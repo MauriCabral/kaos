@@ -4,15 +4,14 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.example.kaos.util.SchemaManager;
-
-import java.io.IOException;
+import org.example.kaos.util.JpaUtil;
 
 public class App extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        SchemaManager.createSchemaAndTables();
+        //SchemaManager.createSchemaAndTables();
+        JpaUtil.getEntityManager().close();
 
         // login
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));

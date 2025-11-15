@@ -1,0 +1,56 @@
+.root {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #e9500e 0%, #ff6b35 100%);
+}
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 0);
+}
+
+.title-label {
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.form-label {
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555;
+}
+
+.text-field, .password-field {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #ddd;
+    -fx-padding: 10;
+    -fx-pref-height: 40;
+    -fx-pref-width: 220;
+}
+
+.login-button {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #e9500e 0%, #ff6b35 100%);
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-cursor: hand;
+    -fx-pref-height: 45;
+    -fx-pref-width: 220;
+}
+
+.login-button:hover {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #d1450c 0%, #e55a2b 100%);
+}
+
+.forgot-link {
+    -fx-text-fill: #e9500e;
+    -fx-border-color: transparent;
+    -fx-font-size: 12;
+}
+
+.forgot-link:hover {
+    -fx-text-fill: #d1450c;
+    -fx-underline: true;
+}
