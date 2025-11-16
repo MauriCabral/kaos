@@ -10,6 +10,8 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.ToggleButton?>
 <AnchorPane prefHeight="425.0" prefWidth="468.0" stylesheets="@../css/login.css" xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.LoginController">
     <children>
         <!-- Card central -->
@@ -32,7 +34,11 @@
                 <!-- Contraseña -->
                 <VBox spacing="5.0">
                     <Label styleClass="form-label" text="Contraseña" />
-                    <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña" styleClass="password-field" />
+                    <HBox alignment="CENTER_LEFT" spacing="0">
+                        <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña" styleClass="password-field" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="visiblePasswordField" promptText="Ingresa tu contraseña" styleClass="text-field" managed="false" visible="false" HBox.hgrow="ALWAYS" />
+                        <ToggleButton fx:id="togglePasswordButton" styleClass="toggle-password-button" onAction="#togglePasswordVisibility" />
+                    </HBox>
                 </VBox>
             </VBox>
 

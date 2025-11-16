@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+
+<AnchorPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.OrderController" stylesheets="@../css/order.css">
+
+    <HBox spacing="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <!-- PANEL IZQUIERDO - GRID DE BURGERS -->
+        <VBox spacing="20" prefWidth="700" styleClass="products-panel">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <!-- TÍTULO -->
+            <Label text="Gestión de Pedidos" styleClass="title-label"/>
+
+            <!-- CONTENEDOR DE BURGERS CON SCROLL -->
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+                <FlowPane fx:id="productsFlowPane" styleClass="products-flow-pane" hgap="15" vgap="15"/>
+            </ScrollPane>
+        </VBox>
+
+        <!-- SEPARADOR -->
+        <Separator orientation="VERTICAL"/>
+
+        <!-- PANEL DERECHO - DETALLE DEL PEDIDO -->
+        <VBox spacing="20" prefWidth="300" styleClass="details-panel">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Detalle del Pedido" styleClass="details-title"/>
+
+            <!-- INFORMACIÓN DE LA BURGER SELECCIONADA -->
+            <VBox spacing="15" styleClass="selected-product" visible="false" fx:id="selectedProductPanel">
+                <ImageView fitWidth="120" fitHeight="120" preserveRatio="true"
+                           styleClass="selected-product-image" fx:id="selectedProductImage"/>
+                <Label styleClass="selected-product-name" fx:id="selectedProductName"/>
+
+                <!-- CONTROLES DE CANTIDAD -->
+                <HBox spacing="10" alignment="CENTER">
+                    <Button text="-" styleClass="quantity-btn" onAction="#decreaseQuantity"/>
+                    <Label text="1" styleClass="quantity-label" fx:id="quantityLabel"/>
+                    <Button text="+" styleClass="quantity-btn" onAction="#increaseQuantity"/>
+                </HBox>
+
+                <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder"/>
+            </VBox>
+
+            <!-- LISTA DE ITEMS DEL PEDIDO -->
+            <VBox spacing="10" VBox.vgrow="ALWAYS">
+                <Label text="Items del Pedido" styleClass="items-title"/>
+                <ListView styleClass="items-list" fx:id="orderItemsList"/>
+            </VBox>
+
+            <!-- TOTAL Y ACCIONES -->
+            <VBox spacing="15">
+                <HBox styleClass="total-container">
+                    <Label text="Total:" styleClass="total-label"/>
+                    <Label text="0.00" styleClass="total-amount" fx:id="totalAmount"/>
+                </HBox>
+
+                <Button text="Confirmar Pedido" styleClass="confirm-btn" onAction="#confirmOrder"/>
+                <Button text="Limpiar Pedido" styleClass="clear-btn" onAction="#clearOrder"/>
+            </VBox>
+        </VBox>
+    </HBox>
+
+</AnchorPane>

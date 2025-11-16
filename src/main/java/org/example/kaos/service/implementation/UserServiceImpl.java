@@ -2,9 +2,9 @@ package org.example.kaos.service.implementation;
 
 import org.example.kaos.entity.User;
 import org.example.kaos.repository.UserRepository;
-import org.example.kaos.service.UserService;
+import org.example.kaos.service.IUserService;
 
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements IUserService {
     private final UserRepository userRepository = new UserRepository();
 
     @Override
