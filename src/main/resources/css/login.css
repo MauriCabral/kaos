@@ -54,3 +54,31 @@
     -fx-text-fill: #d1450c;
     -fx-underline: true;
 }
+
+.toggle-password-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1px 1px 1px 0;
+    -fx-border-radius: 0 5px 5px 0;
+    -fx-background-radius: 0 5px 5px 0;
+    -fx-padding: 8px 12px;
+    -fx-cursor: hand;
+    -fx-text-fill: #000000;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-min-width: 40px;
+    -fx-min-height: 40px;
+}
+
+.toggle-password-button:hover {
+    -fx-background-color: #f0f0f0;
+}
+
+.toggle-password-button:selected {
+    -fx-background-color: #e0e0e0;
+}
+
+.password-field, .text-field {
+    -fx-border-radius: 5px 0 0 5px;
+    -fx-background-radius: 5px 0 0 5px;
+}

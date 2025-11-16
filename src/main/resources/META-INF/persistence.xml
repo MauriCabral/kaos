@@ -6,6 +6,11 @@
 
         <class>org.example.kaos.entity.Store</class>
         <class>org.example.kaos.entity.User</class>
+        <class>org.example.kaos.entity.Burger</class>
+        <class>org.example.kaos.entity.Extra</class>
+        <class>org.example.kaos.entity.Combo</class>
+        <class>org.example.kaos.entity.BurgerVariant</class>
+        <class>org.example.kaos.entity.VariantType</class>
 
         <properties>
 
