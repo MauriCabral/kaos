@@ -12,7 +12,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.example.kaos.util.DialogUtil;
-import org.example.kaos.util.ViewLoader;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -97,16 +96,12 @@ public class MainController {
         String tabId = title + "_" + System.currentTimeMillis();
 
         try {
-            // Cargar el contenido FXML
             Parent content = FXMLLoader.load(getClass().getResource(fxmlPath));
 
-            // Guardar información de la pestaña
             openTabs.put(tabId, new TabInfo(title, fxmlPath, content));
 
-            // Crear y agregar la pestaña al toolbar
             createTab(tabId, title);
 
-            // Mostrar el contenido
             switchToTab(tabId);
 
         } catch (IOException e) {
@@ -120,11 +115,9 @@ public class MainController {
         tabItem.getStyleClass().add("tab-item");
         tabItem.setUserData(tabId);
 
-        // Label con el título
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("tab-label");
 
-        // Botón cerrar
         Button closeBtn = new Button("×");
         closeBtn.getStyleClass().add("tab-close-btn");
         closeBtn.setOnAction(e -> closeTab(tabId));
@@ -136,15 +129,12 @@ public class MainController {
     }
 
     private void switchToTab(String tabId) {
-        // Desactivar pestaña actual
         if (currentTabId != null) {
             deactivateTab(currentTabId);
         }
 
-        // Activar nueva pestaña
         activateTab(tabId);
 
-        // Mostrar contenido
         TabInfo tabInfo = openTabs.get(tabId);
         if (tabInfo != null) {
             contentArea.getChildren().setAll(tabInfo.content);
@@ -171,22 +161,31 @@ public class MainController {
     }
 
     private void closeTab(String tabId) {
-        // No permitir cerrar la última pestaña
-        if (openTabs.size() <= 1) {
-            DialogUtil.showWarning("Atención", "No puedes cerrar la última pestaña");
+//        if (openTabs.size() <= 1) {
+//            DialogUtil.showWarning("Atención", "No puedes cerrar la última pestaña");
+//            return;
+//        }
+//        openTabs.remove(tabId);
+//        tabContainer.getChildren().removeIf(node -> tabId.equals(node.getUserData()));
+//
+//        if (tabId.equals(currentTabId)) {
+//            String newTabId = openTabs.keySet().iterator().next();
+//            switchToTab(newTabId);
+//        }
+        openTabs.remove(tabId);
+
+        tabContainer.getChildren().removeIf(node -> tabId.equals(node.getUserData()));
+
+        if (openTabs.isEmpty()) {
+            contentArea.getChildren().clear();
+            currentTabId = null;
+            orderCounter = 1;
             return;
         }
 
-        // Remover del mapa
-        openTabs.remove(tabId);
-
-        // Remover del toolbar
-        tabContainer.getChildren().removeIf(node -> tabId.equals(node.getUserData()));
-
-        // Si cerramos la pestaña activa, cambiar a otra
         if (tabId.equals(currentTabId)) {
-            String newTabId = openTabs.keySet().iterator().next();
-            switchToTab(newTabId);
+            String nextTabId = openTabs.keySet().iterator().next();
+            switchToTab(nextTabId);
         }
     }
 

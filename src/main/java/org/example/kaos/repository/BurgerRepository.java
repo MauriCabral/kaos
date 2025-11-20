@@ -1,16 +1,18 @@
 package org.example.kaos.repository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.BurgerVariant;
+import org.example.kaos.entity.User;
 import org.example.kaos.entity.VariantType;
 import org.example.kaos.util.JpaUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BurgerRepository {
-
     public List<Burger> findAll() {
         EntityManager em = JpaUtil.getEntityManager();
         try {
@@ -41,77 +43,152 @@ public class BurgerRepository {
         }
     }
 
-    public boolean existsByCode(String code) {
+    public boolean existsByCode(long id, String code) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(b) FROM Burger b WHERE b.code = :code", Long.class);
+            String queryString;
+            if (id == 0) {
+                queryString = "SELECT COUNT(b) FROM Burger b WHERE b.code = :code";
+            } else {
+                queryString = "SELECT COUNT(b) FROM Burger b WHERE b.code = :code AND b.id != :id";
+            }
+
+            TypedQuery<Long> query = em.createQuery(queryString, Long.class);
             query.setParameter("code", code);
+            if (id != 0) {
+                query.setParameter("id", id);
+            }
             return query.getSingleResult() > 0;
         } finally {
             em.close();
         }
     }
 
-    public boolean existsByName(String name) {
+    public boolean existsByName(long id, String name) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(b) FROM Burger b WHERE b.name = :name", Long.class);
+            String queryString;
+            if (id == 0) {
+                queryString = "SELECT COUNT(b) FROM Burger b WHERE b.name = :name";
+            } else {
+                queryString = "SELECT COUNT(b) FROM Burger b WHERE b.name = :name AND b.id != :id";
+            }
+
+            TypedQuery<Long> query = em.createQuery(queryString, Long.class);
             query.setParameter("name", name);
+            if (id != 0) {
+                query.setParameter("id", id);
+            }
             return query.getSingleResult() > 0;
         } finally {
             em.close();
         }
     }
 
-    public void saveBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
+    public Burger saveBurger(Burger burger) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Burger savedBurger;
+            if (burger.getId() == 0) {
+                em.persist(burger);
+                savedBurger = burger;
+            } else {
+                savedBurger = em.merge(burger);
+            }
+            em.getTransaction().commit();
+            return savedBurger;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Burger updateBurger(Burger burger) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Burger updatedBurger = em.merge(burger); // UPDATE automático
+            em.getTransaction().commit();
+            return updatedBurger;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Burger findBurgerById(int burgerId) {
+        EntityManager em = JpaUtil.getEntityManager();
+        Burger burger = null;
+        try {
+            TypedQuery<Burger> query = em.createQuery(
+                    "SELECT b FROM Burger b WHERE b.id = :burgerId", Burger.class);
+            query.setParameter("burgerId", burgerId);
+            burger = query.getSingleResult();
+        } catch (NoResultException e) {
+            // burger no encontrado
+        } finally {
+            em.close();
+        }
+        return burger;
+    }
+
+    public boolean deleteBurgerById(long burgerId) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            Burger burger = em.find(Burger.class, burgerId);
+            if (burger != null) {
+                for (BurgerVariant variant : new ArrayList<>(burger.getVariants())) {
+                    em.remove(variant);
+                }
+                burger.getVariants().clear();
+
+                em.remove(burger);
+                em.getTransaction().commit();
+                return true;
+            }
+
+            em.getTransaction().commit();
+            return false;
+
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
 
             Burger managedBurger = em.merge(burger);
 
-            VariantType simpleType = em.createQuery(
-                            "SELECT vt FROM VariantType vt WHERE vt.name = 'SIMPLE'", VariantType.class)
-                    .getSingleResult();
+            for (BurgerVariant variant : managedBurger.getVariants()) {
+                long variantTypeId = variant.getVariantType().getId();
+                if (variantTypeId == 1L) {
+                    variant.setPrice(simplePrice);
+                } else if (variantTypeId == 2L) {
+                    variant.setPrice(doblePrice);
+                } else if (variantTypeId == 3L) {
+                    variant.setPrice(triplePrice);
+                }
 
-            VariantType dobleType = em.createQuery(
-                            "SELECT vt FROM VariantType vt WHERE vt.name = 'DOBLE'", VariantType.class)
-                    .getSingleResult();
-
-            VariantType tripleType = em.createQuery(
-                            "SELECT vt FROM VariantType vt WHERE vt.name = 'TRIPLE'", VariantType.class)
-                    .getSingleResult();
-
-            BurgerVariant simpleVariant = BurgerVariant.builder()
-                    .burger(managedBurger)
-                    .variantType(simpleType)
-                    .price(simplePrice)
-                    .isAvailable(true)
-                    .createdByUser(managedBurger.getCreatedByUser())
-                    .build();
-            em.persist(simpleVariant);
-
-            BurgerVariant dobleVariant = BurgerVariant.builder()
-                    .burger(managedBurger)
-                    .variantType(dobleType)
-                    .price(doblePrice)
-                    .isAvailable(true)
-                    .createdByUser(managedBurger.getCreatedByUser())
-                    .build();
-            em.persist(dobleVariant);
-
-            BurgerVariant tripleVariant = BurgerVariant.builder()
-                    .burger(managedBurger)
-                    .variantType(tripleType)
-                    .price(triplePrice)
-                    .isAvailable(true)
-                    .createdByUser(managedBurger.getCreatedByUser())
-                    .build();
-            em.persist(tripleVariant);
-
+                em.merge(variant);
+            }
             em.getTransaction().commit();
+            return true;
+
         } catch (Exception e) {
             em.getTransaction().rollback();
             throw e;

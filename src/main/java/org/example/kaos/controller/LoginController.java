@@ -24,15 +24,12 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        // Sincronizar los campos de contraseña
         setupPasswordFields();
     }
 
     private void setupPasswordFields() {
-        // Vincular los textos de ambos campos
         visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
 
-        // Configurar estado inicial
         togglePasswordButton.setText("○");
     }
 
@@ -60,14 +57,14 @@ public class LoginController {
     @FXML
     public void togglePasswordVisibility(ActionEvent actionEvent) {
         if (togglePasswordButton.isSelected()) {
-            // Mostrar contraseña (● negro)
+            // Mostrar contraseña
             passwordField.setVisible(false);
             passwordField.setManaged(false);
             visiblePasswordField.setVisible(true);
             visiblePasswordField.setManaged(true);
             togglePasswordButton.setText("●");
         } else {
-            // Ocultar contraseña (○ blanco)
+            // Ocultar contraseña
             visiblePasswordField.setVisible(false);
             visiblePasswordField.setManaged(false);
             passwordField.setVisible(true);

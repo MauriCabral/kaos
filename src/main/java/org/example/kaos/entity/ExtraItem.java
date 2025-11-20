@@ -6,17 +6,20 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "extras")
+@Table(name = "extra_items")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Extra {
+public class ExtraItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "extra_id", nullable = false, unique = true)
+    private int extraItemId;
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;

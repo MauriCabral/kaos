@@ -22,7 +22,7 @@ public class BurgerVariant {
     @JoinColumn(name = "burger_id", nullable = false)
     private Burger burger;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "variant_type_id", nullable = false)
     private VariantType variantType;
 

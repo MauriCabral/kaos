@@ -11,34 +11,37 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.Setter;
 import org.example.kaos.entity.Burger;
-import org.example.kaos.entity.Combo;
-import org.example.kaos.entity.Extra;
+import org.example.kaos.entity.BurgerVariant;
+import org.example.kaos.entity.ExtraItem;
 import org.example.kaos.service.IBurgerService;
-import org.example.kaos.service.IComboService;
-import org.example.kaos.service.IExtraService;
+import org.example.kaos.service.IExtraItemService;
 import org.example.kaos.service.implementation.BurgerServiceImpl;
-import org.example.kaos.service.implementation.ComboServiceImpl;
-import org.example.kaos.service.implementation.ExtraServiceImpl;
+import org.example.kaos.service.implementation.ExtraItemServiceImpl;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.List;
 
-public class AddProductDialog {
+public class ProductDialog {
 
     private final IBurgerService burgerService = new BurgerServiceImpl();
-    private final IExtraService extraService = new ExtraServiceImpl();
-    private final IComboService comboService = new ComboServiceImpl();
+    private final IExtraItemService extraItemService = new ExtraItemServiceImpl();
 
-    private Runnable onSuccessCallback;
+    @Setter private Runnable onSuccessCallback;
 
-    public void setOnSuccessCallback(Runnable onSuccessCallback) {
-        this.onSuccessCallback = onSuccessCallback;
-    }
+    @Setter private ProductMode mode = ProductMode.ADD;
+    @Setter private Object productToEdit;
+    public enum ProductMode { ADD, EDIT }
+
+    boolean isBurger = false, isExtra = false, isCombo = false;
+    byte[] existingImageData;
 
     public void show() {
         Stage dialog = new Stage();
-        dialog.setTitle("Agregar Producto");
+        dialog.setTitle(mode == ProductMode.ADD ? "Agregar Producto" : "Editar Producto");
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setResizable(false);
 
@@ -47,7 +50,7 @@ public class AddProductDialog {
         mainLayout.setAlignment(Pos.TOP_CENTER);
         mainLayout.setStyle("-fx-background-color: white;");
 
-        Label titleLabel = new Label("Agregar Nuevo Producto");
+        Label titleLabel = new Label(mode == ProductMode.ADD ? "Agregar Nuevo Producto" : "Editar Producto");
         titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #e9500e;");
 
         VBox typeBox = new VBox(5);
@@ -211,6 +214,58 @@ public class AddProductDialog {
             }
         });
 
+        if (mode == ProductMode.EDIT) {
+            int id = 0;
+            if (productToEdit instanceof ExtraItem) {
+                ExtraItem extraItem = (ExtraItem) productToEdit;
+                if (extraItem.getExtraItemId() == 1) {
+                    isExtra = true;
+                    id = 1;
+                } else {
+                    isCombo = true;
+                    id = 2;
+                }
+                existingImageData = extraItem.getImageData();
+            } else if (productToEdit instanceof Burger) {
+                isBurger = true;
+                existingImageData = ((Burger) productToEdit).getImageData();
+            }
+
+            typeComboBox.setValue(typeComboBox.getItems().get(id));
+            typeComboBox.setDisable(true);
+
+            if (existingImageData != null && existingImageData.length > 0) {
+                Image image = new Image(new ByteArrayInputStream(existingImageData));
+                previewImage.setImage(image);
+            } else {
+                previewImage.setImage(null);
+            }
+
+            updateFormForType(typeComboBox.getValue().toString(), codeBox, descriptionBox, priceBox, burgerPricesBox);
+
+            if (isBurger) {
+                Burger burger = ((Burger) productToEdit);
+                List<BurgerVariant> burgerVariantList = burgerService.getVariantsByBurgerId(burger.getId());
+
+                nameField.setText(burger.getName());
+                codeField.setText(burger.getCode());
+                for (BurgerVariant variant : burgerVariantList) {
+                    if (variant.getVariantType().getId() == 1) { // SIMPLE
+                        simplePriceField.setText(variant.getPrice().toString());
+                    } else if (variant.getVariantType().getId() == 2) { // DOBLE
+                        doblePriceField.setText(variant.getPrice().toString());
+                    } else { // TRIPLE
+                        triplePriceField.setText(variant.getPrice().toString());
+                    }
+                }
+            } else if (isExtra || isCombo) {
+                ExtraItem extraItem = (ExtraItem) productToEdit;
+                nameField.setText(extraItem.getName());
+                descriptionField.setText(extraItem.getDescription());
+                priceField.setText(extraItem.getPrice().toString());
+            }
+        }
+
         cancelBtn.setOnAction(e -> dialog.close());
 
         saveBtn.setOnAction(e -> {
@@ -220,30 +275,40 @@ public class AddProductDialog {
                     simplePriceField.getText(), doblePriceField.getText(), triplePriceField.getText(),
                     selectedImage[0], errorLabel)) {
                 try {
-                    byte[] imageData = Files.readAllBytes(selectedImage[0].toPath());
+                    byte[] imageDataToUse;
+
+                    if (mode == ProductMode.ADD) {
+                        imageDataToUse = Files.readAllBytes(selectedImage[0].toPath());
+                    } else {
+                        imageDataToUse = (selectedImage[0] != null)
+                                ? Files.readAllBytes(selectedImage[0].toPath())
+                                : existingImageData;
+                    }
 
                     switch (selectedType) {
                         case "Burger":
-                            saveBurger(nameField.getText(), codeField.getText(), imageData,
+                            saveBurger(nameField.getText().trim(), codeField.getText().trim(), imageDataToUse,
                                     Double.parseDouble(simplePriceField.getText()),
                                     Double.parseDouble(doblePriceField.getText()),
                                     Double.parseDouble(triplePriceField.getText()));
                             break;
                         case "Extra":
-                            if (extraService.hasExtra()) {
+                            if (mode == ProductMode.ADD && extraItemService.hasExtra()) {
                                 DialogUtil.showWarning("Atención", "Ya existe un Extra. Solo puede haber uno.");
                                 return;
                             }
-                            saveExtra(nameField.getText(), descriptionField.getText(),
-                                    Double.parseDouble(priceField.getText()), imageData);
+                            saveExtraItem(nameField.getText().trim(), descriptionField.getText().trim(),
+                                    Double.parseDouble(priceField.getText()), imageDataToUse, 1); // extra_id = 1
                             break;
                         case "Combo":
-                            saveCombo(nameField.getText(), descriptionField.getText(),
-                                    Double.parseDouble(priceField.getText()), imageData);
+                            saveExtraItem(nameField.getText().trim(), descriptionField.getText().trim(),
+                                    Double.parseDouble(priceField.getText()), imageDataToUse, 2); // extra_id = 2
                             break;
                     }
 
-                    DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
+                    if (mode == ProductMode.ADD) {
+                        DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
+                    }
                     dialog.close();
 
                     if (onSuccessCallback != null) {
@@ -305,13 +370,14 @@ public class AddProductDialog {
     private boolean validateForm(String type, String name, String code, String description,
                                  String price, String simplePrice, String doblePrice, String triplePrice,
                                  File image, Label errorLabel) {
+        long idProduct = 0L;
         if (name == null || name.trim().isEmpty()) {
             errorLabel.setText("El nombre es obligatorio");
             errorLabel.setVisible(true);
             return false;
         }
 
-        if (image == null) {
+        if (mode == ProductMode.ADD && image == null) {
             errorLabel.setText("Debe seleccionar una imagen");
             errorLabel.setVisible(true);
             return false;
@@ -319,6 +385,9 @@ public class AddProductDialog {
 
         switch (type) {
             case "Burger":
+                if (productToEdit != null) {
+                    idProduct = ((Burger) productToEdit).getId();
+                }
                 if (code == null || code.trim().length() != 2) {
                     errorLabel.setText("El código debe tener exactamente 2 caracteres");
                     errorLabel.setVisible(true);
@@ -353,12 +422,12 @@ public class AddProductDialog {
                     errorLabel.setVisible(true);
                     return false;
                 }
-                if (burgerService.nameExists(name.trim())) {
+                if (burgerService.nameExists(idProduct, name.trim())) {
                     errorLabel.setText("Ya existe una burger con ese nombre");
                     errorLabel.setVisible(true);
                     return false;
                 }
-                if (burgerService.codeExists(code.trim())) {
+                if (burgerService.codeExists(idProduct, code.trim())) {
                     errorLabel.setText("Ya existe una burger con ese código");
                     errorLabel.setVisible(true);
                     return false;
@@ -366,7 +435,17 @@ public class AddProductDialog {
                 break;
 
             case "Extra":
+                break;
+
             case "Combo":
+                if (productToEdit != null && productToEdit instanceof ExtraItem) {
+                    idProduct = ((ExtraItem) productToEdit).getId();
+                }
+                if (extraItemService.nameExists(idProduct, name.trim())) {
+                    errorLabel.setText("Ya existe un combo con ese nombre");
+                    errorLabel.setVisible(true);
+                    return false;
+                }
                 if (description == null || description.trim().isEmpty()) {
                     errorLabel.setText("La descripción es obligatoria");
                     errorLabel.setVisible(true);
@@ -397,34 +476,56 @@ public class AddProductDialog {
     }
 
     private void saveBurger(String name, String code, byte[] imageData, double simplePrice, double doblePrice, double triplePrice) {
+        boolean res = false;
         Burger burger = Burger.builder()
+                .id(isBurger ? ((Burger) productToEdit).getId() : 0)
                 .name(name.trim())
                 .code(code.trim().toUpperCase())
                 .imageData(imageData)
                 .createdByUser(Session.getInstance().getCurrentUser().getId())
                 .build();
-        burgerService.saveBurgerWithVariants(burger, simplePrice, doblePrice, triplePrice);
+        if (mode == ProductMode.EDIT) {
+            res = burgerService.updateBurgerWithVariants(burger, simplePrice, doblePrice, triplePrice);
+            if (res) {
+                DialogUtil.showInfo("Éxito", "Burger actualizado correctamente");
+            } else {
+                DialogUtil.showError("Error", "Error al actualizar la burger.");
+            }
+        } else {
+            res = burgerService.saveBurgerWithVariants(burger, simplePrice, doblePrice, triplePrice);
+            if (res) {
+                DialogUtil.showInfo("Éxito", "Burger agregado correctamente");
+            } else {
+                DialogUtil.showError("Error", "Error al agregadar el burger.");
+            }
+        }
     }
 
-    private void saveExtra(String name, String description, double price, byte[] imageData) {
-        Extra extra = Extra.builder()
+    private void saveExtraItem(String name, String description, double price, byte[] imageData, int extraItemId) {
+        boolean res = false;
+        Long id = (productToEdit instanceof ExtraItem) ? ((ExtraItem) productToEdit).getId() : null;
+
+        ExtraItem extraItem = ExtraItem.builder()
+                .id(id)
+                .extraItemId(extraItemId) // 1 para Extra, 2 para Combo
                 .name(name.trim())
                 .description(description.trim())
                 .price(price)
                 .imageData(imageData)
                 .createdByUser(Session.getInstance().getCurrentUser().getId())
                 .build();
-        extraService.saveExtra(extra);
-    }
 
-    private void saveCombo(String name, String description, double price, byte[] imageData) {
-        Combo combo = Combo.builder()
-                .name(name.trim())
-                .description(description.trim())
-                .price(price)
-                .imageData(imageData)
-                .createdByUser(Session.getInstance().getCurrentUser().getId())
-                .build();
-        comboService.saveCombo(combo);
+        boolean isNew = (mode == ProductMode.ADD);
+        res = extraItemService.saveOrUpdateExtraItem(extraItem, isNew);
+
+        if (res) {
+            String productType = (extraItemId == 1) ? "Extra" : "Combo";
+            String action = isNew ? "agregado" : "actualizado";
+            DialogUtil.showInfo("Éxito", productType + " " + action + " correctamente");
+        } else {
+            String productType = (extraItemId == 1) ? "Extra" : "Combo";
+            String action = isNew ? "agregar" : "actualizar";
+            DialogUtil.showError("Error", "Error al " + action + " el " + productType.toLowerCase());
+        }
     }
 }
