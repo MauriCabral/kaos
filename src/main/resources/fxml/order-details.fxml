@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.OrderDetailsController" stylesheets="@../css/order-details.css" prefWidth="800" prefHeight="600">
+
+    <!-- FONDO PRINCIPAL -->
+    <VBox spacing="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <!-- HEADER -->
+        <HBox styleClass="header" alignment="CENTER" spacing="15">
+            <ImageView fitWidth="40" fitHeight="40" preserveRatio="true">
+                <Image url="@../image/logo.png"/>
+            </ImageView>
+            <Label text="Detalle del Pedido" styleClass="header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="orderNumberLabel" styleClass="order-number"/>
+        </HBox>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <HBox spacing="0" VBox.vgrow="ALWAYS">
+
+            <!-- PANEL IZQUIERDO - ITEMS DEL PEDIDO Y RESUMEN -->
+            <VBox styleClass="items-panel" prefWidth="500" spacing="0">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <Label text="Items del Pedido" styleClass="section-title"/>
+
+                <!-- SCROLL SOLO PARA LOS ITEMS -->
+                <ScrollPane fitToWidth="true" styleClass="items-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="itemsContainer" spacing="10"/>
+                </ScrollPane>
+
+                <!-- RESUMEN FIJO EN LA PARTE INFERIOR -->
+                <VBox styleClass="summary-container" spacing="10">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="Subtotal:" styleClass="summary-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="subtotalLabel" styleClass="summary-value" text="0.00"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="IVA (5%):" styleClass="summary-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="taxLabel" styleClass="summary-value" text="0.00"/>
+                    </HBox>
+                    <Separator styleClass="summary-separator"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="TOTAL:" styleClass="total-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="totalLabel" styleClass="total-value" text="0.00"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <Separator orientation="VERTICAL"/>
+
+            <!-- PANEL DERECHO - INFORMACIÓN Y ACCIONES -->
+            <VBox styleClass="actions-panel" prefWidth="300" spacing="20">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <!-- INFORMACIÓN DEL CLIENTE -->
+                <VBox spacing="10">
+                    <Label text="Información del Cliente" styleClass="section-title"/>
+                    <VBox styleClass="info-card" spacing="8">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                                <!--<Image url="@../image/user-icon.png"/>-->
+                            </ImageView>
+                            <Label fx:id="customerNameLabel" text="Cliente: Consumidor Final" styleClass="info-text"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                                <!--<Image url="@../image/clock-icon.png"/>-->
+                            </ImageView>
+                            <Label fx:id="orderTimeLabel" styleClass="info-text"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                                <!--<Image url="@../image/status-icon.png"/>-->
+                            </ImageView>
+                            <Label text="Estado:" styleClass="info-text"/>
+                            <Label fx:id="statusLabel" text="PENDIENTE" styleClass="status-pending"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- OBSERVACIONES -->
+                <VBox spacing="10">
+                    <Label text="Observaciones" styleClass="section-title"/>
+                    <TextArea fx:id="notesTextArea" styleClass="notes-textarea"
+                              promptText="Agregar observaciones del pedido..."
+                              wrapText="true" prefRowCount="3"/>
+                </VBox>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <VBox spacing="10" VBox.vgrow="ALWAYS">
+                    <Label text="Acciones" styleClass="section-title"/>
+                    <VBox spacing="8">
+                        <Button text="🖨️ Imprimir Comanda" styleClass="action-btn print-btn"/>
+                        <!--onAction="#printOrder"/>-->
+                        <Button text="✅ Confirmar Pedido" styleClass="action-btn confirm-btn"/>
+                        <!--onAction="#confirmOrder"/>-->
+                        <Button text="✏️ Editar Pedido" styleClass="action-btn edit-btn"/>
+                        <!--onAction="#editOrder"/>-->
+                        <Button text="❌ Cancelar Pedido" styleClass="action-btn cancel-btn"/>
+                        <!--onAction="#cancelOrder"/>-->
+                    </VBox>
+                </VBox>
+
+                <!-- BOTÓN VOLVER -->
+                <Button text="← Volver al Menú" styleClass="back-btn"/> <!--onAction="#goBack"/>-->
+            </VBox>
+        </HBox>
+    </VBox>
+
+</AnchorPane>

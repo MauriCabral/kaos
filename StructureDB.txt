@@ -1,0 +1,38 @@
+CREATE TABLE topping (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    price NUMERIC(10,2) NOT NULL,
+    image_data BYTEA,
+    created_by_user BIGINT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+/*CREATE TABLE burger_topping (
+    id SERIAL PRIMARY KEY,
+    burger_id INT REFERENCES burger(id),
+    topping_id INT REFERENCES topping(id)
+); */
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    id_user BIGINT REFERENCES app_user(id),
+    total NUMERIC(10,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE order_detail (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(id),
+    product_type VARCHAR(20) NOT NULL, -- BURGER / EXTRA / COMBO
+    product_id BIGINT NOT NULL,
+    variant_type_id BIGINT, -- solo para burger
+    quantity INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE order_detail_topping (
+    id SERIAL PRIMARY KEY,
+    order_detail_id INT REFERENCES order_detail(id),
+    topping_id INT NOT NULL
+);

@@ -5,7 +5,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
 
-<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.MainController" prefWidth="1050" prefHeight="650" stylesheets="@/css/main.css">
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.MainController" prefWidth="1075" prefHeight="675" stylesheets="@/css/main.css">
 
     <top>
         <VBox styleClass="tab-toolbar">
@@ -27,6 +27,7 @@
 
                 <VBox spacing="10" alignment="CENTER_LEFT" style="-fx-margin-top: 20;">
                     <Button text="Pedidos" fx:id="btnPedidos" styleClass="side-button" onAction="#handlePedidosAction"/>
+                    <Button text="Delivery" fx:id="btnDelivery" styleClass="side-button"/>
                 </VBox>
             </VBox>
 

@@ -1,5 +1,6 @@
 package org.example.kaos.controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -11,20 +12,23 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.example.kaos.entity.*;
 import org.example.kaos.service.IBurgerService;
 import org.example.kaos.service.IVariantService;
-import org.example.kaos.service.IComboService;
-import org.example.kaos.service.IExtraService;
+import org.example.kaos.service.IExtraItemService;
 import org.example.kaos.service.implementation.BurgerServiceImpl;
 import org.example.kaos.service.implementation.VariantServiceImpl;
-import org.example.kaos.service.implementation.ComboServiceImpl;
-import org.example.kaos.service.implementation.ExtraServiceImpl;
-import org.example.kaos.util.AddProductDialog;
+import org.example.kaos.service.implementation.ExtraItemServiceImpl;
+import org.example.kaos.util.DialogUtil;
+import org.example.kaos.util.ProductDialog;
 import org.example.kaos.util.Session;
+import org.example.kaos.entity.OrderDetail;
+import org.example.kaos.util.WindowManager;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -37,21 +41,24 @@ public class OrderController implements Initializable {
     @FXML private Label quantityLabel;
     @FXML private ListView<String> orderItemsList;
     @FXML private Label totalAmount;
+    @FXML private Button editProductsBtn;
 
     private final IBurgerService burgerService = new BurgerServiceImpl();
-    private final IExtraService extraService = new ExtraServiceImpl();
-    private final IComboService comboService = new ComboServiceImpl();
+    private final IExtraItemService extraItemService = new ExtraItemServiceImpl();
     private final IVariantService variantService = new VariantServiceImpl();
 
-    private Extra singleExtra;
-    private List<Combo> combos;
+    private ExtraItem singleExtra;
+    private List<ExtraItem> combos;
     private int quantity = 1;
+    private boolean isEditMode = false;
+    private final List<OrderDetail> currentOrderDetails = new ArrayList<>();
+
 
     private Burger currentSelectedBurger;
     private Long currentSelectedVariantId;
     private String currentSelectedVariantName;
-    private Extra currentSelectedExtra;
-    private Combo currentSelectedCombo;
+    private ExtraItem currentSelectedExtra;
+    private ExtraItem currentSelectedCombo;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -70,17 +77,17 @@ public class OrderController implements Initializable {
                 productsFlowPane.getChildren().add(burgerCard);
             }
 
-            // 2. CARGAR EL ÚNICO EXTRA (PAPAS)
-            singleExtra = extraService.getSingleExtra();
+            // 2. CARGAR EL ÚNICO EXTRA (PAPAS) - extra_id = 1
+            singleExtra = extraItemService.getSingleExtra(); // CAMBIADO: usa getSingleExtra() no getExtraItemById(1)
             if (singleExtra != null) {
-                VBox extraCard = createSimpleProductCard(singleExtra, "EXTRA");
+                VBox extraCard = createExtraItemCard(singleExtra, "EXTRA");
                 productsFlowPane.getChildren().add(extraCard);
             }
 
-            // 3. CARGAR COMBOS
-            combos = comboService.getAllCombos();
-            for (Combo combo : combos) {
-                VBox comboCard = createSimpleProductCard(combo, "COMBO");
+            // 3. CARGAR COMBOS (extra_id = 2)
+            combos = extraItemService.getAllCombos();
+            for (ExtraItem combo : combos) {
+                VBox comboCard = createExtraItemCard(combo, "COMBO");
                 productsFlowPane.getChildren().add(comboCard);
             }
 
@@ -99,6 +106,7 @@ public class OrderController implements Initializable {
     private VBox createBurgerCard(Burger burger) {
         VBox card = new VBox();
         card.getStyleClass().add("product-card");
+        card.setUserData(burger);
 
         StackPane imageContainer = new StackPane();
         imageContainer.getStyleClass().add("image-container");
@@ -106,11 +114,17 @@ public class OrderController implements Initializable {
 
         ImageView imageView = createProductImageView(burger.getImageData());
 
-        Button menuButton = createMenuButton(burger);
-        StackPane.setAlignment(menuButton, Pos.TOP_RIGHT);
-        StackPane.setMargin(menuButton, new Insets(5, 5, 0, 0));
-
-        imageContainer.getChildren().addAll(imageView, menuButton);
+        if (!isEditMode) {
+            Button menuButton = createMenuButton(burger);
+            StackPane.setAlignment(menuButton, Pos.TOP_RIGHT);
+            StackPane.setMargin(menuButton, new Insets(5, 5, 0, 0));
+            imageContainer.getChildren().addAll(imageView, menuButton);
+        } else {
+            Button deleteButton = createDeleteButton(burger);
+            StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
+            StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
+            imageContainer.getChildren().addAll(imageView, deleteButton);
+        }
 
         Label nameLabel = new Label(burger.getName());
         nameLabel.getStyleClass().add("product-name");
@@ -118,15 +132,38 @@ public class OrderController implements Initializable {
         card.getChildren().addAll(imageContainer, nameLabel);
         card.setAlignment(Pos.CENTER);
 
+        card.setOnMouseClicked(event -> {
+            if (isEditMode) {
+                editProduct(burger);
+            }
+        });
+
         return card;
     }
 
     private Button createMenuButton(Burger burger) {
         Button menuButton = new Button("⋮");
         menuButton.getStyleClass().add("menu-button");
-        menuButton.setOnAction(e -> showVariantMenu(menuButton, burger));
+
+        if (!isEditMode) {
+            menuButton.setOnAction(e -> showVariantMenu(menuButton, burger));
+        } else {
+            menuButton.setDisable(true);
+            menuButton.setVisible(false);
+        }
         menuButton.setMouseTransparent(false);
         return menuButton;
+    }
+
+    private Button createDeleteButton(Object product) {
+        Button deleteButton = new Button("X");
+        deleteButton.getStyleClass().add("delete-button");
+
+        deleteButton.setOnAction(e -> {
+            deleteProduct(product);
+        });
+
+        return deleteButton;
     }
 
     private void showVariantMenu(Button menuButton, Burger burger) {
@@ -197,51 +234,63 @@ public class OrderController implements Initializable {
         return imageView;
     }
 
-    private VBox createSimpleProductCard(Object product, String type) {
+    private VBox createExtraItemCard(ExtraItem extraItem, String type) {
         VBox card = new VBox();
         card.getStyleClass().add("product-card");
+        card.setUserData(extraItem);
 
-        String name = "";
-        byte[] imageData = null;
-        double price = 0.0;
+        StackPane imageContainer = new StackPane();
+        imageContainer.setMaxSize(100, 100);
 
-        if (type.equals("EXTRA")) {
-            Extra extra = (Extra) product;
-            name = extra.getName();
-            imageData = extra.getImageData();
-            price = extra.getPrice();
-        } else if (type.equals("COMBO")) {
-            Combo combo = (Combo) product;
-            name = combo.getName();
-            imageData = combo.getImageData();
-            price = combo.getPrice();
+        ImageView imageView = createProductImageView(extraItem.getImageData());
+
+        if (isEditMode) {
+            Button deleteButton = createDeleteButton(extraItem);
+            StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
+            StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
+            imageContainer.getChildren().addAll(imageView, deleteButton);
+        } else {
+            imageContainer.getChildren().add(imageView);
         }
 
-        ImageView imageView = createProductImageView(imageData);
-
-        Label nameLabel = new Label(name);
+        Label nameLabel = new Label(extraItem.getName());
         nameLabel.getStyleClass().add("product-name");
 
-        Label priceLabel = new Label("$" + price);
+        Label priceLabel = new Label("$" + extraItem.getPrice());
         priceLabel.getStyleClass().add("product-price");
 
-        card.getChildren().addAll(imageView, nameLabel, priceLabel);
+        card.getChildren().addAll(imageContainer, nameLabel, priceLabel);
         card.setAlignment(Pos.CENTER);
 
-        /*card.setOnMouseClicked(event -> {
-            if (type.equals("EXTRA")) {
-                selectExtra((Extra) product);
-            } else if (type.equals("COMBO")) {
-                selectCombo((Combo) product);
+        card.setOnMouseClicked(event -> {
+            if (isEditMode) {
+                editProduct(extraItem);
+            } else {
+                if ("EXTRA".equals(type)) {
+                    selectExtra(extraItem);
+                } else if ("COMBO".equals(type)) {
+                    selectCombo(extraItem);
+                }
             }
-        });*/
+        });
 
         return card;
     }
 
-    /*private void selectExtra(Extra extra) {
+    private void selectExtra(ExtraItem extra) {
         selectedProductPanel.setVisible(true);
-        loadDefaultImage(selectedProductImage);
+
+        try {
+            if (extra.getImageData() != null && extra.getImageData().length > 0) {
+                Image image = new Image(new ByteArrayInputStream(extra.getImageData()));
+                selectedProductImage.setImage(image);
+            } else {
+                loadDefaultImage(selectedProductImage);
+            }
+        } catch (Exception e) {
+            loadDefaultImage(selectedProductImage);
+        }
+
         selectedProductName.setText(extra.getName() + " - $" + extra.getPrice());
 
         currentSelectedExtra = extra;
@@ -250,11 +299,22 @@ public class OrderController implements Initializable {
 
         quantity = 1;
         quantityLabel.setText(String.valueOf(quantity));
-    }*/
+    }
 
-    private void selectCombo(Combo combo) {
+    private void selectCombo(ExtraItem combo) {
         selectedProductPanel.setVisible(true);
-        loadDefaultImage(selectedProductImage);
+
+        try {
+            if (combo.getImageData() != null && combo.getImageData().length > 0) {
+                Image image = new Image(new ByteArrayInputStream(combo.getImageData()));
+                selectedProductImage.setImage(image);
+            } else {
+                loadDefaultImage(selectedProductImage);
+            }
+        } catch (Exception e) {
+            loadDefaultImage(selectedProductImage);
+        }
+
         selectedProductName.setText(combo.getName() + " - $" + combo.getPrice());
 
         currentSelectedCombo = combo;
@@ -275,21 +335,25 @@ public class OrderController implements Initializable {
     }
 
     private void showAddButton() {
-        VBox addButton = new VBox();
-        addButton.getStyleClass().add("add-button");
-        addButton.setAlignment(Pos.CENTER);
+        if (!isEditMode) {
+            VBox addButton = new VBox();
+            addButton.getStyleClass().add("add-button");
+            addButton.setAlignment(Pos.CENTER);
 
-        Label plusLabel = new Label("+");
-        plusLabel.getStyleClass().add("plus-label");
+            Label plusLabel = new Label("+");
+            plusLabel.getStyleClass().add("plus-label");
 
-        addButton.getChildren().add(plusLabel);
-        addButton.setOnMouseClicked(event -> openAddProductForm());
+            addButton.getChildren().add(plusLabel);
 
-        productsFlowPane.getChildren().add(addButton);
+            addButton.setOnMouseClicked(event -> openAddProductForm(isEditMode));
+
+            productsFlowPane.getChildren().add(addButton);
+        }
     }
 
-    private void openAddProductForm() {
-        AddProductDialog dialog = new AddProductDialog();
+    private void openAddProductForm(boolean isEditMode) {
+        ProductDialog dialog = new ProductDialog();
+        dialog.setMode(isEditMode ? ProductDialog.ProductMode.EDIT : ProductDialog.ProductMode.ADD);
         dialog.setOnSuccessCallback(this::loadAllProductsFromDatabase);
         dialog.show();
     }
@@ -310,16 +374,54 @@ public class OrderController implements Initializable {
 
     @FXML
     private void addToOrder() {
+        OrderDetail orderDetail = null;
+
         if (currentSelectedBurger != null) {
-            System.out.println("Agregar burger: " + currentSelectedBurger.getName() +
-                    " (" + currentSelectedVariantName + ")");
+            Double unitPrice = getBurgerVariantPrice((long)currentSelectedBurger.getId(), currentSelectedVariantId);
+            orderDetail = OrderDetail.builder()
+                    .productType("BURGER")
+                    .productId((long)currentSelectedBurger.getId())
+                    .productName(currentSelectedBurger.getName() + " (" + currentSelectedVariantName + ")")
+                    .variantName(currentSelectedVariantName)
+                    .unitPrice(unitPrice)
+                    .quantity(quantity)
+                    .build();
+
         } else if (currentSelectedExtra != null) {
-            System.out.println("Agregar extra: " + currentSelectedExtra.getName());
+            orderDetail = OrderDetail.builder()
+                    .productType("EXTRA")
+                    .productId(currentSelectedExtra.getId())
+                    .productName(currentSelectedExtra.getName())
+                    .variantName(null)
+                    .unitPrice(currentSelectedExtra.getPrice())
+                    .quantity(quantity)
+                    .build();
+
         } else if (currentSelectedCombo != null) {
-            System.out.println("Agregar combo: " + currentSelectedCombo.getName());
+            orderDetail = OrderDetail.builder()
+                    .productType("COMBO")
+                    .productId(currentSelectedCombo.getId())
+                    .productName(currentSelectedCombo.getName())
+                    .variantName(null)
+                    .unitPrice(currentSelectedCombo.getPrice())
+                    .quantity(quantity)
+                    .build();
         }
 
-        // Limpiar selección
+        if (orderDetail != null) {
+            // Calcular subtotal inmediatamente
+            orderDetail.setSubtotal(orderDetail.getUnitPrice() * orderDetail.getQuantity());
+
+            currentOrderDetails.add(orderDetail);
+
+            System.out.println("Agregado al pedido: " + orderDetail.getProductName() +
+                    " - Cantidad: " + orderDetail.getQuantity() +
+                    " - Subtotal: $" + orderDetail.getSubtotal());
+
+            /*DialogUtil.showInfo("Éxito", "Producto agregado al pedido:\n" +
+                    orderDetail.getProductName() + "\nCantidad: " + orderDetail.getQuantity());*/
+        }
+
         clearSelection();
     }
 
@@ -333,12 +435,115 @@ public class OrderController implements Initializable {
     }
 
     @FXML
-    private void confirmOrder() {
-        // Lógica para confirmar pedido
+    private void viewOrder() {
+        if (currentOrderDetails.isEmpty()) {
+            DialogUtil.showWarning("Carrito Vacío", "No hay productos en el pedido.");
+            return;
+        }
+
+        WindowManager.openOrderDetailsWindow(currentOrderDetails);
     }
 
     @FXML
     private void clearOrder() {
         // Lógica para limpiar pedido
+    }
+
+    @FXML
+    public void openEditProducts(ActionEvent actionEvent) {
+        isEditMode = !isEditMode;
+
+        for (javafx.scene.Node node : productsFlowPane.getChildren()) {
+            if (node instanceof VBox) {
+                VBox productCard = (VBox) node;
+
+                if (isEditMode) {
+                    productCard.getStyleClass().add("edit-mode");
+                    productCard.setStyle("-fx-opacity: 0.8;");
+                } else {
+                    productCard.getStyleClass().remove("edit-mode");
+                    productCard.setStyle("-fx-opacity: 1.0;");
+                }
+            }
+        }
+
+        if (isEditMode) {
+            editProductsBtn.getStyleClass().add("edit-mode-active");
+            editProductsBtn.setText("❌ Salir Edición");
+
+        } else {
+            editProductsBtn.getStyleClass().remove("edit-mode-active");
+            editProductsBtn.setText("");
+        }
+
+        loadAllProductsFromDatabase();
+    }
+
+    private void editProduct(Object product) {
+        ProductDialog dialog = new ProductDialog();
+        dialog.setMode(ProductDialog.ProductMode.EDIT);
+        dialog.setProductToEdit(product);
+        dialog.setOnSuccessCallback(this::loadAllProductsFromDatabase);
+        dialog.show();
+    }
+
+    public void deleteProduct(Object product) {
+        if (product == null) {
+            System.out.println("Error: Producto nulo");
+            return;
+        }
+
+        boolean confirm = DialogUtil.showConfirmation("Eliminar producto", "¿Estás seguro de que deseas eliminar el producto?");
+        if (confirm) {
+            try {
+                if (product instanceof Burger) {
+                    Burger burger = (Burger) product;
+                    System.out.println("Eliminando burger: " + burger.getName() + " (ID: " + burger.getId() + ")");
+                    confirm = burgerService.deleteBurgerById(burger.getId());
+                    if (confirm) {
+                        DialogUtil.showInfo("Éxito", "Burger eliminada correctamente");
+                    } else {
+                        DialogUtil.showError("Error", "Error al borrar la burger.");
+                    }
+
+                } else if (product instanceof ExtraItem) {
+                    ExtraItem extraItem = (ExtraItem) product;
+                    System.out.println("Eliminando extra/combo: " + extraItem.getName() + " (ID: " + extraItem.getId() + ")");
+                    boolean deleted = extraItemService.deleteExtraItem(extraItem.getId());
+                    if (deleted) {
+                        DialogUtil.showInfo("Éxito", "Producto eliminado correctamente");
+                    } else {
+                        DialogUtil.showError("Error", "Error al eliminar el producto.");
+                    }
+
+                } else {
+                    System.out.println("Error: Tipo de producto no reconocido: " + product.getClass().getSimpleName());
+                    return;
+                }
+
+                loadAllProductsFromDatabase();
+
+            } catch (Exception e) {
+                System.err.println("Error al eliminar producto: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Double getBurgerVariantPrice(Long burgerId, Long variantId) {
+        try {
+            List<BurgerVariant> variants = burgerService.getVariantsByBurgerId(burgerId.intValue());
+
+            for (BurgerVariant variant : variants) {
+                if (variant.getVariantType().getId().equals(variantId)) {
+                    return variant.getPrice();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error al obtener precio de variante: " + e.getMessage());
+        }
+        return null;
     }
 }
