@@ -127,11 +127,15 @@ public class OrderDetailsController {
         card.setAlignment(Pos.CENTER_LEFT);
         card.getStyleClass().add("item-card");
 
-        // Información del producto
         VBox infoBox = new VBox(5);
         infoBox.setPrefWidth(400);
 
-        Label nameLabel = new Label(detail.getProductName());
+        String displayName = detail.getProductName();
+        if (detail.getVariantName() != null && !detail.getVariantName().trim().isEmpty()) {
+            displayName += " (" + detail.getVariantName() + ")";
+        }
+
+        Label nameLabel = new Label(displayName);
         nameLabel.getStyleClass().add("item-name");
         nameLabel.setWrapText(true);
 
