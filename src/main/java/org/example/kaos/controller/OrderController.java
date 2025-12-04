@@ -399,46 +399,51 @@ public class OrderController implements Initializable {
         OrderDetail orderDetail = null;
 
         if (currentSelectedBurger != null) {
-            BurgerVariant selectedVariant = getBurgerVariantById(currentSelectedBurger, currentSelectedVariantId);
-            Double unitPrice = selectedVariant != null ? selectedVariant.getPrice() : 0.0;
-            orderDetail = OrderDetail.builder()
-                    .burgerVariant(selectedVariant)
-                    .productName(currentSelectedBurger.getName())
-                    .variantName(currentSelectedVariantName)
-                    .unitPrice(unitPrice)
-                    .quantity(quantity)
-                    .build();
+            // Obtener precio directamente de la lista de variantes
+            Double unitPrice = getBurgerVariantPrice(currentSelectedBurger.getId(), currentSelectedVariantId);
+            if (unitPrice == null) unitPrice = 0.0;
+
+            // Crear variante desacoplada
+            BurgerVariant variant = new BurgerVariant();
+            variant.setId(currentSelectedVariantId);
+
+            // Crear VariantType básico con el nombre que ya tenemos
+            VariantType variantType = new VariantType();
+            variantType.setId(currentSelectedVariantId); // Usar el mismo ID temporalmente
+            variantType.setName(currentSelectedVariantName);
+            variant.setVariantType(variantType);
+
+            variant.setPrice(unitPrice);
+            variant.setIsAvailable(true);
+
+            orderDetail = new OrderDetail();
+            orderDetail.setBurgerVariant(variant);
+            orderDetail.setProductName(currentSelectedBurger.getName());
+            orderDetail.setVariantName(currentSelectedVariantName);
+            orderDetail.setUnitPrice(unitPrice);
+            orderDetail.setQuantity(quantity);
+            orderDetail.calculateSubtotal();
 
         } else if (currentSelectedExtra != null) {
-            orderDetail = OrderDetail.builder()
-                    .extraItem(currentSelectedExtra)
-                    .productName(currentSelectedExtra.getName())
-                    .variantName(null)
-                    .unitPrice(currentSelectedExtra.getPrice())
-                    .quantity(quantity)
-                    .build();
+            orderDetail = new OrderDetail();
+            orderDetail.setExtraItem(currentSelectedExtra);
+            orderDetail.setProductName(currentSelectedExtra.getName());
+            orderDetail.setUnitPrice(currentSelectedExtra.getPrice());
+            orderDetail.setQuantity(quantity);
+            orderDetail.calculateSubtotal();
 
         } else if (currentSelectedCombo != null) {
-            orderDetail = OrderDetail.builder()
-                    .extraItem(currentSelectedCombo)
-                    .productName(currentSelectedCombo.getName())
-                    .variantName(null)
-                    .unitPrice(currentSelectedCombo.getPrice())
-                    .quantity(quantity)
-                    .build();
+            orderDetail = new OrderDetail();
+            orderDetail.setExtraItem(currentSelectedCombo);
+            orderDetail.setProductName(currentSelectedCombo.getName());
+            orderDetail.setUnitPrice(currentSelectedCombo.getPrice());
+            orderDetail.setQuantity(quantity);
+            orderDetail.calculateSubtotal();
         }
 
         if (orderDetail != null) {
-            //orderDetail.setSubtotal(orderDetail.getUnitPrice() * orderDetail.getQuantity());
-
             currentOrderDetails.add(orderDetail);
-
-            System.out.println("Agregado al pedido: " + orderDetail.getProductName() +
-                    " - Cantidad: " + orderDetail.getQuantity() +
-                    " - Subtotal: $" + orderDetail.getSubtotal());
-
-            /*DialogUtil.showInfo("Éxito", "Producto agregado al pedido:\n" +
-                    orderDetail.getProductName() + "\nCantidad: " + orderDetail.getQuantity());*/
+            System.out.println("Agregado al pedido: " + orderDetail.getProductName());
         }
 
         clearSelection();
@@ -561,16 +566,15 @@ public class OrderController implements Initializable {
             List<BurgerVariant> variants = burgerService.getVariantsByBurgerId(burgerId.intValue());
 
             for (BurgerVariant variant : variants) {
-                if (variant.getVariantType().getId().equals(variantId)) {
+                if (variant.getVariantType() != null &&
+                        variant.getVariantType().getId().equals(variantId)) {
                     return variant.getPrice();
                 }
             }
-
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error al obtener precio de variante: " + e.getMessage());
+            System.err.println("Error al obtener precio: " + e.getMessage());
         }
-        return null;
+        return 0.0;
     }
 
     private void openBurgerSelection(Burger burger) {
