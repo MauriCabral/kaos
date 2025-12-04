@@ -53,7 +53,7 @@ public class BurgerServiceImpl implements IBurgerService {
     }
 
     @Override
-    public List<BurgerVariant> getVariantsByBurgerId(int burgerId) {
+    public List<BurgerVariant> getVariantsByBurgerId(long burgerId) {
         return burgerVariantRepository.findByBurgerId(burgerId);
     }
 

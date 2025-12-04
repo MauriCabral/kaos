@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class OrderDetail {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,13 +21,15 @@ public class OrderDetail {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(name = "product_type", nullable = false, length = 20)
-    private String productType; // "BURGER", "EXTRA", "COMBO"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "burger_variant_id")
+    private BurgerVariant burgerVariant;
 
-    @Column(name = "product_id", nullable = false)
-    private Long productId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extra_item_id")
+    private ExtraItem extraItem;
 
-    @Column(name = "product_name", nullable = false, length = 100)
+    @Column(name = "product_name", nullable = false, length = 50)
     private String productName;
 
     @Column(name = "variant_name", length = 50)
@@ -42,6 +43,9 @@ public class OrderDetail {
 
     @Column(nullable = false)
     private Double subtotal; // unitPrice * quantity
+
+    @Column(name = "observations", length = 500)
+    private String observations;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -57,7 +61,7 @@ public class OrderDetail {
         calculateSubtotal();
     }
 
-    private void calculateSubtotal() {
+    public void calculateSubtotal() {
         if (unitPrice != null && quantity != null) {
             this.subtotal = unitPrice * quantity;
         }

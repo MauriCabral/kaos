@@ -16,6 +16,8 @@ import org.example.kaos.util.WindowManager;
 public class LoginController {
 
     private final IUserService IUserService = new UserServiceImpl();
+    private final String usernametest = "admin";
+    private final String passwordtest = "admin123";
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
@@ -24,12 +26,13 @@ public class LoginController {
 
     @FXML
     public void initialize() {
+        usernameField.setText(usernametest);
+        passwordField.setText(passwordtest);
         setupPasswordFields();
     }
 
     private void setupPasswordFields() {
         visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
-
         togglePasswordButton.setText("○");
     }
 
@@ -49,7 +52,7 @@ public class LoginController {
             DialogUtil.showError("Error de login", "Usuario o contraseña incorrectos");
         } else {
             Session.getInstance().setCurrentUser(user);
-            WindowManager.openWindow("/fxml/main.fxml", "Menú");
+            WindowManager.openWindow("/fxml/main.fxml", "Menú", null);
             ((Stage) usernameField.getScene().getWindow()).close();
         }
     }

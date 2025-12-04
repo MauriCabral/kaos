@@ -19,16 +19,30 @@
 
             <AnchorPane>
                 <Label text="Gestión de Pedidos" styleClass="title-label" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0"/>
-                <Button fx:id="editProductsBtn" styleClass="edit-products-btn" onAction="#openEditProducts" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                    <tooltip>
-                        <Tooltip text="Editar" />
-                    </tooltip>
-                    <graphic>
-                        <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
-                            <Image url="@../image/Edit.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
+
+                <!-- BOTONES DE ADMINISTRACIÓN -->
+                <HBox spacing="10" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                    <Button fx:id="toppingsBtn" styleClass="edit-products-btn" onAction="#openToppingsManager" visible="false" text="📝">
+                        <tooltip>
+                            <Tooltip text="Gestionar Toppings" />
+                        </tooltip>
+                        <graphic>
+                            <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
+                                <!--<Image url="@../image/Topping.png"/> -->
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="editProductsBtn" styleClass="edit-products-btn" onAction="#openEditProducts">
+                        <tooltip>
+                            <Tooltip text="Editar Productos" />
+                        </tooltip>
+                        <graphic>
+                            <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
+                                <Image url="@../image/Edit.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
             </AnchorPane>
 
             <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
@@ -60,20 +74,12 @@
                 <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder"/>
             </VBox>
 
-            <!--<VBox spacing="10" VBox.vgrow="ALWAYS">
-                <Label text="Items del Pedido" styleClass="items-title"/>
-                <ListView styleClass="items-list" fx:id="orderItemsList"/>
-            </VBox> -->
-
             <VBox spacing="15">
-                <!--<HBox styleClass="total-container">
-                    <Label text="Total:" styleClass="total-label"/>
-                    <Label text="0.00" styleClass="total-amount" fx:id="totalAmount"/>
-                </HBox>
-
-                <Button text="Confirmar Pedido" styleClass="confirm-btn" onAction="#confirmOrder"/>
-                <Button text="Limpiar Pedido" styleClass="clear-btn" onAction="#clearOrder"/> -->
-                <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder"/>
+                <VBox spacing="15">
+                    <HBox alignment="CENTER">
+                        <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder"/>
+                    </HBox>
+                </VBox>
             </VBox>
         </VBox>
     </HBox>

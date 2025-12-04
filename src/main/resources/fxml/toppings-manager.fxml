@@ -1,14 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.kaos.controller.ToppingController"
+      stylesheets="@../css/toppings-manager.css"
+      prefWidth="600" prefHeight="500" spacing="15">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
 
-</AnchorPane>
+    <!-- TÍTULO -->
+    <Label text="Gestión de Toppings" styleClass="title-label"/>
+
+    <!-- FORMULARIO DE AGREGAR/EDITAR -->
+    <VBox spacing="10" styleClass="form-container">
+        <Label text="Agregar/Editar Topping" styleClass="form-title"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Nombre:" styleClass="field-label"/>
+                <TextField fx:id="nameField" promptText="Nombre del topping" styleClass="text-field"/>
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="Precio:" styleClass="field-label"/>
+                <TextField fx:id="priceField" promptText="0.00" styleClass="price-field"/>
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="‎" styleClass="field-label"/> <!-- Espacio vacío para alinear -->
+                <HBox spacing="5">
+                    <Button fx:id="actionButton" styleClass="add-btn" onAction="#handleAddOrUpdate">
+                        <graphic>
+                            <Label text="+" styleClass="plus-icon"/>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="cancelEditBtn" text="✕" styleClass="cancel-edit-btn"
+                            onAction="#cancelEdit" visible="false"/>
+                </HBox>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- TABLA DE TOPPINGS -->
+    <VBox spacing="8" VBox.vgrow="ALWAYS">
+        <Label text="Toppings Existentes" styleClass="table-title"/>
+
+        <TableView fx:id="toppingsTable" styleClass="toppings-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Nombre" styleClass="table-column">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="name"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Precio" styleClass="table-column">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="price"/>
+                    </cellValueFactory>
+                </TableColumn>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cerrar" styleClass="cancel-btn" onAction="#handleClose" minWidth="80"/>
+    </HBox>
+</VBox>

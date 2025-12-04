@@ -3,8 +3,11 @@ package org.example.kaos.util;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.kaos.controller.BurgerSelectionController;
 import org.example.kaos.controller.OrderDetailsController;
+import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.OrderDetail;
 
 import java.io.IOException;
@@ -12,7 +15,7 @@ import java.util.List;
 
 public class WindowManager {
 
-    public static void openWindow(String fxmlPath, String title) {
+    /*public static void openWindow(String fxmlPath, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(WindowManager.class.getResource(fxmlPath));
             Parent root = loader.load();
@@ -24,6 +27,32 @@ public class WindowManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }*/
+
+    public static <T> T openWindow(String fxmlPath, String title, Object initData) {
+        try {
+            FXMLLoader loader = new FXMLLoader(WindowManager.class.getResource(fxmlPath));
+            Parent root = loader.load();
+
+            T controller = loader.getController();
+
+            if (initData != null) {
+                if (controller instanceof BurgerSelectionController && initData instanceof Burger) {
+                    ((BurgerSelectionController) controller).setBurger((Burger) initData);
+                }
+                // Aagregar más casos para otros controllers
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+            stage.show();
+
+            return controller;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static void openOrderDetailsWindow(List<OrderDetail> orderDetails) {
@@ -33,9 +62,10 @@ public class WindowManager {
 
             OrderDetailsController controller = loader.getController();
 
+            Stage stage = new Stage();
+            controller.setStage(stage);
             controller.setOrderDetails(orderDetails);
 
-            Stage stage = new Stage();
             stage.setTitle("Detalle del Pedido - Kaos Burgers");
             stage.setScene(new Scene(root, 800, 600));
             stage.setResizable(false);

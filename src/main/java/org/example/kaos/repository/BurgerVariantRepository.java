@@ -10,7 +10,7 @@ import org.example.kaos.util.JpaUtil;
 import java.util.List;
 
 public class BurgerVariantRepository {
-    public List<BurgerVariant> findByBurgerId(int burgerId) {
+    public List<BurgerVariant> findByBurgerId(long burgerId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             TypedQuery<BurgerVariant> query = em.createQuery(
