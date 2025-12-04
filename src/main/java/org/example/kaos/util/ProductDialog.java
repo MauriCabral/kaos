@@ -45,7 +45,7 @@ public class ProductDialog {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setResizable(false);
 
-        VBox mainLayout = new VBox(15);
+        VBox mainLayout = new VBox(10);
         mainLayout.setPadding(new Insets(15));
         mainLayout.setAlignment(Pos.TOP_CENTER);
         mainLayout.setStyle("-fx-background-color: white;");
@@ -102,15 +102,19 @@ public class ProductDialog {
         VBox descriptionBox = new VBox(3);
         Label descriptionLabel = new Label("Descripción *");
         descriptionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
-        TextField descriptionField = new TextField();
-        descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 30px;");
+        //TextField descriptionField = new TextField();
+        //descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 30px;");
+        //descriptionBox.getChildren().addAll(descriptionLabel, descriptionField);
+        TextArea descriptionField = new TextArea();
+        descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 60px; -fx-wrap-text: true;");
+        descriptionField.setPrefRowCount(3);
         descriptionBox.getChildren().addAll(descriptionLabel, descriptionField);
 
         VBox priceBox = new VBox(3);
         Label priceLabel = new Label("Precio *");
         priceLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
         TextField priceField = new TextField();
-        priceField.setStyle("-fx-pref-width: 120px; -fx-pref-height: 30px;");
+        priceField.setStyle("-fx-pref-width: 60px; -fx-pref-height: 30px;");
         priceBox.getChildren().addAll(priceLabel, priceField);
 
         VBox burgerPricesBox = new VBox(3);
@@ -249,6 +253,7 @@ public class ProductDialog {
 
                 nameField.setText(burger.getName());
                 codeField.setText(burger.getCode());
+                descriptionField.setText(burger.getDescription());
                 for (BurgerVariant variant : burgerVariantList) {
                     if (variant.getVariantType().getId() == 1) { // SIMPLE
                         simplePriceField.setText(variant.getPrice().toString());
@@ -287,7 +292,7 @@ public class ProductDialog {
 
                     switch (selectedType) {
                         case "Burger":
-                            saveBurger(nameField.getText().trim(), codeField.getText().trim(), imageDataToUse,
+                            saveBurger(nameField.getText().trim(), codeField.getText().trim(), descriptionField.getText().trim(), imageDataToUse,
                                     Double.parseDouble(simplePriceField.getText()),
                                     Double.parseDouble(doblePriceField.getText()),
                                     Double.parseDouble(triplePriceField.getText()));
@@ -306,9 +311,9 @@ public class ProductDialog {
                             break;
                     }
 
-                    if (mode == ProductMode.ADD) {
-                        DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
-                    }
+//                    if (mode == ProductMode.ADD) {
+//                        DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
+//                    }
                     dialog.close();
 
                     if (onSuccessCallback != null) {
@@ -325,46 +330,23 @@ public class ProductDialog {
 
         mainLayout.getChildren().addAll(titleLabel, typeBox, previewBox, formLayout, errorLabel, buttonBox);
 
-        Scene scene = new Scene(mainLayout, 350, 600);
+        Scene scene = new Scene(mainLayout, 350, 650);
         dialog.setScene(scene);
         dialog.showAndWait();
     }
 
     private void updateFormForType(String type, VBox codeBox, VBox descriptionBox, VBox priceBox, VBox burgerPricesBox) {
-        switch (type) {
-            case "Burger":
-                codeBox.setVisible(true);
-                codeBox.setManaged(true);
-                descriptionBox.setVisible(false);
-                descriptionBox.setManaged(false);
-                priceBox.setVisible(false);
-                priceBox.setManaged(false);
-                burgerPricesBox.setVisible(true);
-                burgerPricesBox.setManaged(true);
-                break;
+        boolean isBurger = "Burger".equals(type);
+        boolean isExtraOrCombo = "Extra".equals(type) || "Combo".equals(type);
 
-            case "Extra":
-                codeBox.setVisible(false);
-                codeBox.setManaged(false);
-                descriptionBox.setVisible(true);
-                descriptionBox.setManaged(true);
-                priceBox.setVisible(true);
-                priceBox.setManaged(true);
-                burgerPricesBox.setVisible(false);
-                burgerPricesBox.setManaged(false);
-                break;
-
-            case "Combo":
-                codeBox.setVisible(false);
-                codeBox.setManaged(false);
-                descriptionBox.setVisible(true);
-                descriptionBox.setManaged(true);
-                priceBox.setVisible(true);
-                priceBox.setManaged(true);
-                burgerPricesBox.setVisible(false);
-                burgerPricesBox.setManaged(false);
-                break;
-        }
+        codeBox.setVisible(isBurger);
+        codeBox.setManaged(isBurger);
+        descriptionBox.setVisible(true);
+        descriptionBox.setManaged(true);
+        priceBox.setVisible(isExtraOrCombo);
+        priceBox.setManaged(isExtraOrCombo);
+        burgerPricesBox.setVisible(isBurger);
+        burgerPricesBox.setManaged(isBurger);
     }
 
     private boolean validateForm(String type, String name, String code, String description,
@@ -390,6 +372,11 @@ public class ProductDialog {
                 }
                 if (code == null || code.trim().length() != 2) {
                     errorLabel.setText("El código debe tener exactamente 2 caracteres");
+                    errorLabel.setVisible(true);
+                    return false;
+                }
+                if (description == null || description.trim().isEmpty()) {
+                    errorLabel.setText("La descripción es obligatoria");
                     errorLabel.setVisible(true);
                     return false;
                 }
@@ -475,12 +462,13 @@ public class ProductDialog {
         return true;
     }
 
-    private void saveBurger(String name, String code, byte[] imageData, double simplePrice, double doblePrice, double triplePrice) {
+    private void saveBurger(String name, String code, String description, byte[] imageData, double simplePrice, double doblePrice, double triplePrice) {
         boolean res = false;
         Burger burger = Burger.builder()
                 .id(isBurger ? ((Burger) productToEdit).getId() : 0)
                 .name(name.trim())
                 .code(code.trim().toUpperCase())
+                .description(description.trim())
                 .imageData(imageData)
                 .createdByUser(Session.getInstance().getCurrentUser().getId())
                 .build();

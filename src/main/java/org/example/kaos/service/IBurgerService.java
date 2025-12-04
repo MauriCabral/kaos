@@ -12,7 +12,7 @@ public interface IBurgerService {
     boolean nameExists(long id, String name);
     boolean saveBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice);
 
-    List<BurgerVariant> getVariantsByBurgerId(int id);
+    List<BurgerVariant> getVariantsByBurgerId(long id);
     boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice);
     Burger getBurgerById(int burgerId);
 

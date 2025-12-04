@@ -15,16 +15,18 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Burger {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
     @Column(nullable = false, unique = true, length = 2)
     private String code;
+
+    @Column(nullable = false, length = 200)
+    private String description;
 
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "image_data", columnDefinition = "BYTEA")

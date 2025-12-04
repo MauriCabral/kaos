@@ -1,0 +1,145 @@
+/* TOppings MANAGER STYLES */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #ffffff;
+}
+
+.title-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* FORMULARIO */
+.form-container {
+    -fx-background-color: #f8f9fa;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 15px;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+}
+
+.form-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555;
+}
+
+.text-field, .price-field {
+    -fx-pref-height: 35px;
+    -fx-font-size: 14px;
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 0 10px;
+}
+
+.text-field:focused, .price-field:focused {
+    -fx-border-color: #e9500e;
+}
+
+/* BOTÓN AGREGAR/ACTUALIZAR */
+.add-btn {
+    -fx-background-color: #28a745;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-min-width: 40px;
+    -fx-min-height: 35px;
+    -fx-cursor: hand;
+}
+
+.add-btn:hover {
+    -fx-background-color: #218838;
+}
+
+.plus-icon {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.cancel-edit-btn {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-min-width: 35px;
+    -fx-min-height: 35px;
+    -fx-cursor: hand;
+}
+
+.cancel-edit-btn:hover {
+    -fx-background-color: #c82333;
+}
+
+/* TABLA */
+.table-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.toppings-table {
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+.table-column {
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 13px;
+}
+
+.actions-column {
+    -fx-pref-width: 100px;
+    -fx-alignment: CENTER;
+}
+
+/* BOTONES */
+.cancel-btn {
+    -fx-background-color: #6c757d;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.cancel-btn:hover {
+    -fx-background-color: #5a6268;
+}
+
+.edit-btn {
+    -fx-background-color: #1976D2;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+}
+
+.check-icon {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.add-btn {
+    -fx-background-color: #4CAF50;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+}
+
+.plus-icon {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}

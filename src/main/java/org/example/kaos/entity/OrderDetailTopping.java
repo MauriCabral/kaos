@@ -11,7 +11,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class OrderDetailTopping {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,4 +25,27 @@ public class OrderDetailTopping {
 
     @Column(name = "is_added", nullable = false)
     private Boolean isAdded;
+
+    @Column(name = "price_per_unit")
+    private Double pricePerUnit;
+
+    @Column(name = "total_price", nullable = false)
+    private Double totalPrice;
+
+    @PrePersist
+    public void onCreate() {
+        calculateTotalPrice();
+    }
+
+    public void calculateTotalPrice() {
+        if (Boolean.TRUE.equals(isAdded) && pricePerUnit != null) {
+            this.totalPrice = pricePerUnit;
+        } else {
+            this.totalPrice = 0.0; // quitar topping = 0
+        }
+    }
+
+    public Boolean getIsAdded() {
+        return isAdded;
+    }
 }

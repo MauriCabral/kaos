@@ -11,6 +11,12 @@
         <class>org.example.kaos.entity.BurgerVariant</class>
         <class>org.example.kaos.entity.VariantType</class>
         <class>org.example.kaos.entity.Item</class>
+        <class>org.example.kaos.entity.Delivery</class>
+        <class>org.example.kaos.entity.Order</class>
+        <class>org.example.kaos.entity.OrderDetail</class>
+        <class>org.example.kaos.entity.PaymentMethod</class>
+        <class>org.example.kaos.entity.Topping</class>
+        <!--<class>org.example.kaos.entity.OrderDetailTopping</class>-->
 
         <properties>
 

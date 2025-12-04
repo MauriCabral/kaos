@@ -4,66 +4,95 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../css/burger-selection.css" fx:controller="org.example.kaos.controller.BurgerSelectionController">
-    <center>
-        <VBox spacing="20" style="-fx-padding: 20;">
-            <!-- Header -->
-            <Label text="Personaliza tu Burger" styleClass="header-label"/>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.BurgerSelectionController" stylesheets="@../css/burger-selection.css" prefWidth="780" prefHeight="750" spacing="0">
 
-            <!-- Burger Selection and Variants -->
-            <HBox spacing="20" style="-fx-alignment: center-left;">
-                <!-- Burger Image and Info -->
-                <VBox spacing="10" style="-fx-alignment: center;">
-                    <ImageView fx:id="burgerImageView" fitWidth="150" fitHeight="150"
-                               styleClass="burger-image"/>
-                    <Label fx:id="burgerNameLabel" styleClass="burger-name"/>
-                    <Label fx:id="burgerDescriptionLabel" styleClass="burger-description"
-                           wrapText="true" maxWidth="200"/>
-                </VBox>
+    <VBox styleClass="header" spacing="6">
+        <padding>
+            <Insets top="16" right="25" bottom="12" left="25"/>
+        </padding>
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label text="🍔" styleClass="burger-emoji"/>
+            <VBox spacing="1">
+                <Label text="Personalizar Burger" styleClass="header-title"/>
+                <Label fx:id="burgerNameLabel" styleClass="burger-subtitle"/>
+            </VBox>
+        </HBox>
+    </VBox>
 
-                <!-- Variant Selection -->
-                <VBox spacing="10" style="-fx-padding: 0 0 0 20;">
-                    <Label text="Selecciona el tipo:" styleClass="section-label"/>
-                    <VBox fx:id="variantsContainer" spacing="5"/>
-                </VBox>
-            </HBox>
+    <VBox spacing="15" VBox.vgrow="ALWAYS" style="-fx-padding: 20 25 15 25;">
 
-            <!-- Toppings Section -->
-            <VBox spacing="10">
-                <Label text="Toppings:" styleClass="section-label"/>
-                <ScrollPane fitToWidth="true" maxHeight="200" styleClass="toppings-scroll">
-                    <GridPane fx:id="toppingsGrid" hgap="10" vgap="5"
-                              styleClass="toppings-grid"/>
-                </ScrollPane>
-
-                <!-- Price Summary -->
-                <VBox spacing="5" styleClass="price-summary">
-                    <Label text="Resumen de Precio:" styleClass="summary-label"/>
-                    <HBox spacing="10">
-                        <Label text="Precio Base:" styleClass="price-label"/>
-                        <Label fx:id="basePriceLabel" text="0.00" styleClass="price-value"/>
-                    </HBox>
-                    <HBox spacing="10">
-                        <Label text="Toppings:" styleClass="price-label"/>
-                        <Label fx:id="toppingsPriceLabel" text="0.00" styleClass="price-value"/>
-                    </HBox>
-                    <HBox spacing="10" styleClass="total-row">
-                        <Label text="Total:" styleClass="total-label"/>
-                        <Label fx:id="totalPriceLabel" text="0.00" styleClass="total-value"/>
-                    </HBox>
-                </VBox>
+        <HBox spacing="25" alignment="TOP_LEFT">
+            <VBox spacing="12" alignment="TOP_CENTER" prefWidth="260">
+                <ImageView fx:id="burgerImageView" fitWidth="200" fitHeight="150"
+                           preserveRatio="true" styleClass="burger-image"/>
+                <Label fx:id="burgerDescriptionLabel" wrapText="true" prefWidth="220"
+                       styleClass="description-label"/>
             </VBox>
 
-            <!-- Action Buttons -->
-            <HBox spacing="10" style="-fx-alignment: center-right;">
-                <Button text="Cancelar" styleClass="cancel-button"
-                        onAction="#handleCancel"/>
-                <Button text="Agregar al Pedido" styleClass="add-button"
-                        onAction="#handleAddToOrder"/>
-            </HBox>
-        </VBox>
-    </center>
-</BorderPane>
+            <VBox spacing="12" prefWidth="460" VBox.vgrow="ALWAYS">
+                <VBox spacing="6">
+                    <Label text="TIPO DE BURGER" styleClass="section-label"/>
+                    <ComboBox fx:id="variantComboBox" prefWidth="140" prefHeight="36" styleClass="variant-combo"/>
+                    <Label fx:id="llbCbo" text="Selecciona un tipo." styleClass="hint-label"/>
+                </VBox>
+
+                <Separator styleClass="elegant-separator"/>
+
+                <VBox spacing="6" VBox.vgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="0">
+                        <Label text="TOPPINGS" styleClass="toppings-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <HBox spacing="8" alignment="CENTER_RIGHT" style="-fx-padding: 0 10 0 0;">
+                            <!--<Label text="Sí" styleClass="radio-header"/>
+                            <Label text="No" styleClass="radio-header"/>-->
+                        </HBox>
+                    </HBox>
+
+                    <VBox styleClass="toppings-container" VBox.vgrow="ALWAYS">
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                    prefHeight="300" styleClass="toppings-scroll">
+                            <VBox fx:id="toppingsContainer" spacing="3" style="-fx-padding: 8;"/>
+                        </ScrollPane>
+                    </VBox>
+                </VBox>
+
+                <Separator styleClass="elegant-separator"/>
+
+                <VBox spacing="6">
+                    <Label text="OBSERVACIONES ESPECIALES" styleClass="section-label"/>
+                    <TextArea fx:id="observationsField"
+                              promptText="Ej: Sin salsa, cambiar salsa a ..."
+                              wrapText="true" prefRowCount="2" styleClass="observations-field"/>
+                    <!--<Label text="Solicita modificaciones aquí" styleClass="hint-label"/>-->
+                </VBox>
+            </VBox>
+        </HBox>
+
+        <HBox styleClass="summary-container" spacing="50" alignment="CENTER" prefHeight="80">
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="BASE" styleClass="summary-label"/>
+                <Label fx:id="basePriceLabel" text="0.00" styleClass="price-base"/>
+            </VBox>
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="TOPPINGS" styleClass="summary-label"/>
+                <Label fx:id="toppingsPriceLabel" text="0.00" styleClass="price-toppings"/>
+            </VBox>
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="TOTAL" styleClass="summary-total-label"/>
+                <Label fx:id="totalPriceLabel" text="0.00" styleClass="price-total"/>
+            </VBox>
+        </HBox>
+
+    </VBox>
+
+    <HBox styleClass="footer" spacing="12" alignment="CENTER_RIGHT">
+        <padding>
+            <Insets top="16" right="25" bottom="16" left="25"/>
+        </padding>
+        <Button text="Cancelar" styleClass="cancel-btn" onAction="#handleCancel"
+                minWidth="100" prefHeight="40"/>
+        <Button text="Agregar al Pedido" styleClass="confirm-btn" onAction="#handleAddToOrder"
+                minWidth="150" prefHeight="40"/>
+    </HBox>
+</VBox>

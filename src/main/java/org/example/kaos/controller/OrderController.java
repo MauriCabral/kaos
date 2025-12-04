@@ -12,7 +12,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import org.example.kaos.entity.*;
 import org.example.kaos.service.IBurgerService;
 import org.example.kaos.service.IVariantService;
@@ -42,6 +41,7 @@ public class OrderController implements Initializable {
     @FXML private ListView<String> orderItemsList;
     @FXML private Label totalAmount;
     @FXML private Button editProductsBtn;
+    @FXML private Button toppingsBtn;
 
     private final IBurgerService burgerService = new BurgerServiceImpl();
     private final IExtraItemService extraItemService = new ExtraItemServiceImpl();
@@ -66,8 +66,21 @@ public class OrderController implements Initializable {
         loadAllProductsFromDatabase();
     }
 
+    private void buttonInitialize() {
+        if (Session.getInstance().getCurrentUser().getId() == 1) {
+            showAddButton();
+            editProductsBtn.setVisible(true);
+            toppingsBtn.setVisible(true);
+        } else {
+            editProductsBtn.setVisible(false);
+            toppingsBtn.setVisible(false);
+        }
+    }
+
     private void loadAllProductsFromDatabase() {
         try {
+            buttonInitialize();
+
             productsFlowPane.getChildren().clear();
 
             // 1. CARGAR BURGERS
@@ -90,11 +103,6 @@ public class OrderController implements Initializable {
                 VBox comboCard = createExtraItemCard(combo, "COMBO");
                 productsFlowPane.getChildren().add(comboCard);
             }
-
-            if (Session.getInstance().getCurrentUser().getId() == 1) {
-                showAddButton();
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
             if (Session.getInstance().getCurrentUser().getId() == 1) {
@@ -107,6 +115,12 @@ public class OrderController implements Initializable {
         VBox card = new VBox();
         card.getStyleClass().add("product-card");
         card.setUserData(burger);
+
+        if (burger.getDescription() != null && !burger.getDescription().trim().isEmpty()) {
+            Tooltip tooltip = new Tooltip(burger.getDescription());
+            tooltip.setStyle("-fx-font-size: 12px; -fx-max-width: 300px; -fx-wrap-text: true;");
+            Tooltip.install(card, tooltip);
+        }
 
         StackPane imageContainer = new StackPane();
         imageContainer.getStyleClass().add("image-container");
@@ -135,6 +149,8 @@ public class OrderController implements Initializable {
         card.setOnMouseClicked(event -> {
             if (isEditMode) {
                 editProduct(burger);
+            } else {
+                openBurgerSelection(burger);
             }
         });
 
@@ -238,6 +254,12 @@ public class OrderController implements Initializable {
         VBox card = new VBox();
         card.getStyleClass().add("product-card");
         card.setUserData(extraItem);
+
+        if (extraItem.getDescription() != null && !extraItem.getDescription().trim().isEmpty()) {
+            Tooltip tooltip = new Tooltip(extraItem.getDescription());
+            tooltip.setStyle("-fx-font-size: 12px; -fx-max-width: 300px; -fx-wrap-text: true;");
+            Tooltip.install(card, tooltip);
+        }
 
         StackPane imageContainer = new StackPane();
         imageContainer.setMaxSize(100, 100);
@@ -377,11 +399,11 @@ public class OrderController implements Initializable {
         OrderDetail orderDetail = null;
 
         if (currentSelectedBurger != null) {
-            Double unitPrice = getBurgerVariantPrice((long)currentSelectedBurger.getId(), currentSelectedVariantId);
+            BurgerVariant selectedVariant = getBurgerVariantById(currentSelectedBurger, currentSelectedVariantId);
+            Double unitPrice = selectedVariant != null ? selectedVariant.getPrice() : 0.0;
             orderDetail = OrderDetail.builder()
-                    .productType("BURGER")
-                    .productId((long)currentSelectedBurger.getId())
-                    .productName(currentSelectedBurger.getName() + " (" + currentSelectedVariantName + ")")
+                    .burgerVariant(selectedVariant)
+                    .productName(currentSelectedBurger.getName())
                     .variantName(currentSelectedVariantName)
                     .unitPrice(unitPrice)
                     .quantity(quantity)
@@ -389,8 +411,7 @@ public class OrderController implements Initializable {
 
         } else if (currentSelectedExtra != null) {
             orderDetail = OrderDetail.builder()
-                    .productType("EXTRA")
-                    .productId(currentSelectedExtra.getId())
+                    .extraItem(currentSelectedExtra)
                     .productName(currentSelectedExtra.getName())
                     .variantName(null)
                     .unitPrice(currentSelectedExtra.getPrice())
@@ -399,8 +420,7 @@ public class OrderController implements Initializable {
 
         } else if (currentSelectedCombo != null) {
             orderDetail = OrderDetail.builder()
-                    .productType("COMBO")
-                    .productId(currentSelectedCombo.getId())
+                    .extraItem(currentSelectedCombo)
                     .productName(currentSelectedCombo.getName())
                     .variantName(null)
                     .unitPrice(currentSelectedCombo.getPrice())
@@ -409,8 +429,7 @@ public class OrderController implements Initializable {
         }
 
         if (orderDetail != null) {
-            // Calcular subtotal inmediatamente
-            orderDetail.setSubtotal(orderDetail.getUnitPrice() * orderDetail.getQuantity());
+            //orderDetail.setSubtotal(orderDetail.getUnitPrice() * orderDetail.getQuantity());
 
             currentOrderDetails.add(orderDetail);
 
@@ -423,6 +442,13 @@ public class OrderController implements Initializable {
         }
 
         clearSelection();
+    }
+
+    private BurgerVariant getBurgerVariantById(Burger burger, Long variantId) {
+        return burger.getVariants().stream()
+                .filter(variant -> variant.getId().equals(variantId))
+                .findFirst()
+                .orElse(null);
     }
 
     private void clearSelection() {
@@ -545,5 +571,29 @@ public class OrderController implements Initializable {
             System.err.println("Error al obtener precio de variante: " + e.getMessage());
         }
         return null;
+    }
+
+    private void openBurgerSelection(Burger burger) {
+        BurgerSelectionController controller = WindowManager.openWindow("/fxml/burger-selection.fxml", "Personalizar Burger - Kaos Burgers", burger);
+
+        if (controller != null && controller.isConfirmed()) {
+            OrderDetail orderDetail = controller.getResultOrderDetail();
+            List<OrderDetailTopping> toppings = controller.getSelectedToppings();
+
+            currentOrderDetails.add(orderDetail);
+
+            if (toppings != null && !toppings.isEmpty()) {
+                System.out.println("Toppings agregados: " + toppings.size());
+            }
+        }
+    }
+
+    public void openToppingsManager(ActionEvent actionEvent) {
+        try {
+            WindowManager.openWindow("/fxml/toppings-manager.fxml", "Gestión de Toppings - Kaos Burgers", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            DialogUtil.showError("Error", "No se pudo abrir el gestor de toppings.");
+        }
     }
 }
