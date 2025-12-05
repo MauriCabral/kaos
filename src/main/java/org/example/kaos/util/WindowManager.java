@@ -40,13 +40,13 @@ public class WindowManager {
                 if (controller instanceof BurgerSelectionController && initData instanceof Burger) {
                     ((BurgerSelectionController) controller).setBurger((Burger) initData);
                 }
-                // Aagregar más casos para otros controllers
             }
 
             Stage stage = new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root));
-            stage.show();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
 
             return controller;
         } catch (IOException e) {

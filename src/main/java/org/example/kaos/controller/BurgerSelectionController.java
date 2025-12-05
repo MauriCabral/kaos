@@ -15,6 +15,7 @@ import org.example.kaos.service.IVariantService;
 import org.example.kaos.service.implementation.BurgerServiceImpl;
 import org.example.kaos.service.implementation.ToppingServiceImpl;
 import org.example.kaos.service.implementation.VariantServiceImpl;
+import org.example.kaos.util.WindowManager;
 
 import java.net.URL;
 import java.util.*;
@@ -163,24 +164,59 @@ public class BurgerSelectionController implements Initializable {
             Label priceLabel = new Label(String.format("+$%.2f", topping.getPrice()));
             priceLabel.getStyleClass().add("topping-price");
 
-            ToggleGroup tg = new ToggleGroup();
+            //ToggleGroup tg = new ToggleGroup();
             RadioButton rbYes = new RadioButton("Sí");
             RadioButton rbNo = new RadioButton("No");
 
             rbYes.getStyleClass().add("radio-button");
             rbNo.getStyleClass().add("radio-button");
 
-            rbYes.setToggleGroup(tg);
-            rbNo.setToggleGroup(tg);
-            rbNo.setSelected(true);
+            rbYes.setSelected(false);
+            rbNo.setSelected(false);
+            //rbYes.setToggleGroup(tg);
+            //rbNo.setToggleGroup(tg);
+            //rbNo.setSelected(true);
+
+            rbYes.setUserData(topping);
+            rbNo.setUserData(topping);
+
+            // Manejar clic en "Sí" con comportamiento toggle
+            rbYes.setOnAction(e -> {
+                Topping currentTopping = (Topping) rbYes.getUserData();
+
+                if (rbYes.isSelected()) {
+                    // Si "Sí" se acaba de seleccionar, asegurar que "No" esté deseleccionado
+                    rbNo.setSelected(false);
+                    handleToppingSelection(currentTopping, true);
+                } else {
+                    // Si "Sí" se deseleccionó, limpiar selección
+                    handleToppingSelection(currentTopping, null);
+                }
+                updatePrice();
+            });
+
+            // Manejar clic en "No" con comportamiento toggle
+            rbNo.setOnAction(e -> {
+                Topping currentTopping = (Topping) rbNo.getUserData();
+
+                if (rbNo.isSelected()) {
+                    // Si "No" se acaba de seleccionar, asegurar que "Sí" esté deseleccionado
+                    rbYes.setSelected(false);
+                    handleToppingSelection(currentTopping, false);
+                } else {
+                    // Si "No" se deseleccionó, limpiar selección
+                    handleToppingSelection(currentTopping, null);
+                }
+                updatePrice();
+            });
 
             HBox radioBox = new HBox(8, rbYes, rbNo);
             radioBox.getStyleClass().add("radio-box");
             radioBox.setAlignment(Pos.CENTER_RIGHT);
 
-            tg.selectedToggleProperty().addListener((o, oldVal, newVal) -> {
-                handleToppingSelection(topping, newVal == rbYes);
-            });
+//            tg.selectedToggleProperty().addListener((o, oldVal, newVal) -> {
+//                handleToppingSelection(topping, newVal == rbYes);
+//            });
 
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -188,23 +224,21 @@ public class BurgerSelectionController implements Initializable {
             row.getChildren().addAll(nameLabel, priceLabel, spacer, radioBox);
             toppingsContainer.getChildren().add(row);
 
-            toppingRadioGroups.put(topping, tg);
+            //toppingRadioGroups.put(topping, tg);
         }
     }
 
-    private void handleToppingSelection(Topping topping, boolean isSelected) {
+    private void handleToppingSelection(Topping topping, Boolean isAdded) {
         selectedToppings.removeIf(odt -> odt.getTopping().equals(topping));
 
-        if (isSelected) {
+        if (isAdded != null) {
             OrderDetailTopping odt = new OrderDetailTopping();
             odt.setTopping(topping);
-            odt.setIsAdded(true);
+            odt.setIsAdded(isAdded);
             odt.setPricePerUnit(topping.getPrice());
             odt.calculateTotalPrice();
             selectedToppings.add(odt);
         }
-
-        updatePrice();
     }
 
     private void updatePrice() {
@@ -234,14 +268,10 @@ public class BurgerSelectionController implements Initializable {
 
         OrderDetail orderDetail = new OrderDetail();
 
-        // Crear una nueva instancia desacoplada
         BurgerVariant detachedVariant = new BurgerVariant();
         detachedVariant.setId(selectedVariant.getId());
 
-        // variantType es EAGER, así que debería estar disponible
-        // Solo necesitamos crear una nueva instancia si selectedVariant.getVariantType() es null
         if (selectedVariant.getVariantType() != null) {
-            // Crear una copia del VariantType
             VariantType variantType = new VariantType();
             variantType.setId(selectedVariant.getVariantType().getId());
             variantType.setName(selectedVariant.getVariantType().getName());
@@ -254,7 +284,6 @@ public class BurgerSelectionController implements Initializable {
         orderDetail.setBurgerVariant(detachedVariant);
         orderDetail.setProductName(selectedBurger.getName());
 
-        // Obtener el nombre de la variante
         String variantName = selectedVariant.getVariantType() != null ?
                 selectedVariant.getVariantType().getName() : "Desconocido";
         orderDetail.setVariantName(variantName);
@@ -265,17 +294,17 @@ public class BurgerSelectionController implements Initializable {
         double basePrice = selectedVariant.getPrice();
         double toppingsTotal = 0;
 
-        List<OrderDetailTopping> toppingsForOrder = new ArrayList<>();
         for (OrderDetailTopping toppingSelection : selectedToppings) {
-            if (Boolean.TRUE.equals(toppingSelection.getIsAdded())) {
-                OrderDetailTopping odt = new OrderDetailTopping();
-                odt.setTopping(toppingSelection.getTopping());
-                odt.setIsAdded(true);
-                odt.setPricePerUnit(toppingSelection.getPricePerUnit());
-                odt.calculateTotalPrice();
-                odt.setOrderDetail(orderDetail);
-                toppingsForOrder.add(odt);
+            OrderDetailTopping odt = new OrderDetailTopping();
+            odt.setTopping(toppingSelection.getTopping());
+            odt.setIsAdded(toppingSelection.getIsAdded());
+            odt.setPricePerUnit(toppingSelection.getPricePerUnit());
+            odt.calculateTotalPrice();
 
+            odt.setOrderDetail(orderDetail);
+            orderDetail.getOrderDetailToppings().add(odt);
+
+            if (Boolean.TRUE.equals(toppingSelection.getIsAdded())) {
                 toppingsTotal += odt.getTotalPrice();
             }
         }

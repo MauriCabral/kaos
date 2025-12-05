@@ -83,21 +83,18 @@ public class OrderController implements Initializable {
 
             productsFlowPane.getChildren().clear();
 
-            // 1. CARGAR BURGERS
             List<Burger> burgers = burgerService.getAllBurgers();
             for (Burger burger : burgers) {
                 VBox burgerCard = createBurgerCard(burger);
                 productsFlowPane.getChildren().add(burgerCard);
             }
 
-            // 2. CARGAR EL ÚNICO EXTRA (PAPAS) - extra_id = 1
-            singleExtra = extraItemService.getSingleExtra(); // CAMBIADO: usa getSingleExtra() no getExtraItemById(1)
+            singleExtra = extraItemService.getSingleExtra();
             if (singleExtra != null) {
                 VBox extraCard = createExtraItemCard(singleExtra, "EXTRA");
                 productsFlowPane.getChildren().add(extraCard);
             }
 
-            // 3. CARGAR COMBOS (extra_id = 2)
             combos = extraItemService.getAllCombos();
             for (ExtraItem combo : combos) {
                 VBox comboCard = createExtraItemCard(combo, "COMBO");
@@ -399,17 +396,14 @@ public class OrderController implements Initializable {
         OrderDetail orderDetail = null;
 
         if (currentSelectedBurger != null) {
-            // Obtener precio directamente de la lista de variantes
             Double unitPrice = getBurgerVariantPrice(currentSelectedBurger.getId(), currentSelectedVariantId);
             if (unitPrice == null) unitPrice = 0.0;
 
-            // Crear variante desacoplada
             BurgerVariant variant = new BurgerVariant();
             variant.setId(currentSelectedVariantId);
 
-            // Crear VariantType básico con el nombre que ya tenemos
             VariantType variantType = new VariantType();
-            variantType.setId(currentSelectedVariantId); // Usar el mismo ID temporalmente
+            variantType.setId(currentSelectedVariantId);
             variantType.setName(currentSelectedVariantName);
             variant.setVariantType(variantType);
 

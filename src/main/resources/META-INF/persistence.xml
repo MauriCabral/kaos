@@ -16,7 +16,7 @@
         <class>org.example.kaos.entity.OrderDetail</class>
         <class>org.example.kaos.entity.PaymentMethod</class>
         <class>org.example.kaos.entity.Topping</class>
-        <!--<class>org.example.kaos.entity.OrderDetailTopping</class>-->
+        <class>org.example.kaos.entity.OrderDetailTopping</class>
 
         <properties>
 
