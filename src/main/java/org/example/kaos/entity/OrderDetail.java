@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "order_details")
@@ -50,6 +52,10 @@ public class OrderDetail {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<OrderDetailTopping> orderDetailToppings = new ArrayList<>();
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
@@ -65,5 +71,23 @@ public class OrderDetail {
         if (unitPrice != null && quantity != null) {
             this.subtotal = unitPrice * quantity;
         }
+    }
+
+    public List<OrderDetailTopping> getOrderDetailToppings() {
+        return orderDetailToppings;
+    }
+
+    public void setOrderDetailToppings(List<OrderDetailTopping> orderDetailToppings) {
+        this.orderDetailToppings = orderDetailToppings;
+        if (orderDetailToppings != null) {
+            for (OrderDetailTopping topping : orderDetailToppings) {
+                topping.setOrderDetail(this);
+            }
+        }
+    }
+
+    public void addOrderDetailTopping(OrderDetailTopping topping) {
+        orderDetailToppings.add(topping);
+        topping.setOrderDetail(this);
     }
 }

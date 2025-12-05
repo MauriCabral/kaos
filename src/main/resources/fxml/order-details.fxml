@@ -6,10 +6,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.kaos.controller.OrderDetailsController"
-      stylesheets="@../css/order-details.css"
-      prefWidth="850" prefHeight="600" spacing="0">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.OrderDetailsController" stylesheets="@../css/order-details.css" prefWidth="850" prefHeight="600" spacing="0">
 
     <!-- HEADER COMPACTO -->
     <HBox styleClass="header" alignment="CENTER" spacing="10">

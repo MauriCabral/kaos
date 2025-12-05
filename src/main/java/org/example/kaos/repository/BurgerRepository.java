@@ -172,10 +172,16 @@ public class BurgerRepository {
         try {
             em.getTransaction().begin();
 
-            Burger managedBurger = em.merge(burger);
+            List<BurgerVariant> variants = em.createQuery(
+                            "SELECT v FROM BurgerVariant v WHERE v.burger.id = :burgerId",
+                            BurgerVariant.class)
+                    .setParameter("burgerId", burger.getId())
+                    .getResultList();
 
-            for (BurgerVariant variant : managedBurger.getVariants()) {
-                long variantTypeId = variant.getVariantType().getId();
+            for (BurgerVariant variant : variants) {
+                VariantType variantType = variant.getVariantType();
+                Long variantTypeId = variantType.getId();
+
                 if (variantTypeId == 1L) {
                     variant.setPrice(simplePrice);
                 } else if (variantTypeId == 2L) {
@@ -183,7 +189,6 @@ public class BurgerRepository {
                 } else if (variantTypeId == 3L) {
                     variant.setPrice(triplePrice);
                 }
-
                 em.merge(variant);
             }
             em.getTransaction().commit();
