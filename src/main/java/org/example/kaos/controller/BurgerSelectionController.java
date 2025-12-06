@@ -289,7 +289,7 @@ public class BurgerSelectionController implements Initializable {
         orderDetail.setVariantName(variantName);
 
         orderDetail.setQuantity(1);
-        orderDetail.setObservations(observationsField.getText());
+        orderDetail.setObservations(observationsField.getText().trim().isEmpty() ? observationsField.getText().trim() : null);
 
         double basePrice = selectedVariant.getPrice();
         double toppingsTotal = 0;

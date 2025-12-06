@@ -22,11 +22,20 @@ public class Order {
     @Column(name = "order_number", unique = true)
     private String orderNumber;
 
+    @Column(name = "customer_name", nullable = false)
+    private String customerName;
+
+    @Column(name = "customer_address")
+    private String customerAddress;
+
+    @Column(name = "customer_phone")
+    private String customerPhone;
+
     @Column(name = "is_delivery")
     private Boolean isDelivery = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "delivery_id")
+    @JoinColumn(name = "delivery_id", nullable = true)
     private Delivery delivery;
 
     @Column(name = "cash_amount")
@@ -38,6 +47,9 @@ public class Order {
     @Column(name = "delivery_amount")
     private Double deliveryAmount = 0.0;
 
+    @Column(name = "subtotal", nullable = false)
+    private Double subtotal = 0.0;
+
     @Column(name = "total", nullable = false)
     private Double total = 0.0;
 
@@ -45,7 +57,12 @@ public class Order {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", nullable = false)
+    private User createdByUser;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<OrderDetail> orderDetails = new ArrayList<>();
 
     @Column(name = "notes", length = 500)
@@ -54,11 +71,22 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
-        if (orderNumber == null) {
-            orderNumber = "ORD-" + (System.currentTimeMillis() % 10000);
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    @PostPersist
+    public void generateOrderNumber() {
+        if (orderNumber == null && id != null) {
+            orderNumber = String.format("ORD-%04d", id);
         }
     }
 }

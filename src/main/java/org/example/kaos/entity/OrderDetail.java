@@ -52,6 +52,9 @@ public class OrderDetail {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<OrderDetailTopping> orderDetailToppings = new ArrayList<>();
@@ -59,35 +62,18 @@ public class OrderDetail {
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
-        calculateSubtotal();
+        if (this.subtotal == null && this.unitPrice != null && this.quantity != null) {
+            this.subtotal = this.unitPrice * this.quantity;
+        }
     }
 
-    @PreUpdate
-    public void onUpdate() {
-        calculateSubtotal();
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
     }
 
     public void calculateSubtotal() {
         if (unitPrice != null && quantity != null) {
             this.subtotal = unitPrice * quantity;
         }
-    }
-
-    public List<OrderDetailTopping> getOrderDetailToppings() {
-        return orderDetailToppings;
-    }
-
-    public void setOrderDetailToppings(List<OrderDetailTopping> orderDetailToppings) {
-        this.orderDetailToppings = orderDetailToppings;
-        if (orderDetailToppings != null) {
-            for (OrderDetailTopping topping : orderDetailToppings) {
-                topping.setOrderDetail(this);
-            }
-        }
-    }
-
-    public void addOrderDetailTopping(OrderDetailTopping topping) {
-        orderDetailToppings.add(topping);
-        topping.setOrderDetail(this);
     }
 }

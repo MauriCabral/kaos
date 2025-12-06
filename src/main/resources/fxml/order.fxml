@@ -22,13 +22,13 @@
 
                 <!-- BOTONES DE ADMINISTRACIÓN -->
                 <HBox spacing="10" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                    <Button fx:id="toppingsBtn" styleClass="edit-products-btn" onAction="#openToppingsManager" visible="false" text="📝">
+                    <Button fx:id="toppingsBtn" styleClass="edit-products-btn" onAction="#openToppingsManager" visible="false" text="T">
                         <tooltip>
                             <Tooltip text="Gestionar Toppings" />
                         </tooltip>
                         <graphic>
                             <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
-                                <!--<Image url="@../image/Topping.png"/> -->
+                                <Image url="@../image/Edit.png"/>
                             </ImageView>
                         </graphic>
                     </Button>

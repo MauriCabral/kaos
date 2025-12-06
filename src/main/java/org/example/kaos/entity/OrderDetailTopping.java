@@ -3,6 +3,8 @@ package org.example.kaos.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "order_detail_toppings")
 @Getter
@@ -23,6 +25,10 @@ public class OrderDetailTopping {
     @JoinColumn(name = "topping_id", nullable = false)
     private Topping topping;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "burger_variant_id")
+    private BurgerVariant burgerVariant;
+
     @Column(name = "is_added", nullable = false)
     private Boolean isAdded;
 
@@ -32,9 +38,20 @@ public class OrderDetailTopping {
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     public void onCreate() {
+        createdAt = LocalDateTime.now();
         calculateTotalPrice();
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
     }
 
     public void calculateTotalPrice() {
@@ -43,9 +60,5 @@ public class OrderDetailTopping {
         } else {
             this.totalPrice = 0.0; // quitar topping = 0
         }
-    }
-
-    public Boolean getIsAdded() {
-        return isAdded;
     }
 }

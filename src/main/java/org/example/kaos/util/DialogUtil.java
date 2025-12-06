@@ -4,6 +4,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.stage.Modality;
 
 import java.util.Optional;
 
@@ -14,7 +15,8 @@ public class DialogUtil {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.showAndWait();
+        alert.initModality(Modality.NONE);
+        alert.show();
     }
 
     public static void showError(String title, String message) {
@@ -22,7 +24,8 @@ public class DialogUtil {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.showAndWait();
+        alert.initModality(Modality.NONE);
+        alert.show();
     }
 
     public static void showWarning(String title, String message) {
@@ -30,7 +33,8 @@ public class DialogUtil {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.showAndWait();
+        alert.initModality(Modality.NONE);
+        alert.show();
     }
 
     public static boolean showConfirmation(String title, String message) {
@@ -43,6 +47,7 @@ public class DialogUtil {
         ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
         alert.getButtonTypes().setAll(yesButton, noButton);
 
+        alert.initModality(Modality.NONE);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == yesButton;
     }

@@ -1,5 +1,6 @@
 package org.example.kaos.controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,10 +10,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.example.kaos.entity.Order;
-import org.example.kaos.entity.OrderDetail;
-import org.example.kaos.entity.OrderDetailTopping;
-import org.example.kaos.entity.Store;
+import org.example.kaos.entity.*;
+import org.example.kaos.service.IOrderDetailService;
+import org.example.kaos.service.IOrderService;
+import org.example.kaos.service.implementation.OrderDetailServiceImpl;
+import org.example.kaos.service.implementation.OrderServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 
@@ -37,8 +39,18 @@ public class OrderDetailsController {
     @FXML private CheckBox transferCheckBox;
     @FXML private TextField transferAmountField;
 
+    private final IOrderService orderService = new OrderServiceImpl();
+    private final IOrderDetailService orderDetailService = new OrderDetailServiceImpl();
+
     private List<OrderDetail> orderDetails;
     private Stage stage;
+    private boolean orderConfirmed = false;
+
+    private double cash = 0;
+    private double transfer = 0;
+    private double delivery = 0;
+    private double subtotal = 0;
+    private double total = 0;
 
     public void initialize() {
         setupDefaultData();
@@ -55,7 +67,7 @@ public class OrderDetailsController {
     }
 
     private void setupDefaultData() {
-        orderNumberLabel.setText("#ORD-" + (System.currentTimeMillis() % 10000));
+        orderNumberLabel.setText("#ORD-"/* + (System.currentTimeMillis() % 10000)*/);
         customerNameField.setText("");
         deliveryPriceField.setText("2000");
         cashAmountField.setText("0.00");
@@ -161,7 +173,6 @@ public class OrderDetailsController {
             VBox toppingsBox = new VBox(3);
             toppingsBox.setPadding(new Insets(5, 0, 0, 10));
 
-            // Separar toppings
             List<OrderDetailTopping> addedToppings = new ArrayList<>();
             List<OrderDetailTopping> notAddedToppings = new ArrayList<>();
 
@@ -173,11 +184,9 @@ public class OrderDetailsController {
                 }
             }
 
-            // Solo mostrar toppings si hay de algún tipo
             if (!addedToppings.isEmpty() || !notAddedToppings.isEmpty()) {
                 HBox toppingsColumns = new HBox(20);
 
-                // Columna agregados
                 if (!addedToppings.isEmpty()) {
                     VBox addedColumn = new VBox(3);
                     Label addedLabel = new Label("Agregados:");
@@ -192,7 +201,6 @@ public class OrderDetailsController {
                     toppingsColumns.getChildren().add(addedColumn);
                 }
 
-                // Columna no agregados
                 if (!notAddedToppings.isEmpty()) {
                     VBox notAddedColumn = new VBox(3);
                     Label notAddedLabel = new Label("No agregados:");
@@ -215,7 +223,6 @@ public class OrderDetailsController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Botón eliminar pequeño y redondo
         Button deleteBtn = new Button("✕");
         deleteBtn.getStyleClass().add("delete-btn");
         deleteBtn.setOnAction(e -> removeItem(detail));
@@ -232,39 +239,162 @@ public class OrderDetailsController {
     }
 
     @FXML
-    private void confirmOrder() {
-        if (customerNameField.getText().trim().isEmpty()) {
-            DialogUtil.showError("Error", "El nombre del cliente es obligatorio");
-            return;
-        }
-
+    private void confirmOrder(ActionEvent event) {
         try {
-            double cash = cashCheckBox.isSelected() ? Double.parseDouble(cashAmountField.getText()) : 0;
-            double transfer = transferCheckBox.isSelected() ? Double.parseDouble(transferAmountField.getText()) : 0;
-            double total = calculateTotal();
-            double delivery = deliveryCheckBox.isSelected() ? Double.parseDouble(deliveryPriceField.getText()) : 0;
+            orderConfirmed = false;
 
-            Store store = Session.getInstance().getCurrentUser().getStore();
+            boolean valid = validator();
 
-            Order order = Order.builder()
-                    .isDelivery(deliveryCheckBox.isSelected())
-                    .cashAmount(cash)
-                    .transferAmount(transfer)
-                    .deliveryAmount(delivery)
-                    .total(total)
-                    .notes(notesTextArea.getText())
-                    .store(store)
-                    .build();
+            if (valid) {
 
-            DialogUtil.showInfo("Éxito", "Pedido confirmado correctamente");
-            if (stage != null) stage.close();
+                Store store = Session.getInstance().getCurrentUser().getStore();
+                User currentUser = Session.getInstance().getCurrentUser();
 
-        } catch (Exception e) {
-            DialogUtil.showError("Error", "Verifique que todos los montos sean números válidos");
+                Order order = Order.builder()
+                        .orderNumber(orderNumberLabel.getText())
+                        .customerName(customerNameField.getText().trim())
+                        .customerAddress(customerAddressField.getText().trim())
+                        .customerPhone(customerPhoneField.getText().trim())
+                        .isDelivery(deliveryCheckBox.isSelected())
+                        .cashAmount(cash)
+                        .transferAmount(transfer)
+                        .deliveryAmount(delivery)
+                        .subtotal(subtotal)
+                        .total(total)
+                        .notes(notesTextArea.getText())
+                        .store(store)
+                        .createdByUser(currentUser)
+                        .build();
+
+                Order savedOrder = orderService.createOrder(order);
+
+                if (savedOrder == null || savedOrder.getId() == null) {
+                    DialogUtil.showError("Error", "No se pudo crear la orden");
+                    event.consume();
+                    return;
+                }
+
+                boolean allDetailsSaved = true;
+                for (OrderDetail detail : orderDetails) {
+                    try {
+                        detail.setOrder(savedOrder);
+                        orderDetailService.saveOrderDetail(detail);
+                    } catch (Exception e) {
+                        allDetailsSaved = false;
+                        e.printStackTrace();
+                        DialogUtil.showError("Error", "Error al guardar un item: " + e.getMessage());
+                    }
+                }
+
+                if (!allDetailsSaved) {
+                    DialogUtil.showError("Error", "No se pudieron guardar todos los items de la orden");
+                    return;
+                }
+
+                orderConfirmed = true;
+
+                /*DialogUtil.showInfo("Éxito",
+                        String.format("Pedido %s confirmado correctamente\n\n" +
+                                        "Cliente: %s\n" +
+                                        "Total: $%.2f\n" +
+                                        "Efectivo: $%.2f\n" +
+                                        "Transferencia: $%.2f",
+                                savedOrder.getOrderNumber(),
+                                savedOrder.getCustomerName(),
+                                savedOrder.getTotal(),
+                                savedOrder.getCashAmount(),
+                                savedOrder.getTransferAmount()));*/
+                DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
+
+                if (stage != null && orderConfirmed) {
+                    stage.close();
+                }
+            }
+
+        } catch (NumberFormatException e) {
+            DialogUtil.showError("Error", "Verifique que todos los montos sean números válidos\nEjemplo: 1500.50");
         }
     }
 
-    private double calculateTotal() {
+    private boolean validator() {
+        boolean res = true;
+
+        if (customerNameField.getText().trim().isEmpty()) {
+            DialogUtil.showWarning("Error", "El nombre del cliente es obligatorio");
+            customerNameField.requestFocus();
+            return false;
+        }
+
+        if (customerAddressField.getText().trim().isEmpty()) {
+            DialogUtil.showError("Error", "La dirección del cliente es obligatoria");
+            customerAddressField.requestFocus();
+            return false;
+        }
+
+        if (customerPhoneField.getText().trim().isEmpty()) {
+            DialogUtil.showError("Error", "El teléfono del cliente es obligatorio");
+            customerPhoneField.requestFocus();
+            return false;
+        }
+
+        try {
+            cash = 0;
+            transfer = 0;
+            delivery = 0;
+
+            if (cashCheckBox.isSelected()) {
+                cash = Double.parseDouble(cashAmountField.getText());
+                if (cash < 0) {
+                    DialogUtil.showError("Error", "El monto en efectivo no puede ser negativo");
+                    cashAmountField.requestFocus();
+                    return false;
+                }
+            }
+
+            if (transferCheckBox.isSelected()) {
+                transfer = Double.parseDouble(transferAmountField.getText());
+                if (transfer < 0) {
+                    DialogUtil.showError("Error", "El monto de transferencia no puede ser negativo");
+                    transferAmountField.requestFocus();
+                    return false;
+                }
+            }
+
+            if (deliveryCheckBox.isSelected()) {
+                delivery = Double.parseDouble(deliveryPriceField.getText());
+                if (delivery < 0) {
+                    DialogUtil.showError("Error", "El monto de delivery no puede ser negativo");
+                    deliveryPriceField.requestFocus();
+                    return false;
+                }
+            }
+
+            subtotal = calculateSubtotal();
+            total = subtotal + delivery;
+
+            double totalPayment = cash + transfer;
+            if (Math.abs(totalPayment - total) > 0.01) {
+                DialogUtil.showError("Error",
+                        String.format("El total de pagos ($%.2f) no coincide con el total de la orden ($%.2f)\n\nDiferencia: $%.2f",
+                                totalPayment, total, Math.abs(totalPayment - total)));
+                return false;
+            }
+
+        } catch (NumberFormatException e) {
+            DialogUtil.showError("Error", "Verifique que todos los montos sean números válidos\nEjemplo: 1500.50");
+            return false;
+        }
+
+        return res;
+    }
+
+    private double calculateSubtotal() {
+        if (orderDetails == null) return 0;
+
+        double subtotal = orderDetails.stream().mapToDouble(OrderDetail::getSubtotal).sum();
+        return subtotal;
+    }
+    /*private double calculateSubtotal() {
         if (orderDetails == null) return 0;
 
         double subtotal = orderDetails.stream().mapToDouble(OrderDetail::getSubtotal).sum();
@@ -274,7 +404,7 @@ public class OrderDetailsController {
             } catch (Exception e) {}
         }
         return subtotal;
-    }
+    }*/
 
     @FXML
     private void cancelOrder() {

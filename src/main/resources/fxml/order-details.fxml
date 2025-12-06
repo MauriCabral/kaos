@@ -56,7 +56,7 @@
 
         <Separator orientation="VERTICAL"/>
 
-        <!-- PANEL DERECHO - TODO JUNTO Y COMPACTO -->
+        <!-- PANEL DERECHO -->
         <VBox styleClass="actions-panel" prefWidth="350" spacing="12">
             <padding>
                 <Insets top="15" right="15" bottom="15" left="15"/>
@@ -94,7 +94,8 @@
             <!-- BOTONES VISIBLES -->
             <VBox spacing="8">
                 <HBox spacing="10">
-                    <Button text="Aceptar" styleClass="confirm-btn" onAction="#confirmOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35"/>
+                    <Button text="Aceptar" styleClass="confirm-btn" onAction="#confirmOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35" defaultButton="false"
+                    cancelButton="false"/>
                     <Button text="Cancelar" styleClass="cancel-btn" onAction="#cancelOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35"/>
                 </HBox>
                 <Button text="← Volver" styleClass="back-btn" onAction="#goBack" prefHeight="32"/>

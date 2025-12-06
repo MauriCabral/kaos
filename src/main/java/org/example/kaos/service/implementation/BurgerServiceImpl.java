@@ -59,7 +59,11 @@ public class BurgerServiceImpl implements IBurgerService {
 
     @Override
     public boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
-        return burgerRepository.updateBurgerWithVariants(burger, simplePrice, doblePrice, triplePrice);
+        Burger bur = burgerRepository.updateBurger(burger);
+        if (bur != null) {
+            return burgerVariantRepository.updateVariantPrices(bur, simplePrice, doblePrice, triplePrice);
+        }
+        return false;
     }
 
     @Override

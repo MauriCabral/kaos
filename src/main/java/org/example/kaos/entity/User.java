@@ -26,7 +26,7 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id")
     private Store store;
 

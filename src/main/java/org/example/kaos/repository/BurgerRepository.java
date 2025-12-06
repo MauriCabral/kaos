@@ -110,7 +110,7 @@ public class BurgerRepository {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            Burger updatedBurger = em.merge(burger); // UPDATE automático
+            Burger updatedBurger = em.merge(burger);
             em.getTransaction().commit();
             return updatedBurger;
         } catch (Exception e) {
@@ -167,7 +167,7 @@ public class BurgerRepository {
         }
     }
 
-    public boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
+    /*public boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -200,5 +200,5 @@ public class BurgerRepository {
         } finally {
             em.close();
         }
-    }
+    }*/
 }
