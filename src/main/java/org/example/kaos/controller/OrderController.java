@@ -275,7 +275,7 @@ public class OrderController implements Initializable {
         Label nameLabel = new Label(extraItem.getName());
         nameLabel.getStyleClass().add("product-name");
 
-        Label priceLabel = new Label("$" + extraItem.getPrice());
+        Label priceLabel = new Label("$" + String.valueOf(extraItem.getPrice().intValue()).trim());
         priceLabel.getStyleClass().add("product-price");
 
         card.getChildren().addAll(imageContainer, nameLabel, priceLabel);
@@ -310,7 +310,7 @@ public class OrderController implements Initializable {
             loadDefaultImage(selectedProductImage);
         }
 
-        selectedProductName.setText(extra.getName() + " - $" + extra.getPrice());
+        selectedProductName.setText(extra.getName() + " - $" + String.valueOf(extra.getPrice().intValue()).trim());
 
         currentSelectedExtra = extra;
         currentSelectedBurger = null;
@@ -334,7 +334,7 @@ public class OrderController implements Initializable {
             loadDefaultImage(selectedProductImage);
         }
 
-        selectedProductName.setText(combo.getName() + " - $" + combo.getPrice());
+        selectedProductName.setText(combo.getName() + " - $" + String.valueOf(combo.getPrice().intValue()).trim());
 
         currentSelectedCombo = combo;
         currentSelectedBurger = null;
@@ -418,6 +418,7 @@ public class OrderController implements Initializable {
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
             orderDetail.setObservations(null);
+            orderDetail.setTotal(orderDetail.getSubtotal());
 
         } else if (currentSelectedExtra != null) {
             orderDetail = new OrderDetail();
@@ -427,6 +428,7 @@ public class OrderController implements Initializable {
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
             orderDetail.setObservations(null);
+            orderDetail.setTotal(orderDetail.getSubtotal());
 
         } else if (currentSelectedCombo != null) {
             orderDetail = new OrderDetail();
@@ -436,6 +438,7 @@ public class OrderController implements Initializable {
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
             orderDetail.setObservations(null);
+            orderDetail.setTotal(orderDetail.getSubtotal());
         }
 
         if (orderDetail != null) {

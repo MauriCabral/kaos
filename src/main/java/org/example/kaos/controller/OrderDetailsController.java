@@ -157,19 +157,30 @@ public class OrderDetailsController {
         HBox detailsRow = new HBox(15);
         detailsRow.setAlignment(Pos.CENTER_LEFT);
 
-        Label priceLabel = new Label(String.format("$%.2f c/u", detail.getUnitPrice()));
+        Label priceLabel = new Label("$" + String.valueOf(detail.getUnitPrice().intValue()).trim() + " c/u");
         priceLabel.getStyleClass().add("item-price");
 
         Label quantityLabel = new Label("Cant: " + detail.getQuantity());
         quantityLabel.getStyleClass().add("item-quantity");
 
-        Label subtotalLabel = new Label(String.format("Subtotal: $%.2f", detail.getSubtotal()));
-        subtotalLabel.getStyleClass().add("item-subtotal");
+        boolean hasToppings = detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty();
 
-        detailsRow.getChildren().addAll(priceLabel, quantityLabel, subtotalLabel);
-        infoBox.getChildren().addAll(nameLabel, detailsRow);
+        Label subtotalTotalLabel = new Label("Subtotal: $" + String.valueOf(detail.getSubtotal().intValue()).trim());
+        subtotalTotalLabel.getStyleClass().add("item-subtotal");
 
-        if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
+        HBox pricesContainer = new HBox(20);
+        pricesContainer.setAlignment(Pos.CENTER_LEFT);
+        pricesContainer.getChildren().addAll(priceLabel, quantityLabel, subtotalTotalLabel);
+
+        if (hasToppings) {
+            Label totalLabel = new Label("Total: $" + String.valueOf(detail.getTotal().intValue()).trim());
+            totalLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #e9500e; -fx-font-size: 13px;");
+            pricesContainer.getChildren().add(totalLabel);
+        }
+
+        infoBox.getChildren().addAll(nameLabel, pricesContainer);
+
+        if (hasToppings) {
             VBox toppingsBox = new VBox(3);
             toppingsBox.setPadding(new Insets(5, 0, 0, 10));
 
@@ -194,7 +205,7 @@ public class OrderDetailsController {
                     addedColumn.getChildren().add(addedLabel);
 
                     for (OrderDetailTopping topping : addedToppings) {
-                        Label toppingLabel = new Label("✓ " + topping.getTopping().getName());
+                        Label toppingLabel = new Label("✓ " + topping.getTopping().getName() + " -  $" + String.valueOf(topping.getTopping().getPrice().intValue()).trim());
                         toppingLabel.setStyle("-fx-text-fill: #28a745;");
                         addedColumn.getChildren().add(toppingLabel);
                     }

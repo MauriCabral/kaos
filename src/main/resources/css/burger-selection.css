@@ -294,3 +294,46 @@
     -fx-text-fill: #888;
     -fx-font-style: italic;
 }
+
+/* ESTILOS PARA EL CONTADOR */
+.counter-btn {
+    -fx-background-color: #e9500e;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.counter-btn:hover {
+    -fx-background-color: #d84315;
+    -fx-effect: dropshadow(gaussian, rgba(233, 80, 14, 0.3), 4, 0.3, 0, 1);
+}
+
+.counter-btn:pressed {
+    -fx-background-color: #c4370c;
+}
+
+.counter-field {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #333;
+    -fx-background-color: white;
+    -fx-border-color: #e1e5e9;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-alignment: center;
+    -fx-padding: 0;
+    -fx-border-width: 1.5px;
+}
+
+.counter-field:focused {
+    -fx-border-color: #e9500e;
+}
+
+.counter-field:disabled {
+    -fx-background-color: #f8f9fa;
+    -fx-text-fill: #666;
+}

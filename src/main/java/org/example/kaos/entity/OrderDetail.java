@@ -46,6 +46,9 @@ public class OrderDetail {
     @Column(nullable = false)
     private Double subtotal; // unitPrice * quantity
 
+    @Column(nullable = false)
+    private Double total;
+
     @Column(name = "observations", length = 500)
     private String observations;
 

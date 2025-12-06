@@ -33,6 +33,9 @@ public class BurgerSelectionController implements Initializable {
     @FXML private Label toppingsDisabledLabel;
     @FXML private Label llbCbo;
     @FXML private TextArea observationsField;
+    @FXML private Button decreaseBtn;
+    @FXML private Button increaseBtn;
+    @FXML private TextField quantityField;
 
     private final IVariantService variantService = new VariantServiceImpl();
     private final IToppingService toppingService = new ToppingServiceImpl();
@@ -47,6 +50,8 @@ public class BurgerSelectionController implements Initializable {
     private boolean confirmed = false;
     private OrderDetail resultOrderDetail;
 
+    private int quantity = 1;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         loadAvailableToppings();
@@ -57,6 +62,7 @@ public class BurgerSelectionController implements Initializable {
         }
 
         setupVariantComboBox();
+        setupCounterBurger();
     }
 
     private void setupVariantComboBox() {
@@ -161,10 +167,9 @@ public class BurgerSelectionController implements Initializable {
             Label nameLabel = new Label(topping.getName());
             nameLabel.getStyleClass().add("topping-name");
 
-            Label priceLabel = new Label(String.format("+$%.2f", topping.getPrice()));
+            Label priceLabel = new Label("$" + String.valueOf(topping.getPrice().intValue()).trim());
             priceLabel.getStyleClass().add("topping-price");
 
-            //ToggleGroup tg = new ToggleGroup();
             RadioButton rbYes = new RadioButton("Sí");
             RadioButton rbNo = new RadioButton("No");
 
@@ -173,38 +178,29 @@ public class BurgerSelectionController implements Initializable {
 
             rbYes.setSelected(false);
             rbNo.setSelected(false);
-            //rbYes.setToggleGroup(tg);
-            //rbNo.setToggleGroup(tg);
-            //rbNo.setSelected(true);
 
             rbYes.setUserData(topping);
             rbNo.setUserData(topping);
 
-            // Manejar clic en "Sí" con comportamiento toggle
             rbYes.setOnAction(e -> {
                 Topping currentTopping = (Topping) rbYes.getUserData();
 
                 if (rbYes.isSelected()) {
-                    // Si "Sí" se acaba de seleccionar, asegurar que "No" esté deseleccionado
                     rbNo.setSelected(false);
                     handleToppingSelection(currentTopping, true);
                 } else {
-                    // Si "Sí" se deseleccionó, limpiar selección
                     handleToppingSelection(currentTopping, null);
                 }
                 updatePrice();
             });
 
-            // Manejar clic en "No" con comportamiento toggle
             rbNo.setOnAction(e -> {
                 Topping currentTopping = (Topping) rbNo.getUserData();
 
                 if (rbNo.isSelected()) {
-                    // Si "No" se acaba de seleccionar, asegurar que "Sí" esté deseleccionado
                     rbYes.setSelected(false);
                     handleToppingSelection(currentTopping, false);
                 } else {
-                    // Si "No" se deseleccionó, limpiar selección
                     handleToppingSelection(currentTopping, null);
                 }
                 updatePrice();
@@ -214,17 +210,11 @@ public class BurgerSelectionController implements Initializable {
             radioBox.getStyleClass().add("radio-box");
             radioBox.setAlignment(Pos.CENTER_RIGHT);
 
-//            tg.selectedToggleProperty().addListener((o, oldVal, newVal) -> {
-//                handleToppingSelection(topping, newVal == rbYes);
-//            });
-
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             row.getChildren().addAll(nameLabel, priceLabel, spacer, radioBox);
             toppingsContainer.getChildren().add(row);
-
-            //toppingRadioGroups.put(topping, tg);
         }
     }
 
@@ -288,7 +278,7 @@ public class BurgerSelectionController implements Initializable {
                 selectedVariant.getVariantType().getName() : "Desconocido";
         orderDetail.setVariantName(variantName);
 
-        orderDetail.setQuantity(1);
+        orderDetail.setQuantity(quantity);
         orderDetail.setObservations(observationsField.getText().trim().isEmpty() ? observationsField.getText().trim() : null);
 
         double basePrice = selectedVariant.getPrice();
@@ -309,8 +299,9 @@ public class BurgerSelectionController implements Initializable {
             }
         }
 
-        orderDetail.setUnitPrice(basePrice + toppingsTotal);
+        orderDetail.setUnitPrice(basePrice);
         orderDetail.calculateSubtotal();
+        orderDetail.setTotal(orderDetail.getSubtotal() + toppingsTotal);
 
         resultOrderDetail = orderDetail;
         confirmed = true;
@@ -334,4 +325,31 @@ public class BurgerSelectionController implements Initializable {
     public boolean isConfirmed() { return confirmed; }
     public OrderDetail getResultOrderDetail() { return resultOrderDetail; }
     public List<OrderDetailTopping> getSelectedToppings() { return selectedToppings; }
+
+    private void setupCounterBurger() {
+        quantityField.setText("1");
+        quantityField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                quantityField.setText(oldValue);
+            } else if (!newValue.isEmpty()) {
+                quantity = Integer.parseInt(newValue);
+            }
+        });
+
+        decreaseBtn.setOnAction(e -> {
+            if (quantity > 1) {
+                quantity--;
+                quantityField.setText(String.valueOf(quantity));
+            }
+        });
+
+        increaseBtn.setOnAction(e -> {
+            quantity++;
+            quantityField.setText(String.valueOf(quantity));
+        });
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
 }
