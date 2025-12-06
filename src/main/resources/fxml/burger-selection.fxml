@@ -24,18 +24,30 @@
 
         <HBox spacing="25" alignment="TOP_LEFT">
             <VBox spacing="12" alignment="TOP_CENTER" prefWidth="260">
-                <ImageView fx:id="burgerImageView" fitWidth="200" fitHeight="150"
-                           preserveRatio="true" styleClass="burger-image"/>
-                <Label fx:id="burgerDescriptionLabel" wrapText="true" prefWidth="220"
-                       styleClass="description-label"/>
+                <ImageView fx:id="burgerImageView" fitWidth="200" fitHeight="150" preserveRatio="true" styleClass="burger-image"/>
+                <Label fx:id="burgerDescriptionLabel" wrapText="true" prefWidth="220" styleClass="description-label"/>
             </VBox>
 
             <VBox spacing="12" prefWidth="460" VBox.vgrow="ALWAYS">
-                <VBox spacing="6">
-                    <Label text="TIPO DE BURGER" styleClass="section-label"/>
-                    <ComboBox fx:id="variantComboBox" prefWidth="140" prefHeight="36" styleClass="variant-combo"/>
-                    <Label fx:id="llbCbo" text="Selecciona un tipo." styleClass="hint-label"/>
-                </VBox>
+                <HBox spacing="15" alignment="TOP_LEFT">
+                    <!-- COMBOBOX -->
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="TIPO DE BURGER" styleClass="section-label"/>
+                        <ComboBox fx:id="variantComboBox" prefWidth="140" prefHeight="36" styleClass="variant-combo"/>
+                        <Label fx:id="llbCbo" text="Selecciona un tipo." styleClass="hint-label"/>
+                    </VBox>
+
+                    <!-- CONTADOR -->
+                    <VBox spacing="6">
+                        <Label text="CANTIDAD" styleClass="section-label"/>
+                        <HBox spacing="4" alignment="CENTER_LEFT">
+                            <Button fx:id="decreaseBtn" text="-" styleClass="counter-btn" minWidth="36" minHeight="36" maxWidth="36" maxHeight="36"/>
+                            <TextField fx:id="quantityField" text="1" styleClass="counter-field" alignment="CENTER" minWidth="50" minHeight="36" maxWidth="50" maxHeight="36"/>
+                            <Button fx:id="increaseBtn" text="+" styleClass="counter-btn" minWidth="36" minHeight="36" maxWidth="36" maxHeight="36"/>
+                        </HBox>
+                        <Label text="" styleClass="hint-label"/>
+                    </VBox>
+                </HBox>
 
                 <Separator styleClass="elegant-separator"/>
 
@@ -44,14 +56,11 @@
                         <Label text="TOPPINGS" styleClass="toppings-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <HBox spacing="8" alignment="CENTER_RIGHT" style="-fx-padding: 0 10 0 0;">
-                            <!--<Label text="Sí" styleClass="radio-header"/>
-                            <Label text="No" styleClass="radio-header"/>-->
                         </HBox>
                     </HBox>
 
                     <VBox styleClass="toppings-container" VBox.vgrow="ALWAYS">
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                                    prefHeight="300" styleClass="toppings-scroll">
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="300" styleClass="toppings-scroll">
                             <VBox fx:id="toppingsContainer" spacing="3" style="-fx-padding: 8;"/>
                         </ScrollPane>
                     </VBox>
@@ -61,10 +70,7 @@
 
                 <VBox spacing="6">
                     <Label text="OBSERVACIONES ESPECIALES" styleClass="section-label"/>
-                    <TextArea fx:id="observationsField"
-                              promptText="Ej: Sin salsa, cambiar salsa a ..."
-                              wrapText="true" prefRowCount="2" styleClass="observations-field"/>
-                    <!--<Label text="Solicita modificaciones aquí" styleClass="hint-label"/>-->
+                    <TextArea fx:id="observationsField" promptText="Ej: Sin salsa, cambiar salsa a ..." wrapText="true" prefRowCount="2" styleClass="observations-field"/>
                 </VBox>
             </VBox>
         </HBox>
@@ -90,9 +96,7 @@
         <padding>
             <Insets top="16" right="25" bottom="16" left="25"/>
         </padding>
-        <Button text="Cancelar" styleClass="cancel-btn" onAction="#handleCancel"
-                minWidth="100" prefHeight="40"/>
-        <Button text="Agregar al Pedido" styleClass="confirm-btn" onAction="#handleAddToOrder"
-                minWidth="150" prefHeight="40"/>
+        <Button text="Cancelar" styleClass="cancel-btn" onAction="#handleCancel" minWidth="100" prefHeight="40"/>
+        <Button text="Agregar al Pedido" styleClass="confirm-btn" onAction="#handleAddToOrder" minWidth="150" prefHeight="40"/>
     </HBox>
 </VBox>

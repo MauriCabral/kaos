@@ -8,13 +8,12 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.OrderController" stylesheets="@../css/order.css">
 
-    <HBox spacing="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+    <HBox spacing="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
         <!-- PANEL IZQUIERDO -->
-        <VBox spacing="20" prefWidth="700" styleClass="products-panel">
+        <VBox spacing="20" prefWidth="750" styleClass="products-panel">
             <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
+                <Insets top="25" right="25" bottom="25" left="25"/>
             </padding>
 
             <AnchorPane>
@@ -45,41 +44,42 @@
                 </HBox>
             </AnchorPane>
 
-            <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-                <FlowPane fx:id="productsFlowPane" styleClass="products-flow-pane" hgap="15" vgap="15"/>
+            <!-- SCROLL -->
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS" prefViewportHeight="600">
+                <FlowPane fx:id="productsFlowPane" styleClass="products-flow-pane" hgap="20" vgap="20"/>
             </ScrollPane>
         </VBox>
 
         <Separator orientation="VERTICAL"/>
 
         <!-- DETALLE DEL PEDIDO -->
-        <VBox spacing="20" prefWidth="300" styleClass="details-panel">
+        <VBox spacing="25" prefWidth="350" styleClass="details-panel">
             <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
+                <Insets top="25" right="25" bottom="25" left="25"/>
             </padding>
 
             <Label text="Detalle del Pedido" styleClass="details-title"/>
 
-            <VBox spacing="15" styleClass="selected-product" visible="false" fx:id="selectedProductPanel">
-                <ImageView fitWidth="120" fitHeight="120" preserveRatio="true"
-                           styleClass="selected-product-image" fx:id="selectedProductImage"/>
-                <Label styleClass="selected-product-name" fx:id="selectedProductName"/>
+            <VBox spacing="20" styleClass="selected-product" visible="false" fx:id="selectedProductPanel" VBox.vgrow="ALWAYS" alignment="TOP_CENTER">
+                <ImageView fitWidth="150" fitHeight="150" preserveRatio="true" styleClass="selected-product-image" fx:id="selectedProductImage"/>
+                <Label styleClass="selected-product-name" fx:id="selectedProductName" wrapText="true" textAlignment="CENTER" maxWidth="300"/>
 
-                <HBox spacing="10" alignment="CENTER">
-                    <Button text="-" styleClass="quantity-btn" onAction="#decreaseQuantity"/>
-                    <Label text="1" styleClass="quantity-label" fx:id="quantityLabel"/>
-                    <Button text="+" styleClass="quantity-btn" onAction="#increaseQuantity"/>
-                </HBox>
+                <VBox spacing="15" alignment="CENTER">
+                    <HBox spacing="15" alignment="CENTER">
+                        <Button text="-" styleClass="quantity-btn" onAction="#decreaseQuantity" minWidth="40" minHeight="40"/>
+                        <Label text="1" styleClass="quantity-label" fx:id="quantityLabel"/>
+                        <Button text="+" styleClass="quantity-btn" onAction="#increaseQuantity" minWidth="40" minHeight="40"/>
+                    </HBox>
 
-                <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder"/>
+                    <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder" minWidth="200" minHeight="45"/>
+                </VBox>
+                <Region VBox.vgrow="ALWAYS"/>
             </VBox>
 
-            <VBox spacing="15">
-                <VBox spacing="15">
-                    <HBox alignment="CENTER">
-                        <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder"/>
-                    </HBox>
-                </VBox>
+            <!-- BOTÓN "VER PEDIDO"-->
+            <VBox spacing="15" alignment="BOTTOM_CENTER">
+                <Region VBox.vgrow="ALWAYS"/>
+                <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder" minWidth="250" minHeight="50" prefHeight="50"/>
             </VBox>
         </VBox>
     </HBox>
