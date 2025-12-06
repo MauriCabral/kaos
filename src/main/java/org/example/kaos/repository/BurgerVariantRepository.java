@@ -83,7 +83,13 @@ public class BurgerVariantRepository {
             em.getTransaction().begin();
             boolean updated = false;
 
-            for (BurgerVariant variant : burger.getVariants()) {
+            List<BurgerVariant> variants = em.createQuery(
+                            "SELECT v FROM BurgerVariant v WHERE v.burger.id = :burgerId",
+                            BurgerVariant.class)
+                    .setParameter("burgerId", burger.getId())
+                    .getResultList();
+
+            for (BurgerVariant variant : variants) {
                 long variantTypeId = variant.getVariantType().getId();
 
                 if (variantTypeId == 1L) { // SIMPLE

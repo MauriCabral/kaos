@@ -417,6 +417,7 @@ public class OrderController implements Initializable {
             orderDetail.setUnitPrice(unitPrice);
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
+            orderDetail.setObservations(null);
 
         } else if (currentSelectedExtra != null) {
             orderDetail = new OrderDetail();
@@ -425,6 +426,7 @@ public class OrderController implements Initializable {
             orderDetail.setUnitPrice(currentSelectedExtra.getPrice());
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
+            orderDetail.setObservations(null);
 
         } else if (currentSelectedCombo != null) {
             orderDetail = new OrderDetail();
@@ -433,6 +435,7 @@ public class OrderController implements Initializable {
             orderDetail.setUnitPrice(currentSelectedCombo.getPrice());
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
+            orderDetail.setObservations(null);
         }
 
         if (orderDetail != null) {
