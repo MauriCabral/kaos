@@ -94,8 +94,7 @@
             <!-- BOTONES VISIBLES -->
             <VBox spacing="8">
                 <HBox spacing="10">
-                    <Button text="Aceptar" styleClass="confirm-btn" onAction="#confirmOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35" defaultButton="false"
-                    cancelButton="false"/>
+                    <Button text="Aceptar" styleClass="confirm-btn" onAction="#confirmOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35"/>
                     <Button text="Cancelar" styleClass="cancel-btn" onAction="#cancelOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="35"/>
                 </HBox>
                 <Button text="← Volver" styleClass="back-btn" onAction="#goBack" prefHeight="32"/>

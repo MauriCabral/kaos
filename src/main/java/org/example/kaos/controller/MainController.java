@@ -19,7 +19,6 @@ import java.util.Map;
 
 public class MainController {
     @FXML private StackPane contentArea;
-    @FXML private Button btnPedidos;
     @FXML private Button btnLogout;
     @FXML private HBox tabContainer;
 
@@ -44,8 +43,8 @@ public class MainController {
     }
 
     @FXML
-    public void handlePedidosAction(ActionEvent actionEvent) {
-        openNewOrderTab();
+    public void handleOrderAction(ActionEvent actionEvent) {
+        openNewOrderTab("Pedido " + orderCounter, "/fxml/order.fxml");
         //ViewLoader.loadIn(contentArea, "/fxml/order.fxml");
     }
 
@@ -189,8 +188,12 @@ public class MainController {
         }
     }
 
-    public void openNewOrderTab() {
-        openTab("Pedido " + orderCounter, "/fxml/order.fxml");
+    public void openNewOrderTab(String title, String fxmlPath) {
+        openTab(title, fxmlPath);
         orderCounter++;
+    }
+
+    public void handleOrderHistoryAction(ActionEvent actionEvent) {
+        openNewOrderTab("Histórico Pedidos " + orderCounter, "/fxml/order_history.fxml");
     }
 }
