@@ -10,6 +10,7 @@ import org.example.kaos.util.JpaUtil;
 import java.util.List;
 
 public class BurgerVariantRepository {
+
     public List<BurgerVariant> findByBurgerId(long burgerId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {

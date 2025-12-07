@@ -8,6 +8,7 @@ import org.example.kaos.util.JpaUtil;
 import java.util.List;
 
 public class OrderDetailRepository {
+
     public OrderDetail save(OrderDetail orderDetail) {
         EntityManager em = JpaUtil.getEntityManager();
         try {

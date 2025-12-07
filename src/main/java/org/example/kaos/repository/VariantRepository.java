@@ -8,6 +8,7 @@ import org.example.kaos.util.JpaUtil;
 import java.util.List;
 
 public class VariantRepository {
+
     public List<VariantType> findAll() {
         EntityManager em = JpaUtil.getEntityManager();
         try {

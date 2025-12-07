@@ -46,10 +46,8 @@ public class BurgerSelectionController implements Initializable {
     private List<Topping> availableToppings;
     private Map<Topping, ToggleGroup> toppingRadioGroups = new HashMap<>();
     private List<OrderDetailTopping> selectedToppings = new ArrayList<>();
-
     private boolean confirmed = false;
     private OrderDetail resultOrderDetail;
-
     private int quantity = 1;
 
     @Override
@@ -236,11 +234,17 @@ public class BurgerSelectionController implements Initializable {
         double toppingsPrice = selectedToppings.stream()
                 .mapToDouble(OrderDetailTopping::getTotalPrice)
                 .sum();
-        double totalPrice = basePrice + toppingsPrice;
 
-        basePriceLabel.setText(String.format("$%.2f", basePrice));
-        toppingsPriceLabel.setText(String.format("$%.2f", toppingsPrice));
-        totalPriceLabel.setText(String.format("$%.2f", totalPrice));
+        double totalBasePrice = basePrice * quantity;
+        double totalToppingsPrice = toppingsPrice * quantity;
+        double totalPrice = totalBasePrice + totalToppingsPrice;
+
+//        basePriceLabel.setText(String.format("$%.2f", basePrice));
+//        toppingsPriceLabel.setText(String.format("$%.2f", toppingsPrice));
+//        totalPriceLabel.setText(String.format("$%.2f", totalPrice));
+        basePriceLabel.setText("$" + (int)basePrice);
+        toppingsPriceLabel.setText("$" + (int)totalToppingsPrice);
+        totalPriceLabel.setText("$" + (int)totalPrice);
     }
 
     @FXML
@@ -333,6 +337,7 @@ public class BurgerSelectionController implements Initializable {
                 quantityField.setText(oldValue);
             } else if (!newValue.isEmpty()) {
                 quantity = Integer.parseInt(newValue);
+                updatePrice();
             }
         });
 
@@ -340,12 +345,14 @@ public class BurgerSelectionController implements Initializable {
             if (quantity > 1) {
                 quantity--;
                 quantityField.setText(String.valueOf(quantity));
+                updatePrice();
             }
         });
 
         increaseBtn.setOnAction(e -> {
             quantity++;
             quantityField.setText(String.valueOf(quantity));
+            updatePrice();
         });
     }
 

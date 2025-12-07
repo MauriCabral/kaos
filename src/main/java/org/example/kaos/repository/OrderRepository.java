@@ -4,8 +4,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
+import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.Order;
 import org.example.kaos.util.JpaUtil;
+
+import java.util.List;
 
 public class OrderRepository {
     public Order save(Order order) {
@@ -86,5 +89,16 @@ public class OrderRepository {
         }
 
         return orderNumber;
+    }
+
+    public List<Order> findAll() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Order> query = em.createQuery(
+                    "SELECT o FROM Order o ORDER BY o.id DESC", Order.class);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
     }
 }
