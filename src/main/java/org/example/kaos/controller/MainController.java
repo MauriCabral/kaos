@@ -194,6 +194,6 @@ public class MainController {
     }
 
     public void handleOrderHistoryAction(ActionEvent actionEvent) {
-        openNewOrderTab("Histórico Pedidos " + orderCounter, "/fxml/order_history.fxml");
+        openNewOrderTab("Histórico Pedidos " + orderCounter, "/fxml/order-history.fxml");
     }
 }

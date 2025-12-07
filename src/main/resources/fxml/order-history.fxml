@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.kaos.controller.OrderHistoryController"
+            stylesheets="@../css/order-history.css">
+
+    <VBox spacing="15" AnchorPane.topAnchor="15" AnchorPane.bottomAnchor="15"
+          AnchorPane.leftAnchor="15" AnchorPane.rightAnchor="15" styleClass="container">
+
+        <!-- PANEL SUPERIOR COMPACTO -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Histórico de Pedidos" styleClass="compact-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchField" promptText="Buscar..."
+                       styleClass="compact-search-field" prefWidth="200"/>
+            <Button fx:id="searchBtn" text="Buscar" styleClass="compact-search-btn" onAction="#handleSearch"/>
+            <Button fx:id="clearBtn" text="Limpiar" styleClass="compact-clear-btn" onAction="#handleClear"/>
+        </HBox>
+
+        <!-- FILTROS COMPACTOS -->
+        <HBox fx:id="filterContainer" spacing="10" alignment="CENTER_LEFT" styleClass="compact-filter-container">
+            <CheckBox fx:id="deliveryCheck" text="Delivery" styleClass="compact-checkbox"/>
+            <CheckBox fx:id="pickupCheck" text="Recoger" styleClass="compact-checkbox"/>
+            <CheckBox fx:id="cashCheck" text="Efectivo" styleClass="compact-checkbox"/>
+            <CheckBox fx:id="transferCheck" text="Transferencia" styleClass="compact-checkbox"/>
+            <CheckBox fx:id="todayCheck" text="Hoy" styleClass="compact-checkbox"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label text="Desde:" styleClass="filter-label"/>
+            <DatePicker fx:id="dateFromPicker" promptText="dd/mm/aaaa" styleClass="compact-date-filter" prefWidth="110"/>
+
+            <Label text="Hasta:" styleClass="filter-label"/>
+            <DatePicker fx:id="dateToPicker" promptText="dd/mm/aaaa" styleClass="compact-date-filter" prefWidth="110"/>
+        </HBox>
+
+        <!-- TABLA AGRANDADA - OCULTAR TELEFONO Y DIRECCIÓN -->
+        <TableView fx:id="ordersTable" styleClass="compact-order-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" styleClass="compact-id-column"/>
+                <TableColumn fx:id="orderNumberColumn" text="N° Pedido" styleClass="compact-order-column"/>
+                <TableColumn fx:id="dateColumn" text="Fecha" styleClass="compact-date-column"/>
+                <TableColumn fx:id="customerNameColumn" text="Cliente" styleClass="compact-name-column"/>
+                <!-- Telefono y Dirección OCULTOS -->
+                <TableColumn fx:id="customerAddressColumn" text="Dirección" styleClass="compact-address-column" visible="false"/>
+                <TableColumn fx:id="customerPhoneColumn" text="Teléfono" styleClass="compact-phone-column" visible="false"/>
+                <TableColumn fx:id="typeColumn" text="Tipo" styleClass="compact-type-column"/>
+                <TableColumn fx:id="storeColumn" text="Local" styleClass="compact-store-column"/>
+                <!-- Creador OCULTO para todos -->
+                <TableColumn fx:id="createdByColumn" text="Creador" styleClass="compact-creator-column" visible="false"/>
+                <TableColumn fx:id="paymentMethodColumn" text="Pago" styleClass="compact-payment-column"/>
+                <TableColumn fx:id="subtotalColumn" text="Subtotal" styleClass="compact-money-column"/>
+                <TableColumn fx:id="totalColumn" text="Total" styleClass="compact-total-column"/>
+                <TableColumn fx:id="actionsColumn" text=" " styleClass="compact-actions-column"/>
+            </columns>
+        </TableView>
+
+    </VBox>
+
+</AnchorPane>

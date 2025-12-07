@@ -52,8 +52,6 @@ public class OrderController implements Initializable {
     private int quantity = 1;
     private boolean isEditMode = false;
     private final List<OrderDetail> currentOrderDetails = new ArrayList<>();
-
-
     private Burger currentSelectedBurger;
     private Long currentSelectedVariantId;
     private String currentSelectedVariantName;

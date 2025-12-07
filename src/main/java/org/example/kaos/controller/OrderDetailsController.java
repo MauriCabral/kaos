@@ -45,7 +45,6 @@ public class OrderDetailsController {
     private List<OrderDetail> orderDetails;
     private Stage stage;
     private boolean orderConfirmed = false;
-
     private double cash = 0;
     private double transfer = 0;
     private double delivery = 0;
@@ -165,7 +164,8 @@ public class OrderDetailsController {
 
         boolean hasToppings = detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty();
 
-        Label subtotalTotalLabel = new Label("Subtotal: $" + String.valueOf(detail.getSubtotal().intValue()).trim());
+        String labelText = hasToppings ? "Subtotal: $" : "Total: $";
+        Label subtotalTotalLabel = new Label(labelText + String.valueOf(detail.getSubtotal().intValue()).trim());
         subtotalTotalLabel.getStyleClass().add("item-subtotal");
 
         HBox pricesContainer = new HBox(20);

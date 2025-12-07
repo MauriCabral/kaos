@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BurgerRepository {
+
     public List<Burger> findAll() {
         EntityManager em = JpaUtil.getEntityManager();
         try {
@@ -166,39 +167,4 @@ public class BurgerRepository {
             em.close();
         }
     }
-
-    /*public boolean updateBurgerWithVariants(Burger burger, double simplePrice, double doblePrice, double triplePrice) {
-        EntityManager em = JpaUtil.getEntityManager();
-        try {
-            em.getTransaction().begin();
-
-            List<BurgerVariant> variants = em.createQuery(
-                            "SELECT v FROM BurgerVariant v WHERE v.burger.id = :burgerId",
-                            BurgerVariant.class)
-                    .setParameter("burgerId", burger.getId())
-                    .getResultList();
-
-            for (BurgerVariant variant : variants) {
-                VariantType variantType = variant.getVariantType();
-                Long variantTypeId = variantType.getId();
-
-                if (variantTypeId == 1L) {
-                    variant.setPrice(simplePrice);
-                } else if (variantTypeId == 2L) {
-                    variant.setPrice(doblePrice);
-                } else if (variantTypeId == 3L) {
-                    variant.setPrice(triplePrice);
-                }
-                em.merge(variant);
-            }
-            em.getTransaction().commit();
-            return true;
-
-        } catch (Exception e) {
-            em.getTransaction().rollback();
-            throw e;
-        } finally {
-            em.close();
-        }
-    }*/
 }

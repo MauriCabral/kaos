@@ -15,14 +15,15 @@ import org.example.kaos.util.WindowManager;
 
 public class LoginController {
 
-    private final IUserService IUserService = new UserServiceImpl();
-    private final String usernametest = "admin";
-    private final String passwordtest = "admin123";
-
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private TextField visiblePasswordField;
     @FXML private ToggleButton togglePasswordButton;
+
+    private final IUserService userService = new UserServiceImpl();
+
+    private final String usernametest = "admin";
+    private final String passwordtest = "admin123";
 
     @FXML
     public void initialize() {
@@ -46,7 +47,7 @@ public class LoginController {
             return;
         }
 
-        User user = IUserService.login(username, password);
+        User user = userService.login(username, password);
 
         if (user == null) {
             DialogUtil.showError("Error de login", "Usuario o contraseña incorrectos");
