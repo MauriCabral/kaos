@@ -8,11 +8,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import org.example.kaos.entity.Order;
 import org.example.kaos.service.IOrderService;
 import org.example.kaos.service.implementation.OrderServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
+import org.example.kaos.util.WindowManager;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -54,45 +56,41 @@ public class OrderHistoryController implements Initializable {
     private final ObservableList<Order> orders = FXCollections.observableArrayList();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    boolean isAdmin;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+            isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
             setupView();
             setupTableColumns();
             loadOrders();
             setupActionsColumn();
         } catch (Exception e) {
             e.printStackTrace();
-            DialogUtil.showError("Error de Inicialización",
-                    "No se pudo inicializar la pantalla: " + e.getMessage());
+            DialogUtil.showError("Error de Inicialización", "No se pudo inicializar la pantalla: " + e.getMessage());
         }
     }
 
     private void setupView() {
-        // Verificar si el usuario es admin (id = 1)
-        boolean isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
 
         if (!isAdmin) {
             idColumn.setVisible(false);
             storeColumn.setVisible(false);
         }
 
-        // OCULTAR PARA TODOS: Telefono, Dirección y Creador
         customerPhoneColumn.setVisible(false);
         customerAddressColumn.setVisible(false);
         createdByColumn.setVisible(false);
 
-        // AGRANDAR N° Pedido
         orderNumberColumn.setPrefWidth(100);
 
-        // Configurar contenedor de filtros
         if (filterContainer != null) {
             filterContainer.setSpacing(10);
         }
     }
 
     private void setupTableColumns() {
-        // Configurar factories de columnas
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         orderNumberColumn.setCellValueFactory(new PropertyValueFactory<>("orderNumber"));
 
@@ -105,22 +103,19 @@ public class OrderHistoryController implements Initializable {
 
         customerNameColumn.setCellValueFactory(new PropertyValueFactory<>("customerName"));
 
-        // Columnas ocultas pero necesarias para búsqueda
         customerAddressColumn.setCellValueFactory(new PropertyValueFactory<>("customerAddress"));
         customerPhoneColumn.setCellValueFactory(new PropertyValueFactory<>("customerPhone"));
 
-        // Columna Tipo (Delivery/Recoger) - MANEJO DE NULL
         typeColumn.setCellValueFactory(cellData -> {
             Boolean isDelivery = cellData.getValue().getIsDelivery();
             if (isDelivery == null) {
-                return new javafx.beans.property.SimpleStringProperty("🏪"); // Valor por defecto si es null
+                return new javafx.beans.property.SimpleStringProperty("🏪");
             }
             return new javafx.beans.property.SimpleStringProperty(
                     Boolean.TRUE.equals(isDelivery) ? "🚚" : "🏪"
             );
         });
 
-        // Columna Store
         storeColumn.setCellValueFactory(cellData -> {
             if (cellData.getValue().getStore() != null && cellData.getValue().getStore().getName() != null) {
                 return new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStore().getName());
@@ -128,7 +123,6 @@ public class OrderHistoryController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("-");
         });
 
-        // Columna Creado por (OCULTA)
         createdByColumn.setCellValueFactory(cellData -> {
             if (cellData.getValue().getCreatedByUser() != null &&
                     cellData.getValue().getCreatedByUser().getUsername() != null) {
@@ -140,33 +134,25 @@ public class OrderHistoryController implements Initializable {
         subtotalColumn.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
         totalColumn.setCellValueFactory(new PropertyValueFactory<>("total"));
 
-        // Columna método de pago - MEJORADA CON MÁS LÓGICA
         paymentMethodColumn.setCellValueFactory(cellData -> {
             Double cashAmount = cellData.getValue().getCashAmount();
             Double transferAmount = cellData.getValue().getTransferAmount();
 
-            // Inicializar con valor por defecto
             String paymentIcon = "-";
 
-            // Si ambos montos son válidos y mayores que 0
             if (cashAmount != null && cashAmount > 0 && transferAmount != null && transferAmount > 0) {
-                // Pago mixto
                 paymentIcon = "💰+💳";
             }
-            // Solo efectivo
             else if (cashAmount != null && cashAmount > 0 && (transferAmount == null || transferAmount <= 0)) {
                 paymentIcon = "💰";
             }
-            // Solo transferencia
             else if ((cashAmount == null || cashAmount <= 0) && transferAmount != null && transferAmount > 0) {
                 paymentIcon = "💳";
             }
-            // Si ambos son null o 0, queda "-"
 
             return new javafx.beans.property.SimpleStringProperty(paymentIcon);
         });
 
-        // Formatear columnas de dinero - SEPARAR TOTAL DEL RESTO
         subtotalColumn.setCellFactory(column -> new TableCell<Order, Double>() {
             @Override
             protected void updateItem(Double amount, boolean empty) {
@@ -177,7 +163,7 @@ public class OrderHistoryController implements Initializable {
                 } else {
                     setText(String.format("$%.0f", amount));
                     getStyleClass().add("subtotal-cell");
-                    setStyle("-fx-padding: 0 5 0 0;"); // Espacio derecho
+                    setStyle("-fx-padding: 0 5 0 0;");
                 }
             }
         });
@@ -192,7 +178,25 @@ public class OrderHistoryController implements Initializable {
                 } else {
                     setText(String.format("$%.0f", amount));
                     getStyleClass().add("total-cell");
-                    setStyle("-fx-padding: 0 10 0 0;"); // MÁS espacio derecho para separar de acciones
+                    setStyle("-fx-padding: 0 10 0 0;");
+                }
+            }
+        });
+
+        ordersTable.setRowFactory(tv -> new TableRow<Order>() {
+            @Override
+            protected void updateItem(Order order, boolean empty) {
+                super.updateItem(order, empty);
+
+                if (empty || order == null) {
+                    setStyle("");
+                } else {
+                    if (order.getDeletedAt() != null) {
+                        setStyle("-fx-background-color: #ffebee; " +
+                                "-fx-text-fill: #c62828;");
+                    } else {
+                        setStyle("");
+                    }
                 }
             }
         });
@@ -201,12 +205,11 @@ public class OrderHistoryController implements Initializable {
     private void setupActionsColumn() {
         actionsColumn.setCellFactory(param -> new TableCell<Order, Void>() {
             private final Button detailsBtn = new Button("👁");
-            private final Button editBtn = new Button("🖊"); // Icono más visible
+            private final Button editBtn = new Button("🖊");
             private final Button deleteBtn = new Button("🗑");
             private final HBox buttons = new HBox(5, detailsBtn, editBtn, deleteBtn);
 
             {
-                // Aplicar clases CSS compactas
                 detailsBtn.getStyleClass().add("compact-action-btn");
                 editBtn.getStyleClass().add("compact-action-btn");
                 deleteBtn.getStyleClass().add("compact-action-btn");
@@ -221,12 +224,10 @@ public class OrderHistoryController implements Initializable {
                 buttons.setMinHeight(36);
                 buttons.setPrefHeight(36);
 
-                // Configurar tooltips
                 detailsBtn.setTooltip(new Tooltip("Ver detalles"));
                 editBtn.setTooltip(new Tooltip("Editar"));
                 deleteBtn.setTooltip(new Tooltip("Eliminar"));
 
-                // Configurar acciones
                 detailsBtn.setOnAction(event -> {
                     Order order = getTableView().getItems().get(getIndex());
                     viewOrderDetails(order);
@@ -259,7 +260,7 @@ public class OrderHistoryController implements Initializable {
 
     private void loadOrders() {
         try {
-            List<Order> allOrders = orderService.getAllOrders();
+            List<Order> allOrders = orderService.getAllOrders(isAdmin);
             orders.setAll(allOrders);
             ordersTable.setItems(orders);
 
@@ -270,35 +271,14 @@ public class OrderHistoryController implements Initializable {
     }
 
     private void viewOrderDetails(Order order) {
-        StringBuilder details = new StringBuilder();
-        details.append("Orden: ").append(order.getOrderNumber()).append("\n");
-        details.append("Cliente: ").append(order.getCustomerName()).append("\n");
-        details.append("Dirección: ").append(order.getCustomerAddress() != null ? order.getCustomerAddress() : "").append("\n");
-        details.append("Teléfono: ").append(order.getCustomerPhone() != null ? order.getCustomerPhone() : "").append("\n");
-
-        // Tipo de entrega (manejo de null)
-        String deliveryType = "Recoger";
-        if (order.getIsDelivery() != null) {
-            deliveryType = order.getIsDelivery() ? "Delivery" : "Recoger";
+        try {
+            if (order.getOrderDetails() != null) {
+                WindowManager.openOrderDetailsWindow(null, order, false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            DialogUtil.showError("Error", "No se pudo abrir los detalles: " + e.getMessage());
         }
-        details.append("Tipo: ").append(deliveryType).append("\n");
-
-        // Método de pago detallado
-        String paymentDetail = getPaymentDetail(order);
-        details.append("Pago: ").append(paymentDetail).append("\n");
-
-        details.append("Subtotal: $").append(String.format("%.0f", order.getSubtotal())).append("\n");
-        details.append("Total: $").append(String.format("%.0f", order.getTotal())).append("\n");
-
-        if (order.getNotes() != null && !order.getNotes().isEmpty()) {
-            details.append("Notas: ").append(order.getNotes());
-        }
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Detalles del Pedido");
-        alert.setHeaderText("Detalles completos");
-        alert.setContentText(details.toString());
-        alert.showAndWait();
     }
 
     private String getPaymentDetail(Order order) {
@@ -317,28 +297,29 @@ public class OrderHistoryController implements Initializable {
     }
 
     private void editOrder(Order order) {
-        if (Session.getInstance().getCurrentUser().getId() != 1) {
-            DialogUtil.showWarning("Permiso Denegado", "Solo los administradores pueden editar pedidos.");
-            return;
+        try {
+            if (order.getOrderDetails() != null) {
+                Stage editStage = WindowManager.openOrderDetailsWindow(null, order, true);
+                if (editStage != null) {
+                    editStage.setOnHidden(e -> {
+                        loadOrders();
+                    });
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            DialogUtil.showError("Error", "No se pudo abrir los detalles: " + e.getMessage());
         }
-        DialogUtil.showInfo("Editar", "Funcionalidad de edición para: " + order.getOrderNumber());
     }
 
     private void deleteOrder(Order order) {
-        if (Session.getInstance().getCurrentUser().getId() != 1) {
-            DialogUtil.showWarning("Permiso Denegado", "Solo los administradores pueden eliminar pedidos.");
-            return;
-        }
+        boolean res = DialogUtil.showConfirmation("Confirmar Eliminación","¿Estás seguro de eliminar la orden " + order.getOrderNumber() +"?");
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Eliminación");
-        alert.setHeaderText("¿Estás seguro de eliminar esta orden?");
-        alert.setContentText("Orden: " + order.getOrderNumber() + "\nCliente: " + order.getCustomerName());
-
-        if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+        if (res) {
             try {
-                orders.remove(order);
-                DialogUtil.showConfirmation("Éxito", "Orden eliminada correctamente");
+                order.softDelete();
+                orderService.updateOrder(order);
+                loadOrders();
             } catch (Exception e) {
                 DialogUtil.showError("Error", "No se pudo eliminar la orden: " + e.getMessage());
             }
@@ -355,7 +336,6 @@ public class OrderHistoryController implements Initializable {
         for (Order order : orders) {
             boolean matches = true;
 
-            // Filtro de búsqueda (incluye campos ocultos)
             if (!searchText.isEmpty()) {
                 boolean found = (order.getOrderNumber() != null && order.getOrderNumber().toLowerCase().contains(searchText)) ||
                         (order.getCustomerName() != null && order.getCustomerName().toLowerCase().contains(searchText)) ||
@@ -367,7 +347,6 @@ public class OrderHistoryController implements Initializable {
                 }
             }
 
-            // Filtro de tipo (Delivery/Recoger) - MANEJO DE NULL
             if (matches && deliveryCheck != null && deliveryCheck.isSelected()) {
                 Boolean isDelivery = order.getIsDelivery();
                 if (isDelivery == null || !isDelivery) {
@@ -381,7 +360,6 @@ public class OrderHistoryController implements Initializable {
                 }
             }
 
-            // Filtro de pago (Efectivo/Transferencia)
             if (matches && cashCheck != null && cashCheck.isSelected()) {
                 Double cashAmount = order.getCashAmount();
                 if (cashAmount == null || cashAmount <= 0) {
@@ -395,13 +373,11 @@ public class OrderHistoryController implements Initializable {
                 }
             }
 
-            // Filtro de hoy
             if (matches && todayCheck != null && todayCheck.isSelected() && order.getCreatedAt() != null) {
                 LocalDate orderDate = order.getCreatedAt().toLocalDate();
                 matches = orderDate.equals(today);
             }
 
-            // Filtro de fechas
             if (matches && dateFromPicker != null && dateFromPicker.getValue() != null &&
                     order.getCreatedAt() != null) {
                 LocalDate orderDate = order.getCreatedAt().toLocalDate();

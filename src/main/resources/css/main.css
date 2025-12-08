@@ -20,7 +20,6 @@
     -fx-padding: 10 0 10 0;
 }
 
-/* TOOLBAR DE PESTAÑAS */
 .tab-toolbar {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #e0e0e0;
@@ -33,7 +32,6 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-/* PESTAÑA INDIVIDUAL */
 .tab-item {
     -fx-background-color: #e0e0e0;
     -fx-background-radius: 5px 5px 0 0;
@@ -61,14 +59,12 @@
     -fx-text-fill: white;
 }
 
-/* LABEL DE LA PESTAÑA */
 .tab-label {
     -fx-text-fill: #333333;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
-/* BOTÓN CERRAR PESTAÑA */
 .tab-close-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #666666;

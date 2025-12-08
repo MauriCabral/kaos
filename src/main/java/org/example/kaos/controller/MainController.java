@@ -45,7 +45,6 @@ public class MainController {
     @FXML
     public void handleOrderAction(ActionEvent actionEvent) {
         openNewOrderTab("Pedido " + orderCounter, "/fxml/order.fxml");
-        //ViewLoader.loadIn(contentArea, "/fxml/order.fxml");
     }
 
     @FXML
@@ -160,17 +159,6 @@ public class MainController {
     }
 
     private void closeTab(String tabId) {
-//        if (openTabs.size() <= 1) {
-//            DialogUtil.showWarning("Atención", "No puedes cerrar la última pestaña");
-//            return;
-//        }
-//        openTabs.remove(tabId);
-//        tabContainer.getChildren().removeIf(node -> tabId.equals(node.getUserData()));
-//
-//        if (tabId.equals(currentTabId)) {
-//            String newTabId = openTabs.keySet().iterator().next();
-//            switchToTab(newTabId);
-//        }
         openTabs.remove(tabId);
 
         tabContainer.getChildren().removeIf(node -> tabId.equals(node.getUserData()));

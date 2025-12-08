@@ -239,9 +239,6 @@ public class BurgerSelectionController implements Initializable {
         double totalToppingsPrice = toppingsPrice * quantity;
         double totalPrice = totalBasePrice + totalToppingsPrice;
 
-//        basePriceLabel.setText(String.format("$%.2f", basePrice));
-//        toppingsPriceLabel.setText(String.format("$%.2f", toppingsPrice));
-//        totalPriceLabel.setText(String.format("$%.2f", totalPrice));
         basePriceLabel.setText("$" + (int)basePrice);
         toppingsPriceLabel.setText("$" + (int)totalToppingsPrice);
         totalPriceLabel.setText("$" + (int)totalPrice);

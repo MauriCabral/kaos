@@ -34,7 +34,7 @@ public class Order {
     @Column(name = "is_delivery")
     private Boolean isDelivery = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "delivery_id", nullable = true)
     private Delivery delivery;
 
@@ -53,15 +53,15 @@ public class Order {
     @Column(name = "total", nullable = false)
     private Double total = 0.0;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdByUser;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch =  FetchType.EAGER)
     @Builder.Default
     private List<OrderDetail> orderDetails = new ArrayList<>();
 

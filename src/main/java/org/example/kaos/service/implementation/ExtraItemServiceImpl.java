@@ -16,13 +16,11 @@ public class ExtraItemServiceImpl implements IExtraItemService {
 
     @Override
     public ExtraItem getSingleExtra() {
-        // extra_id = 1 para papas (extra)
         return extraItemRepository.findByExtraItemId(1);
     }
 
     @Override
     public List<ExtraItem> getAllCombos() {
-        // extra_id = 2 para combos
         List<ExtraItem> allItems = extraItemRepository.findAll();
         return allItems.stream()
                 .filter(item -> item.getExtraItemId() == 2)

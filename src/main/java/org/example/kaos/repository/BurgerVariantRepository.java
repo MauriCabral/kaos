@@ -1,6 +1,7 @@
 package org.example.kaos.repository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.BurgerVariant;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class BurgerVariantRepository {
 
-    public List<BurgerVariant> findByBurgerId(long burgerId) {
+    public List<BurgerVariant> findByBurgerId(Long burgerId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             TypedQuery<BurgerVariant> query = em.createQuery(
@@ -112,5 +113,22 @@ public class BurgerVariantRepository {
         } finally {
             em.close();
         }
+    }
+
+    public BurgerVariant findByBurgerVariantId(Long id) {
+        EntityManager em = JpaUtil.getEntityManager();
+        BurgerVariant burgerVariant = null;
+        try {
+            TypedQuery<BurgerVariant> query = em.createQuery(
+                    "SELECT v FROM BurgerVariant v WHERE v.id = :id",
+                    BurgerVariant.class);
+            query.setParameter("id", id);
+            burgerVariant =query.getSingleResult();
+        } catch (NoResultException e) {
+            // burgerVariant no encontrado
+        } finally {
+            em.close();
+        }
+        return burgerVariant;
     }
 }
