@@ -91,14 +91,33 @@ public class OrderRepository {
         return orderNumber;
     }
 
-    public List<Order> findAll() {
+    public List<Order> findAll(Boolean isAdmin) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            TypedQuery<Order> query = em.createQuery(
-                    "SELECT o FROM Order o ORDER BY o.id DESC", Order.class);
+            StringBuilder jpql = new StringBuilder("SELECT o FROM Order o");
+            if (!isAdmin) {
+                jpql.append(" WHERE o.deletedAt IS NULL");
+            }
+            jpql.append(" ORDER BY o.id DESC");
+            TypedQuery<Order> query = em.createQuery(jpql.toString(), Order.class);
             return query.getResultList();
         } finally {
             em.close();
         }
+    }
+
+    public Order update(Order order) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(order);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+        return order;
     }
 }

@@ -102,9 +102,6 @@ public class ProductDialog {
         VBox descriptionBox = new VBox(3);
         Label descriptionLabel = new Label("Descripción *");
         descriptionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
-        //TextField descriptionField = new TextField();
-        //descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 30px;");
-        //descriptionBox.getChildren().addAll(descriptionLabel, descriptionField);
         TextArea descriptionField = new TextArea();
         descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 60px; -fx-wrap-text: true;");
         descriptionField.setPrefRowCount(3);
@@ -310,10 +307,6 @@ public class ProductDialog {
                                     Double.parseDouble(priceField.getText()), imageDataToUse, 2); // extra_id = 2
                             break;
                     }
-
-//                    if (mode == ProductMode.ADD) {
-//                        DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
-//                    }
                     dialog.close();
 
                     if (onSuccessCallback != null) {

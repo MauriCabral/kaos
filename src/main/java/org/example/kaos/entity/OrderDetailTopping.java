@@ -25,7 +25,7 @@ public class OrderDetailTopping {
     @JoinColumn(name = "topping_id", nullable = false)
     private Topping topping;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "burger_variant_id")
     private BurgerVariant burgerVariant;
 

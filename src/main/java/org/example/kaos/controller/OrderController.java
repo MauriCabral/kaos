@@ -470,12 +470,11 @@ public class OrderController implements Initializable {
             return;
         }
 
-        WindowManager.openOrderDetailsWindow(currentOrderDetails);
+        WindowManager.openOrderDetailsWindow(currentOrderDetails, null, false);
     }
 
     @FXML
     private void clearOrder() {
-        // Lógica para limpiar pedido
     }
 
     @FXML

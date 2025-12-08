@@ -1,23 +1,19 @@
-/* ORDER HISTORY - COMPACTO */
 .root {
     -fx-font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     -fx-background-color: #f8f9fa;
 }
 
-/* CONTENEDOR PRINCIPAL */
 .container {
     -fx-padding: 15;
     -fx-spacing: 12;
 }
 
-/* TÍTULO COMPACTO */
 .compact-title {
     -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: #e9500e;
 }
 
-/* PANEL SUPERIOR COMPACTO */
 .compact-search-field {
     -fx-font-size: 12px;
     -fx-background-color: white;
@@ -33,7 +29,6 @@
     -fx-border-color: #e9500e;
 }
 
-/* BOTONES COMPACTOS */
 .compact-search-btn {
     -fx-background-color: #e9500e;
     -fx-text-fill: white;
@@ -70,7 +65,6 @@
     -fx-background-color: #5a6268;
 }
 
-/* FILTROS COMPACTOS */
 .compact-filter-container {
     -fx-padding: 8 0 10 0;
     -fx-background-color: #f0f2f5;
@@ -84,7 +78,6 @@
     -fx-font-weight: 500;
 }
 
-/* CHECKBOXES COMPACTOS */
 .compact-checkbox {
     -fx-font-size: 11px;
     -fx-text-fill: #555;
@@ -110,7 +103,6 @@
     -fx-border-color: #e9500e;
 }
 
-/* DATE PICKER COMPACTO */
 .compact-date-filter {
     -fx-font-size: 11px;
     -fx-background-color: white;
@@ -129,7 +121,6 @@
     -fx-pref-width: 25px;
 }
 
-/* TABLA COMPACTA CON LÍNEAS VERTICALES */
 .compact-order-table {
     -fx-background-color: white;
     -fx-border-radius: 8px;
@@ -139,7 +130,6 @@
     -fx-table-cell-border-color: #e0e0e0;
 }
 
-/* HEADERS CON LÍNEAS VERTICALES - CORREGIDO */
 .compact-order-table .column-header {
     -fx-background-color: #e9500e;
     -fx-border-color: #e9ecef;
@@ -147,7 +137,6 @@
     -fx-padding: 8 6;
 }
 
-/* ÚLTIMO HEADER SIN LÍNEA DERECHA */
 .compact-order-table .column-header:last-child {
     -fx-border-width: 0 0 1px 0;
 }
@@ -157,7 +146,6 @@
     -fx-background-radius: 8px 8px 0 0;
 }
 
-/* TEXTOS DE HEADERS - TEXTO BLANCO CON !important */
 .compact-order-table .column-header .label {
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 0 0 0 5px;
@@ -166,7 +154,6 @@
     -fx-font-weight: 700;
 }
 
-/* FILAS DE TABLA COMPACTAS */
 .compact-order-table .table-row-cell {
     -fx-background-color: white;
     -fx-border-color: transparent;
@@ -184,7 +171,6 @@
     -fx-background-color: #f0f7ff;
 }
 
-/* CELDAS CON LÍNEAS VERTICALES - PARA TODAS LAS COLUMNAS EXCEPTO ACCIONES */
 .compact-order-table .table-cell {
     -fx-font-size: 11px;
     -fx-text-fill: #333;
@@ -193,13 +179,11 @@
     -fx-border-width: 0 1px 1px 0;
 }
 
-/* CELDA DE ACCIONES SIN LÍNEA DERECHA */
 .compact-order-table .table-cell:last-child {
     -fx-border-color: #e0e0e0 transparent #e0e0e0 transparent;
     -fx-border-width: 0 0 1px 0;
 }
 
-/* QUITAR LÍNEA INFERIOR DE LA ÚLTIMA FILA */
 .compact-order-table .table-row-cell:last-child .table-cell {
     -fx-border-color: #e0e0e0 transparent transparent #e0e0e0;
     -fx-border-width: 0 1px 0 0;
@@ -210,7 +194,6 @@
     -fx-border-width: 0;
 }
 
-/* ANCHOS DE COLUMNAS COMPACTOS - AJUSTADOS */
 .compact-id-column {
     -fx-alignment: center;
     -fx-pref-width: 40;
@@ -239,7 +222,6 @@
     -fx-max-width: 200;
 }
 
-/* COLUMNAS OCULTAS - MANTENER PERO INVISIBLES */
 .compact-address-column {
     -fx-alignment: center-left;
     -fx-pref-width: 0;
@@ -268,7 +250,6 @@
     -fx-min-width: 100;
 }
 
-/* CREADOR OCULTO PARA TODOS */
 .compact-creator-column {
     -fx-alignment: center-left;
     -fx-pref-width: 0;
@@ -303,7 +284,6 @@
     -fx-min-width: 90;
 }
 
-/* CONTENEDOR DE BOTONES CENTRADO VERTICALMENTE */
 .compact-order-table .table-cell:last-child {
     -fx-alignment: CENTER;
     -fx-padding: 0;
@@ -314,7 +294,6 @@
     -fx-spacing: 5px;
 }
 
-/* ESTILOS PARA CELDAS DE DINERO */
 .subtotal-cell {
     -fx-font-weight: 600;
     -fx-text-fill: #333;
@@ -329,7 +308,6 @@
     -fx-padding: 0 15 0 0;
 }
 
-/* BOTONES DE ACCIÓN COMPACTOS */
 .compact-action-btn {
     -fx-background-color: transparent;
     -fx-border-color: #e1e5e9;
@@ -350,7 +328,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 2, 0, 0, 1);
 }
 
-/* Botón de editar especial */
 .compact-action-btn:nth-child(2) {
     -fx-border-color: #ff9800;
     -fx-font-size: 12px;
@@ -361,7 +338,6 @@
     -fx-border-color: #ff9800;
 }
 
-/* SCROLLBAR COMPACTO - HABILITADO */
 .compact-order-table .scroll-bar:vertical {
     -fx-background-color: transparent;
     -fx-background-radius: 0 8px 8px 0;
@@ -385,7 +361,6 @@
     -fx-background-color: #a8b1bb;
 }
 
-/* ALINEACIÓN DE COLUMNAS */
 .center-cell {
     -fx-alignment: center;
 }

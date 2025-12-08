@@ -9,11 +9,8 @@ import org.example.kaos.util.JpaUtil;
 public class App extends Application {
     @Override
     public void start(Stage stage) throws Exception {
-
-        //SchemaManager.createSchemaAndTables();
         JpaUtil.getEntityManager().close();
 
-        // login
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setScene(scene);

@@ -8,7 +8,7 @@ public interface IExtraItemService {
     ExtraItem getSingleExtra();
     boolean hasExtra();
     List<ExtraItem> getAllCombos();
-    boolean saveOrUpdateExtraItem(ExtraItem extraItem, boolean isNew); // Asegurar que este nombre coincida
+    boolean saveOrUpdateExtraItem(ExtraItem extraItem, boolean isNew);
     boolean deleteExtraItem(Long id);
     boolean nameExists(Long id, String name);
 }

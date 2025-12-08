@@ -38,13 +38,24 @@ public class OrderDetailsController {
     @FXML private TextField cashAmountField;
     @FXML private CheckBox transferCheckBox;
     @FXML private TextField transferAmountField;
+    @FXML private Button btnConfirm;
+    @FXML private Button btnCancel;
+    @FXML private Button btnBack;
+    @FXML private CheckBox deletedCheckBox;
+    @FXML private HBox adminContainer;
+    @FXML private ComboBox<Delivery> deliveryComboBox;
 
     private final IOrderService orderService = new OrderServiceImpl();
     private final IOrderDetailService orderDetailService = new OrderDetailServiceImpl();
 
     private List<OrderDetail> orderDetails;
+    private List<Delivery> deliveriesList = new ArrayList<>();
+    private Order order;
     private Stage stage;
-    private boolean orderConfirmed = false;
+    private boolean isEditMode = false;
+    private boolean isViewMode = false;
+    private boolean isAdmin = false;
+
     private double cash = 0;
     private double transfer = 0;
     private double delivery = 0;
@@ -54,48 +65,222 @@ public class OrderDetailsController {
     public void initialize() {
         setupDefaultData();
         setupListeners();
+
+        isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
+        adminContainer.setVisible(isAdmin);
+        deletedCheckBox.setVisible(isAdmin);
     }
 
     public void setOrderDetails(List<OrderDetail> orderDetails) {
         this.orderDetails = orderDetails;
-        updateOrderDisplay();
+        this.isViewMode = false;
+        this.isEditMode = false;
+        setupNewOrderMode();
+    }
+
+    public void setOrder(Order order, boolean isEditMode) {
+        this.order = order;
+        this.isViewMode = true;
+        this.isEditMode = isEditMode;
+
+        if (isEditMode) {
+            setupEditMode();
+        } else {
+            setupViewMode();
+        }
     }
 
     public void setStage(Stage stage) {
         this.stage = stage;
     }
 
+    private void setupNewOrderMode() {
+        btnConfirm.setText("Confirmar Pedido");
+        btnConfirm.setVisible(true);
+        btnCancel.setVisible(true);
+        btnBack.setVisible(true);
+
+        setFieldsEditable(true);
+
+        deliveryCheckBox.setVisible(true);
+        cashCheckBox.setVisible(true);
+        transferCheckBox.setVisible(true);
+        deletedCheckBox.setVisible(false);
+
+        setupDefaultData();
+        updateOrderDisplay();
+    }
+
+    private void setupViewMode() {
+        loadOrderData();
+
+        btnConfirm.setVisible(false);
+        btnCancel.setVisible(false);
+        btnBack.setVisible(true);
+        btnBack.setText("Salir");
+
+        setFieldsEditable(false);
+
+        deliveryCheckBox.setDisable(true);
+        cashCheckBox.setDisable(true);
+        transferCheckBox.setDisable(true);
+
+        showPaymentValues();
+
+        updateOrderDisplay();
+    }
+
+    private void setupEditMode() {
+        loadOrderData();
+
+        btnConfirm.setText("Guardar");
+        btnConfirm.setVisible(true);
+        btnCancel.setVisible(true);
+        btnBack.setVisible(false);
+
+        setFieldsEditable(true);
+
+        deliveryCheckBox.setVisible(true);
+        cashCheckBox.setVisible(true);
+        transferCheckBox.setVisible(true);
+
+        boolean isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
+        adminContainer.setVisible(isAdmin);
+        deletedCheckBox.setVisible(isAdmin);
+        deletedCheckBox.setDisable(false);
+
+        updateOrderDisplay();
+    }
+
+    private void setFieldsEditable(boolean editable) {
+        customerNameField.setEditable(editable);
+        customerAddressField.setEditable(editable);
+        customerPhoneField.setEditable(editable);
+        deliveryPriceField.setEditable(editable);
+        cashAmountField.setEditable(editable);
+        transferAmountField.setEditable(editable);
+        notesTextArea.setEditable(editable);
+
+        if (!editable) {
+            customerNameField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            customerAddressField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            customerPhoneField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            deliveryPriceField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            cashAmountField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            transferAmountField.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+            notesTextArea.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e0e0e0;");
+        } else {
+            customerNameField.setStyle("");
+            customerAddressField.setStyle("");
+            customerPhoneField.setStyle("");
+            deliveryPriceField.setStyle("");
+            cashAmountField.setStyle("");
+            transferAmountField.setStyle("");
+            notesTextArea.setStyle("");
+        }
+    }
+
+    private void showPaymentValues() {
+        if (order != null) {
+            if (order.getIsDelivery() != null && order.getIsDelivery()) {
+                deliveryPriceField.setText(String.format("%.0f", order.getDeliveryAmount()));
+            }
+
+            if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+                cashAmountField.setText(String.format("%.0f", order.getCashAmount()));
+            }
+
+            if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+                transferAmountField.setText(String.format("%.0f", order.getTransferAmount()));
+            }
+        }
+    }
+
     private void setupDefaultData() {
-        orderNumberLabel.setText("#ORD-"/* + (System.currentTimeMillis() % 10000)*/);
+        orderNumberLabel.setText("#ORD-");
         customerNameField.setText("");
         deliveryPriceField.setText("2000");
-        cashAmountField.setText("0.00");
-        transferAmountField.setText("0.00");
+        cashAmountField.setText("0");
+        transferAmountField.setText("0");
+        notesTextArea.setText("");
     }
 
     private void setupListeners() {
         deliveryCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             deliveryPriceField.setVisible(newVal);
-            updateOrderDisplay();
+            if (!isViewMode) {
+                updateOrderDisplay();
+            }
         });
 
         deliveryPriceField.textProperty().addListener((obs, oldVal, newVal) -> {
-            updateOrderDisplay();
+            if (!isViewMode) {
+                updateOrderDisplay();
+            }
         });
 
         cashCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             cashAmountField.setVisible(newVal);
-            if (!newVal) cashAmountField.setText("0.00");
+            if (isEditMode) cashAmountField.setText(order.getCashAmount().toString().trim());
+            else if (!newVal) cashAmountField.setText("0");
         });
 
         transferCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             transferAmountField.setVisible(newVal);
-            if (!newVal) transferAmountField.setText("0.00");
+            if (isEditMode) transferAmountField.setText(order.getTransferAmount().toString().trim());
+            else if (!newVal) transferAmountField.setText("0");
         });
     }
 
+    private void loadOrderData() {
+        if (order == null) return;
+
+        orderNumberLabel.setText(order.getOrderNumber());
+
+        customerNameField.setText(order.getCustomerName());
+        customerAddressField.setText(order.getCustomerAddress() != null ? order.getCustomerAddress() : "");
+        customerPhoneField.setText(order.getCustomerPhone() != null ? order.getCustomerPhone() : "");
+        notesTextArea.setText(order.getNotes() != null ? order.getNotes() : "");
+
+        if (order.getIsDelivery() != null) {
+            deliveryCheckBox.setSelected(Boolean.TRUE.equals(order.getIsDelivery()));
+            if (order.getDeliveryAmount() != null) {
+                deliveryPriceField.setText(String.format("%.0f", order.getDeliveryAmount()));
+            }
+            setupDeliveryComboBox();
+        }
+
+        if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+            cashCheckBox.setSelected(true);
+            cashAmountField.setText(String.format("%.0f", order.getCashAmount()));
+        }
+
+        if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+            transferCheckBox.setSelected(true);
+            transferAmountField.setText(String.format("%.0f", order.getTransferAmount()));
+        }
+
+        boolean isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
+        if (isAdmin && deletedCheckBox != null) {
+            deletedCheckBox.setSelected(order.getDeletedAt() != null);
+        }
+
+        subtotalLabel.setText(String.format("$%.0f", order.getSubtotal()));
+        totalLabel.setText(String.format("$%.0f", order.getTotal()));
+        deliveryPriceLabel.setText(String.format("$%.0f",
+                order.getDeliveryAmount() != null ? order.getDeliveryAmount() : 0.0));
+    }
+
     private void updateOrderDisplay() {
-        if (orderDetails == null || orderDetails.isEmpty()) {
+        List<OrderDetail> detailsToShow = null;
+
+        if (isViewMode && order != null) {
+            detailsToShow = order.getOrderDetails();
+        } else if (!isViewMode && orderDetails != null) {
+            detailsToShow = orderDetails;
+        }
+
+        if (detailsToShow == null || detailsToShow.isEmpty()) {
             showEmptyOrderMessage();
             return;
         }
@@ -103,27 +288,28 @@ public class OrderDetailsController {
         itemsContainer.getChildren().clear();
         double subtotal = 0;
 
-        for (OrderDetail detail : orderDetails) {
+        for (OrderDetail detail : detailsToShow) {
             HBox itemCard = createItemCard(detail);
             itemsContainer.getChildren().add(itemCard);
             subtotal += detail.getSubtotal();
         }
 
-        double deliveryPrice = 0;
-        if (deliveryCheckBox.isSelected()) {
-            try {
-                deliveryPrice = Double.parseDouble(deliveryPriceField.getText());
-                subtotal += deliveryPrice;
-            } catch (NumberFormatException e) {
-                deliveryPrice = 0;
+        if (!isViewMode || isEditMode) {
+            double deliveryPrice = 0;
+            if (deliveryCheckBox.isSelected()) {
+                try {
+                    deliveryPrice = Double.parseDouble(deliveryPriceField.getText());
+                } catch (NumberFormatException e) {
+                    deliveryPrice = 0;
+                }
             }
+
+            double total = subtotal + deliveryPrice;
+
+            subtotalLabel.setText(String.format("$%.0f", subtotal));
+            totalLabel.setText(String.format("$%.0f", total));
+            deliveryPriceLabel.setText(String.format("$%.0f", deliveryPrice));
         }
-
-        double total = subtotal;
-
-        subtotalLabel.setText(String.format("$%.2f", subtotal));
-        totalLabel.setText(String.format("$%.2f", total));
-        deliveryPriceLabel.setText(String.format("$%.2f", deliveryPrice));
     }
 
     private void showEmptyOrderMessage() {
@@ -234,11 +420,15 @@ public class OrderDetailsController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button deleteBtn = new Button("✕");
-        deleteBtn.getStyleClass().add("delete-btn");
-        deleteBtn.setOnAction(e -> removeItem(detail));
+        if (!isViewMode && !isEditMode) {
+            Button deleteBtn = new Button("✕");
+            deleteBtn.getStyleClass().add("delete-btn");
+            deleteBtn.setOnAction(e -> removeItem(detail));
+            card.getChildren().addAll(infoBox, spacer, deleteBtn);
+        } else {
+            card.getChildren().addAll(infoBox);
+        }
 
-        card.getChildren().addAll(infoBox, spacer, deleteBtn);
         return card;
     }
 
@@ -251,13 +441,82 @@ public class OrderDetailsController {
 
     @FXML
     private void confirmOrder(ActionEvent event) {
-        try {
-            orderConfirmed = false;
+        if (isViewMode && isEditMode) {
+            saveOrderChanges();
+        } else if (!isViewMode) {
+            createNewOrder();
+        }
+    }
 
+    private void saveOrderChanges() {
+        try {
+            if (customerNameField.getText().trim().isEmpty()) {
+                DialogUtil.showWarning("Error", "El nombre del cliente es obligatorio");
+                customerNameField.requestFocus();
+                return;
+            }
+
+            if (!validator()) return;
+
+            order.setCustomerName(customerNameField.getText().trim());
+            order.setCustomerAddress(customerAddressField.getText().trim());
+            order.setCustomerPhone(customerPhoneField.getText().trim());
+            order.setIsDelivery(deliveryCheckBox.isSelected());
+            order.setNotes(notesTextArea.getText());
+
+            try {
+                if (deliveryCheckBox.isSelected()) {
+                    order.setDeliveryAmount(Double.parseDouble(deliveryPriceField.getText()));
+                } else {
+                    order.setDeliveryAmount(0.0);
+                }
+
+                if (cashCheckBox.isSelected()) {
+                    order.setCashAmount(Double.parseDouble(cashAmountField.getText()));
+                } else {
+                    order.setCashAmount(0.0);
+                }
+
+                if (transferCheckBox.isSelected()) {
+                    order.setTransferAmount(Double.parseDouble(transferAmountField.getText()));
+                } else {
+                    order.setTransferAmount(0.0);
+                }
+            } catch (NumberFormatException e) {
+                DialogUtil.showError("Error", "Los montos deben ser números válidos");
+                return;
+            }
+            order.setTotal(total);
+
+            if (isAdmin && deletedCheckBox != null) {
+                if (deletedCheckBox.isSelected()) {
+                    if (order.getDeletedAt() == null) {
+                        order.softDelete();
+                    }
+                } else {
+                    order.setDeletedAt(null);
+                }
+            }
+
+            Order updatedOrder = orderService.updateOrder(order);
+            if (updatedOrder != null) {
+                DialogUtil.showInfo("Éxito", "Orden actualizada correctamente");
+                this.order = updatedOrder;
+                goBack();
+            } else {
+                DialogUtil.showError("Error", "No se pudo actualizar la orden");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            DialogUtil.showError("Error", "Error al actualizar la orden: " + e.getMessage());
+        }
+    }
+
+    private void createNewOrder() {
+        try {
             boolean valid = validator();
 
             if (valid) {
-
                 Store store = Session.getInstance().getCurrentUser().getStore();
                 User currentUser = Session.getInstance().getCurrentUser();
 
@@ -281,7 +540,6 @@ public class OrderDetailsController {
 
                 if (savedOrder == null || savedOrder.getId() == null) {
                     DialogUtil.showError("Error", "No se pudo crear la orden");
-                    event.consume();
                     return;
                 }
 
@@ -302,22 +560,9 @@ public class OrderDetailsController {
                     return;
                 }
 
-                orderConfirmed = true;
-
-                /*DialogUtil.showInfo("Éxito",
-                        String.format("Pedido %s confirmado correctamente\n\n" +
-                                        "Cliente: %s\n" +
-                                        "Total: $%.2f\n" +
-                                        "Efectivo: $%.2f\n" +
-                                        "Transferencia: $%.2f",
-                                savedOrder.getOrderNumber(),
-                                savedOrder.getCustomerName(),
-                                savedOrder.getTotal(),
-                                savedOrder.getCashAmount(),
-                                savedOrder.getTransferAmount()));*/
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
 
-                if (stage != null && orderConfirmed) {
+                if (stage != null) {
                     stage.close();
                 }
             }
@@ -392,7 +637,7 @@ public class OrderDetailsController {
             }
 
         } catch (NumberFormatException e) {
-            DialogUtil.showError("Error", "Verifique que todos los montos sean números válidos\nEjemplo: 1500.50");
+            DialogUtil.showError("Error", "Verifique que todos los montos sean números válidos");
             return false;
         }
 
@@ -400,29 +645,25 @@ public class OrderDetailsController {
     }
 
     private double calculateSubtotal() {
-        if (orderDetails == null) return 0;
-
-        double subtotal = orderDetails.stream().mapToDouble(OrderDetail::getSubtotal).sum();
-        return subtotal;
-    }
-    /*private double calculateSubtotal() {
-        if (orderDetails == null) return 0;
-
-        double subtotal = orderDetails.stream().mapToDouble(OrderDetail::getSubtotal).sum();
-        if (deliveryCheckBox.isSelected()) {
-            try {
-                subtotal += Double.parseDouble(deliveryPriceField.getText());
-            } catch (Exception e) {}
+        List<OrderDetail> detailsToCalculate = null;
+        if (isEditMode && order != null) {
+            detailsToCalculate = order.getOrderDetails();
+        } else if (!isViewMode) {
+            detailsToCalculate = orderDetails;
         }
-        return subtotal;
-    }*/
+        if (detailsToCalculate == null || detailsToCalculate.isEmpty()) {
+            return 0;
+        }
+        return detailsToCalculate.stream().mapToDouble(OrderDetail::getSubtotal).sum();
+    }
 
     @FXML
     private void cancelOrder() {
-        if (DialogUtil.showConfirmation("Cancelar Orden", "¿Estás seguro de cancelar esta orden?")) {
-            if (stage != null) {
-                orderDetails.clear();
-                stage.close();
+        if (isViewMode && isEditMode) {
+            goBack();
+        } else {
+            if (DialogUtil.showConfirmation("Cancelar", "¿Estás seguro de cancelar?")) {
+                goBack();
             }
         }
     }
@@ -430,5 +671,32 @@ public class OrderDetailsController {
     @FXML
     private void goBack() {
         if (stage != null) stage.close();
+    }
+
+    private void setupDeliveryComboBox() {
+        deliveryComboBox.setVisible(true);
+        deliveryComboBox.setCellFactory(param -> new ListCell<Delivery>() {
+            @Override
+            protected void updateItem(Delivery delivery, boolean empty) {
+                super.updateItem(delivery, empty);
+                if (empty || delivery == null) {
+                    setText(null);
+                } else {
+                    setText(delivery.getName());
+                }
+            }
+        });
+
+        deliveryComboBox.setButtonCell(new ListCell<Delivery>() {
+            @Override
+            protected void updateItem(Delivery delivery, boolean empty) {
+                super.updateItem(delivery, empty);
+                if (empty || delivery == null) {
+                    setText(null);
+                } else {
+                    setText(delivery.getName());
+                }
+            }
+        });
     }
 }

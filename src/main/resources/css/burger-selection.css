@@ -1,10 +1,8 @@
-/* BURGER SELECTION - OPTIMIZADO PARA ESPACIO */
 .root {
     -fx-font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     -fx-background-color: #fafafa;
 }
 
-/* HEADER COMPACTO */
 .header {
     -fx-background-color: linear-gradient(to right, #e9500e, #ff6b35);
     -fx-effect: dropshadow(gaussian, rgba(233, 80, 14, 0.2), 0, 0, 0, 6);
@@ -28,7 +26,6 @@
     -fx-font-weight: 500;
 }
 
-/* SECTION LABELS MÁS COMPACTOS */
 .section-label {
     -fx-font-size: 12px;
     -fx-font-weight: 700;
@@ -36,7 +33,6 @@
     -fx-letter-spacing: 0.3px;
 }
 
-/* TÍTULO DE TOPPINGS EN NEGRITA */
 .toppings-title {
     -fx-font-size: 13px;
     -fx-font-weight: 800;
@@ -44,7 +40,6 @@
     -fx-padding: 0 0 0 2px;
 }
 
-/* HEADERS DE RADIO BUTTONS */
 .radio-header {
     -fx-font-size: 10px;
     -fx-font-weight: 700;
@@ -52,7 +47,6 @@
     -fx-padding: 0 2px;
 }
 
-/* BURGER IMAGE MÁS COMPACTA */
 .burger-image {
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 8, 0.3, 0, 4);
     -fx-border-radius: 12px;
@@ -69,7 +63,6 @@
     -fx-text-alignment: center;
 }
 
-/* COMBOBOX MÁS COMPACTO */
 .variant-combo {
     -fx-font-size: 12px;
     -fx-background-color: white;
@@ -84,13 +77,11 @@
     -fx-border-color: #e9500e;
 }
 
-/* SEPARADORES COMPACTOS */
 .elegant-separator .line {
     -fx-border-color: #f0f0f0;
     -fx-border-width: 1px;
 }
 
-/* TOPPINGS CONTAINER CON MÁS ESPACIO */
 .toppings-container {
     -fx-background-color: white;
     -fx-border-radius: 10px;
@@ -108,7 +99,6 @@
     -fx-background-insets: 0;
 }
 
-/* FILA DE TOPPING MÁS COMPACTA Y JUNTA */
 .topping-row {
     -fx-padding: 5px 10px;
     -fx-spacing: 8px;
@@ -131,7 +121,6 @@
     -fx-padding: 0 0 0 5px;
 }
 
-/* PRECIO MÁS LARGO Y BIEN FORMATEADO */
 .topping-price {
     -fx-font-size: 13px;
     -fx-text-fill: #28a745;
@@ -141,7 +130,6 @@
     -fx-padding: 0 0 0 5px;
 }
 
-/* RADIO BUTTONS MÁS JUNTOS Y COMPACTOS */
 .radio-button {
     -fx-font-size: 12px;
     -fx-text-fill: #555;
@@ -180,14 +168,12 @@
     -fx-background-color: white;
 }
 
-/* CONTENEDOR DE RADIO BUTTONS MÁS JUNTOS */
 .radio-box {
     -fx-spacing: 10px;
     -fx-alignment: CENTER_RIGHT;
     -fx-padding: 0 10px 0 0;
 }
 
-/* OBSERVACIONES COMPACTAS */
 .observations-field {
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
@@ -202,7 +188,6 @@
     -fx-border-color: #e9500e;
 }
 
-/* SUMMARY CON PRECIOS MÁS GRANDES */
 .summary-container {
     -fx-background-color: white;
     -fx-border-radius: 14px;
@@ -226,7 +211,6 @@
     -fx-font-weight: 700;
 }
 
-/* PRECIOS MÁS GRANDES Y VISIBLES */
 .price-base {
     -fx-font-size: 18px;
     -fx-text-fill: #333;
@@ -245,14 +229,12 @@
     -fx-text-fill: #e9500e;
 }
 
-/* FOOTER COMPACTO */
 .footer {
     -fx-background-color: white;
     -fx-border-color: #f0f0f0;
     -fx-border-width: 1.5px 0 0 0;
 }
 
-/* BOTONES COMPACTOS */
 .confirm-btn {
     -fx-background-color: #e9500e;
     -fx-text-fill: white;
@@ -288,14 +270,12 @@
     -fx-text-fill: #e9500e;
 }
 
-/* HINT LABELS COMPACTOS */
 .hint-label {
     -fx-font-size: 10px;
     -fx-text-fill: #888;
     -fx-font-style: italic;
 }
 
-/* ESTILOS PARA EL CONTADOR */
 .counter-btn {
     -fx-background-color: #e9500e;
     -fx-text-fill: white;
