@@ -112,6 +112,9 @@
     -fx-padding: 5 8;
     -fx-pref-height: 28;
     -fx-min-height: 28;
+    -fx-pref-width: 110px;
+    -fx-min-width: 110px;
+    -fx-max-width: 110px;
 }
 
 .compact-date-filter .arrow-button {
@@ -119,6 +122,30 @@
     -fx-border-color: #e1e5e9;
     -fx-border-radius: 0 4px 4px 0;
     -fx-pref-width: 25px;
+}
+
+.compact-date-filter .text-field {
+    -fx-pref-width: 85px;
+    -fx-min-width: 85px;
+    -fx-padding: 0 2 0 5;
+}
+
+.compact-date-filter-large {
+    -fx-font-size: 11px;
+    -fx-background-color: white;
+    -fx-border-color: #e1e5e9;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 5 8;
+    -fx-pref-height: 28;
+    -fx-min-height: 28;
+    -fx-pref-width: 130px;
+    -fx-min-width: 130px;
+}
+
+.compact-date-filter-large .text-field {
+    -fx-pref-width: 105px;
+    -fx-min-width: 105px;
 }
 
 .compact-order-table {
@@ -371,4 +398,43 @@
 
 .right-cell {
     -fx-alignment: center-right;
+}
+
+/* VERSION CON ICONOS */
+.counters-container {
+    -fx-padding: 12 0 0 0;
+    -fx-border-color: #e9500e;
+    -fx-border-width: 2 0 0 0;
+}
+
+.counter-item {
+    -fx-spacing: 5;
+    -fx-padding: 8 12;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+}
+
+.total-counter .counter-icon {
+    -fx-text-fill: #333;
+    -fx-font-size: 14px;
+}
+
+.cash-counter .counter-icon {
+    -fx-text-fill: #28a745;
+    -fx-font-size: 14px;
+}
+
+.transfer-counter .counter-icon {
+    -fx-text-fill: #007bff;
+    -fx-font-size: 14px;
+}
+
+.delivery-counter .counter-icon {
+    -fx-text-fill: #e9500e;
+    -fx-font-size: 14px;
+}
+
+.overall-counter .counter-icon {
+    -fx-text-fill: #e9500e;
+    -fx-font-size: 14px;
 }

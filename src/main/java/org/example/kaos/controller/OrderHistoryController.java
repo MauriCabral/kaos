@@ -19,6 +19,7 @@ import org.example.kaos.util.WindowManager;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -50,7 +51,11 @@ public class OrderHistoryController implements Initializable {
     @FXML private DatePicker dateFromPicker;
     @FXML private DatePicker dateToPicker;
     @FXML private HBox filterContainer;
-    @FXML private Label titleLabel;
+
+    @FXML private Label totalOrdersLabel;
+    @FXML private Label cashTotalLabel;
+    @FXML private Label transferTotalLabel;
+    @FXML private Label deliveryTotalLabel;
 
     private final IOrderService orderService = new OrderServiceImpl();
     private final ObservableList<Order> orders = FXCollections.observableArrayList();
@@ -62,10 +67,15 @@ public class OrderHistoryController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         try {
             isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
+
+            dateFromPicker.setValue(LocalDate.now().minusDays(1));
+            dateToPicker.setValue(LocalDate.now());
+
             setupView();
             setupTableColumns();
             loadOrders();
             setupActionsColumn();
+            setupAutoFilterListeners();
         } catch (Exception e) {
             e.printStackTrace();
             DialogUtil.showError("Error de Inicialización", "No se pudo inicializar la pantalla: " + e.getMessage());
@@ -73,7 +83,6 @@ public class OrderHistoryController implements Initializable {
     }
 
     private void setupView() {
-
         if (!isAdmin) {
             idColumn.setVisible(false);
             storeColumn.setVisible(false);
@@ -107,10 +116,16 @@ public class OrderHistoryController implements Initializable {
         customerPhoneColumn.setCellValueFactory(new PropertyValueFactory<>("customerPhone"));
 
         typeColumn.setCellValueFactory(cellData -> {
-            Boolean isDelivery = cellData.getValue().getIsDelivery();
+            Order order = cellData.getValue();
+            Boolean isDelivery = order.getIsDelivery();
             if (isDelivery == null) {
                 return new javafx.beans.property.SimpleStringProperty("🏪");
             }
+
+            if (Boolean.TRUE.equals(isDelivery) && order.getDelivery() == null) {
+                return new javafx.beans.property.SimpleStringProperty("🚚 ⚠");
+            }
+
             return new javafx.beans.property.SimpleStringProperty(
                     Boolean.TRUE.equals(isDelivery) ? "🚚" : "🏪"
             );
@@ -194,10 +209,23 @@ public class OrderHistoryController implements Initializable {
                     if (order.getDeletedAt() != null) {
                         setStyle("-fx-background-color: #ffebee; " +
                                 "-fx-text-fill: #c62828;");
+                    } else if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDelivery() == null) {
+                        setStyle("-fx-background-color: #e3f2fd; " +
+                                "-fx-text-fill: #1565c0; " +
+                                "-fx-font-weight: bold;");
                     } else {
                         setStyle("");
                     }
                 }
+            }
+
+            {
+                setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2 && !isEmpty()) {
+                        Order order = getItem();
+                        editOrder(order);
+                    }
+                });
             }
         });
     }
@@ -264,6 +292,8 @@ public class OrderHistoryController implements Initializable {
             orders.setAll(allOrders);
             ordersTable.setItems(orders);
 
+            updateCounters(allOrders);
+
         } catch (Exception e) {
             e.printStackTrace();
             DialogUtil.showError("Error", "No se pudieron cargar las órdenes: " + e.getMessage());
@@ -326,67 +356,106 @@ public class OrderHistoryController implements Initializable {
         }
     }
 
-    @FXML
-    private void handleSearch() {
-        String searchText = searchField.getText().trim().toLowerCase();
-        LocalDate today = LocalDate.now();
+    private void setupAutoFilterListeners() {
+        deliveryCheck.selectedProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        pickupCheck.selectedProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        cashCheck.selectedProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        transferCheck.selectedProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        todayCheck.selectedProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        dateFromPicker.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        dateToPicker.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+    }
 
+    private void applyFilters() {
         ObservableList<Order> filtered = FXCollections.observableArrayList();
+
+        LocalDate today = LocalDate.now();
+        LocalDate fromDate = dateFromPicker.getValue();
+        LocalDate toDate = dateToPicker.getValue();
+
+        boolean filterDelivery = deliveryCheck.isSelected();
+        boolean filterPickup = pickupCheck.isSelected();
+        boolean filterCash = cashCheck.isSelected();
+        boolean filterTransfer = transferCheck.isSelected();
+        boolean filterToday = todayCheck.isSelected();
+
+        LocalTime startHour = LocalTime.of(15, 0);
+        LocalTime endHour = LocalTime.of(3, 0);
 
         for (Order order : orders) {
             boolean matches = true;
 
-            if (!searchText.isEmpty()) {
-                boolean found = (order.getOrderNumber() != null && order.getOrderNumber().toLowerCase().contains(searchText)) ||
-                        (order.getCustomerName() != null && order.getCustomerName().toLowerCase().contains(searchText)) ||
-                        (order.getCustomerPhone() != null && order.getCustomerPhone().toLowerCase().contains(searchText)) ||
-                        (order.getCustomerAddress() != null && order.getCustomerAddress().toLowerCase().contains(searchText));
-
-                if (!found) {
-                    matches = false;
-                }
-            }
-
-            if (matches && deliveryCheck != null && deliveryCheck.isSelected()) {
+            if (matches && (filterDelivery || filterPickup)) {
                 Boolean isDelivery = order.getIsDelivery();
-                if (isDelivery == null || !isDelivery) {
-                    matches = false;
+
+                if (filterDelivery) {
+                    if (isDelivery == null || !isDelivery) {
+                        matches = false;
+                    }
                 }
-            }
-            if (matches && pickupCheck != null && pickupCheck.isSelected()) {
-                Boolean isDelivery = order.getIsDelivery();
-                if (isDelivery != null && isDelivery) {
-                    matches = false;
+
+                if (filterPickup) {
+                    if (isDelivery != null && isDelivery) {
+                        matches = false;
+                    }
                 }
             }
 
-            if (matches && cashCheck != null && cashCheck.isSelected()) {
+            if (matches && (filterCash || filterTransfer)) {
                 Double cashAmount = order.getCashAmount();
-                if (cashAmount == null || cashAmount <= 0) {
-                    matches = false;
-                }
-            }
-            if (matches && transferCheck != null && transferCheck.isSelected()) {
                 Double transferAmount = order.getTransferAmount();
-                if (transferAmount == null || transferAmount <= 0) {
-                    matches = false;
+
+                if (filterCash) {
+                    if (cashAmount == null || cashAmount <= 0) {
+                        matches = false;
+                    }
+                }
+
+                if (filterTransfer) {
+                    if (transferAmount == null || transferAmount <= 0) {
+                        matches = false;
+                    }
                 }
             }
 
-            if (matches && todayCheck != null && todayCheck.isSelected() && order.getCreatedAt() != null) {
-                LocalDate orderDate = order.getCreatedAt().toLocalDate();
-                matches = orderDate.equals(today);
+            if (matches && filterToday) {
+                if (order.getCreatedAt() == null) {
+                    matches = false;
+                } else {
+                    LocalDateTime orderDateTime = order.getCreatedAt();
+                    LocalDate orderDate = orderDateTime.toLocalDate();
+                    LocalTime orderTime = orderDateTime.toLocalTime();
+
+                    boolean isInRange = false;
+
+                    if (orderDate.equals(today) && !orderTime.isBefore(startHour)) {
+                        isInRange = true;
+                    }
+
+                    LocalDate tomorrow = today.plusDays(1);
+                    if (orderDate.equals(tomorrow) && !orderTime.isAfter(endHour)) {
+                        isInRange = true;
+                    }
+
+                    if (orderDate.equals(today) && orderTime.isBefore(endHour)) {
+                        isInRange = true;
+                    }
+
+                    if (!isInRange) {
+                        matches = false;
+                    }
+                }
             }
 
-            if (matches && dateFromPicker != null && dateFromPicker.getValue() != null &&
-                    order.getCreatedAt() != null) {
+            if (matches && order.getCreatedAt() != null) {
                 LocalDate orderDate = order.getCreatedAt().toLocalDate();
-                matches = !orderDate.isBefore(dateFromPicker.getValue());
-            }
-            if (matches && dateToPicker != null && dateToPicker.getValue() != null &&
-                    order.getCreatedAt() != null) {
-                LocalDate orderDate = order.getCreatedAt().toLocalDate();
-                matches = !orderDate.isAfter(dateToPicker.getValue());
+
+                if (fromDate != null && orderDate.isBefore(fromDate)) {
+                    matches = false;
+                }
+                if (toDate != null && orderDate.isAfter(toDate)) {
+                    matches = false;
+                }
             }
 
             if (matches) {
@@ -395,6 +464,52 @@ public class OrderHistoryController implements Initializable {
         }
 
         ordersTable.setItems(filtered);
+        updateCounters(filtered);
+    }
+
+    @FXML
+    private void handleSearch() {
+        String searchText = searchField.getText().trim().toLowerCase();
+
+        LocalDate fromDate = dateFromPicker.getValue() != null ?
+                dateFromPicker.getValue() : LocalDate.now().minusDays(1);
+        LocalDate toDate = dateToPicker.getValue() != null ?
+                dateToPicker.getValue() : LocalDate.now();
+
+        ObservableList<Order> filtered = FXCollections.observableArrayList();
+
+        for (Order order : orders) {
+            boolean matches = true;
+
+            if (!searchText.isEmpty()) {
+                boolean textMatch = (order.getOrderNumber() != null && order.getOrderNumber().toLowerCase().contains(searchText)) ||
+                        (order.getCustomerName() != null && order.getCustomerName().toLowerCase().contains(searchText)) ||
+                        (order.getCustomerPhone() != null && order.getCustomerPhone().toLowerCase().contains(searchText)) ||
+                        (order.getCustomerAddress() != null && order.getCustomerAddress().toLowerCase().contains(searchText));
+                if (!textMatch) {
+                    matches = false;
+                }
+            }
+
+            if (matches && order.getCreatedAt() != null) {
+                LocalDate orderDate = order.getCreatedAt().toLocalDate();
+
+                if (orderDate.isBefore(fromDate)) {
+                    matches = false;
+                }
+
+                if (orderDate.isAfter(toDate)) {
+                    matches = false;
+                }
+            }
+
+            if (matches) {
+                filtered.add(order);
+            }
+        }
+
+        ordersTable.setItems(filtered);
+        updateCounters(filtered);
     }
 
     @FXML
@@ -405,8 +520,36 @@ public class OrderHistoryController implements Initializable {
         if (cashCheck != null) cashCheck.setSelected(false);
         if (transferCheck != null) transferCheck.setSelected(false);
         if (todayCheck != null) todayCheck.setSelected(false);
-        if (dateFromPicker != null) dateFromPicker.setValue(null);
-        if (dateToPicker != null) dateToPicker.setValue(null);
+        dateFromPicker.setValue(LocalDate.now().minusDays(1));
+        dateToPicker.setValue(LocalDate.now());
+
         ordersTable.setItems(orders);
+        updateCounters(orders);
+    }
+
+    private void updateCounters(List<Order> ordersToCount) {
+        int totalOrders = ordersToCount.size();
+        double cashTotal = 0;
+        double transferTotal = 0;
+        double deliveryTotal = 0;
+
+        for (Order order : ordersToCount) {
+            if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+                cashTotal += order.getCashAmount();
+            }
+
+            if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+                transferTotal += order.getTransferAmount();
+            }
+
+            if (order.getDeliveryAmount() != null && order.getDeliveryAmount() > 0) {
+                deliveryTotal += order.getDeliveryAmount();
+            }
+        }
+
+        totalOrdersLabel.setText(String.valueOf(totalOrders));
+        cashTotalLabel.setText(String.format("$%.0f", cashTotal));
+        transferTotalLabel.setText(String.format("$%.0f", transferTotal));
+        deliveryTotalLabel.setText(String.format("$%.0f", deliveryTotal));
     }
 }

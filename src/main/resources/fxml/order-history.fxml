@@ -25,7 +25,7 @@
         <!-- FILTROS COMPACTOS -->
         <HBox fx:id="filterContainer" spacing="10" alignment="CENTER_LEFT" styleClass="compact-filter-container">
             <CheckBox fx:id="deliveryCheck" text="Delivery" styleClass="compact-checkbox"/>
-            <CheckBox fx:id="pickupCheck" text="Recoger" styleClass="compact-checkbox"/>
+            <CheckBox fx:id="pickupCheck" text="Recoge" styleClass="compact-checkbox"/>
             <CheckBox fx:id="cashCheck" text="Efectivo" styleClass="compact-checkbox"/>
             <CheckBox fx:id="transferCheck" text="Transferencia" styleClass="compact-checkbox"/>
             <CheckBox fx:id="todayCheck" text="Hoy" styleClass="compact-checkbox"/>
@@ -60,6 +60,32 @@
             </columns>
         </TableView>
 
+        <!-- CONTADORES EN LA PARTE INFERIOR -->
+        <HBox spacing="20" alignment="CENTER" styleClass="counters-container">
+            <!-- Total de Pedidos -->
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="Total Pedidos" styleClass="counter-label"/>
+                <Label fx:id="totalOrdersLabel" text="0" styleClass="counter-value total-counter"/>
+            </VBox>
+
+            <!-- Efectivo -->
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="Efectivo" styleClass="counter-label"/>
+                <Label fx:id="cashTotalLabel" styleClass="counter-value cash-counter"/>
+            </VBox>
+
+            <!-- Transferencia -->
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="Transferencia" styleClass="counter-label"/>
+                <Label fx:id="transferTotalLabel" styleClass="counter-value transfer-counter"/>
+            </VBox>
+
+            <!-- Delivery -->
+            <VBox spacing="3" alignment="CENTER">
+                <Label text="Delivery" styleClass="counter-label"/>
+                <Label fx:id="deliveryTotalLabel" styleClass="counter-value delivery-counter"/>
+            </VBox>
+        </HBox>
     </VBox>
 
 </AnchorPane>

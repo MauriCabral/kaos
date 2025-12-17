@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.kaos.controller.DeliveryController" stylesheets="@../css/delivery-manager.css" prefWidth="700" prefHeight="550" spacing="15">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- TÍTULO Y BARRA DE BÚSQUEDA -->
+    <HBox spacing="20" alignment="CENTER_LEFT">
+        <!-- TÍTULO -->
+        <Label text="Gestión de Deliverys" styleClass="title-label" HBox.hgrow="ALWAYS"/>
+
+        <!-- BARRA DE BÚSQUEDA -->
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <TextField fx:id="searchField" promptText="Buscar por nombre..." styleClass="search-field"
+                       prefWidth="200" prefHeight="35"/>
+            <Button text="Buscar" styleClass="search-btn" onAction="#handleSearch" minWidth="80"/>
+        </HBox>
+    </HBox>
+
+    <!-- FORMULARIO DE AGREGAR/EDITAR -->
+    <VBox spacing="12" styleClass="form-container">
+        <Label text="Nuevo/Editar Delivery" styleClass="form-title"/>
+
+        <GridPane hgap="15" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="25"/>
+                <ColumnConstraints percentWidth="15"/>
+            </columnConstraints>
+
+            <!-- FILA 1 -->
+            <VBox spacing="5" GridPane.columnIndex="0">
+                <Label text="Nombre:" styleClass="field-label"/>
+                <TextField fx:id="nameField" promptText="Nombre" styleClass="text-field"/>
+            </VBox>
+
+            <VBox spacing="5" GridPane.columnIndex="1">
+                <Label text="Apellido:" styleClass="field-label"/>
+                <TextField fx:id="lastNameField" promptText="Apellido" styleClass="text-field"/>
+            </VBox>
+
+            <VBox spacing="5" GridPane.columnIndex="2">
+                <Label text="Teléfono:" styleClass="field-label"/>
+                <TextField fx:id="phoneField" promptText="+54 9..." styleClass="text-field"/>
+            </VBox>
+
+            <!-- FILA 2 -->
+            <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                <Label text="Local Asignado:" styleClass="field-label"/>
+                <ComboBox fx:id="storeCombo" styleClass="combo-box" prefHeight="30" prefWidth="250"/>
+            </VBox>
+
+            <!-- BOTONES DE ACCIÓN DEL FORMULARIO -->
+            <HBox spacing="10" alignment="CENTER_RIGHT" GridPane.rowIndex="1"
+                  GridPane.columnIndex="2" GridPane.columnSpan="2">
+                <Button fx:id="saveButton" text="Guardar" styleClass="save-btn"
+                        onAction="#handleSave" minWidth="90"/>
+                <Button fx:id="cancelButton" text="Cancelar" styleClass="cancel-edit-btn"
+                        onAction="#handleCancel" minWidth="90" visible="false"/>
+            </HBox>
+        </GridPane>
+    </VBox>
+
+    <!-- TABLA DE DELIVERYS -->
+    <VBox spacing="8" VBox.vgrow="ALWAYS">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Lista de Deliverys" styleClass="table-title" HBox.hgrow="ALWAYS"/>
+            <Label fx:id="counterLabel" text="0 deliverys" styleClass="counter-label"/>
+        </HBox>
+
+        <TableView fx:id="deliveryTable" styleClass="delivery-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" styleClass="table-column" prefWidth="60">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="id"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="nameColumn" text="Nombre" styleClass="table-column" prefWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="name"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="lastNameColumn" text="Apellido" styleClass="table-column" prefWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="lastName"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="phoneColumn" text="Teléfono" styleClass="table-column" prefWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="phoneNumber"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="storeColumn" text="Local" styleClass="table-column" prefWidth="120">
+                </TableColumn>
+                <TableColumn fx:id="actionsColumn" text="Acciones" styleClass="actions-column" prefWidth="130">
+                </TableColumn>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- BOTONES DE ACCIÓN GENERALES -->
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Cerrar" styleClass="cancel-btn" onAction="#handleClose" minWidth="80"/>
+    </HBox>
+</VBox>

@@ -28,7 +28,7 @@
                 <VBox spacing="10" alignment="CENTER_LEFT" style="-fx-margin-top: 20;">
                     <Button text="Pedidos" fx:id="btnOrder" styleClass="side-button" onAction="#handleOrderAction"/>
                     <Button text="Histórico" fx:id="btnOrderHistory" styleClass="side-button" onAction="#handleOrderHistoryAction"/>
-                    <Button text="Delivery" fx:id="btnDelivery" styleClass="side-button"/>
+                    <Button text="Delivery" fx:id="btnDelivery" styleClass="side-button" onAction="#handleDelivery" visible="false"/>
                 </VBox>
             </VBox>
 

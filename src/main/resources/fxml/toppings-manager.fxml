@@ -33,7 +33,7 @@
             </VBox>
 
             <VBox spacing="5">
-                <Label text="‎" styleClass="field-label"/> <!-- Espacio vacío para alinear -->
+                <Label text="‎" styleClass="field-label"/>
                 <HBox spacing="5">
                     <Button fx:id="actionButton" styleClass="add-btn" onAction="#handleAddOrUpdate">
                         <graphic>

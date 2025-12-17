@@ -95,7 +95,7 @@
                 </HBox>
             </VBox>
 
-            <!-- OBSERVACIONES (SIN CAMBIOS) -->
+            <!-- OBSERVACIONES -->
             <Label text="Observaciones" styleClass="section-title"/>
             <TextArea fx:id="notesTextArea" promptText="Observaciones..." wrapText="true" prefRowCount="3" prefHeight="65"/>
 
@@ -110,7 +110,7 @@
                 <Button text="← Volver" fx:id="btnBack" styleClass="back-btn"
                         onAction="#goBack" prefHeight="30"/>
 
-                <!-- CHECKBOX DE BAJA CON MENOS ESPACIO -->
+                <!-- CHECKBOX BAJA-->
                 <HBox fx:id="adminContainer" visible="false" spacing="8" alignment="CENTER_LEFT"
                       style="-fx-padding: 2 0 0 0;">
                     <CheckBox fx:id="deletedCheckBox" text="Orden de Baja"/>

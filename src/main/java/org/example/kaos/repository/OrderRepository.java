@@ -45,7 +45,7 @@ public class OrderRepository {
         Order order = null;
         try {
             TypedQuery<Order> query = em.createQuery(
-                    "SELECT o FROM Order b WHERE b.id = :orderId", Order.class);
+                    "SELECT o FROM Order o WHERE o.id = :orderId", Order.class);
             query.setParameter("orderId", id);
             order = query.getSingleResult();
         } catch (NoResultException e) {

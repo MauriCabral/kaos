@@ -1,0 +1,282 @@
+/* Estilos base */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #ffffff;
+}
+
+/* TÍTULO */
+.title-label {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e9500e;
+}
+
+/* BARRA DE BÚSQUEDA */
+.search-field {
+    -fx-pref-height: 35px;
+    -fx-font-size: 14px;
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 0 12px;
+}
+
+.search-field:focused {
+    -fx-border-color: #e9500e;
+}
+
+.search-btn {
+    -fx-background-color: #e9500e;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+}
+
+.search-btn:hover {
+    -fx-background-color: #ff6b35;
+}
+
+/* FORMULARIO */
+.form-container {
+    -fx-background-color: #f8f9fa;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 18px;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+}
+
+.form-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-padding: 0 0 5px 0;
+    -fx-border-color: #e9500e;
+    -fx-border-width: 0 0 2px 0;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #555555;
+}
+
+.text-field, .combo-box {
+    -fx-pref-height: 35px; /* Corregido de 80px a 35px */
+    -fx-font-size: 14px;
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 0 10px;
+}
+
+.text-field:focused, .combo-box:focused {
+    -fx-border-color: #e9500e;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #333333;
+}
+
+.combo-box .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+/* BOTONES DEL FORMULARIO */
+.save-btn {
+    -fx-background-color: #28a745;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 20px;
+    -fx-cursor: hand;
+}
+
+.save-btn:hover {
+    -fx-background-color: #218838;
+}
+
+.cancel-edit-btn {
+    -fx-background-color: #6c757d;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 20px;
+    -fx-cursor: hand;
+}
+
+.cancel-edit-btn:hover {
+    -fx-background-color: #5a6268;
+}
+
+/* TABLA - ESTILOS SIMPLIFICADOS */
+.table-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.counter-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6c757d;
+    -fx-font-style: italic;
+}
+
+.delivery-table {
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.delivery-table .column-header {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1px 0;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #495057;
+}
+
+.table-column {
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 13px;
+    -fx-padding: 8px;
+}
+
+.actions-column {
+    -fx-alignment: CENTER;
+}
+
+/* CELDAS DE LA TABLA - ESTILOS MÁS CLAROS */
+.delivery-table .table-row-cell {
+    -fx-border-color: #f0f0f0;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.delivery-table .table-row-cell:odd {
+    -fx-background-color: #f8f9fa;
+}
+
+.delivery-table .table-row-cell:even {
+    -fx-background-color: white;
+}
+
+/* ELIMINADO EL HOVER PROBLEMÁTICO */
+.delivery-table .table-row-cell:hover {
+    -fx-background-color: #f0f0f0; /* Color de hover más sutil */
+}
+
+/* SELECCIÓN CLARA */
+.delivery-table .table-row-cell:selected {
+    -fx-background-color: #e9500e; /* Naranja sólido */
+    -fx-text-fill: white; /* Texto blanco para mejor contraste */
+}
+
+/* BOTONES EN LAS CELDAS */
+.edit-btn {
+    -fx-background-color: #1976D2;
+    -fx-text-fill: white;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 8px;
+    -fx-min-width: 60px;
+    -fx-cursor: hand;
+}
+
+.edit-btn:hover {
+    -fx-background-color: #1565C0;
+}
+
+.delete-btn {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 8px;
+    -fx-min-width: 60px;
+    -fx-cursor: hand;
+}
+
+.delete-btn:hover {
+    -fx-background-color: #c82333;
+}
+
+/* BOTONES SECUNDARIOS */
+.secondary-btn {
+    -fx-background-color: #6c757d;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+}
+
+.secondary-btn:hover {
+    -fx-background-color: #5a6268;
+}
+
+/* BOTÓN CERRAR */
+.cancel-btn {
+    -fx-background-color: #e9500e;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 24px;
+    -fx-cursor: hand;
+}
+
+.cancel-btn:hover {
+    -fx-background-color: #ff6b35;
+}
+
+/* ESTILOS PARA CAMPOS CON ERROR */
+.error-field {
+    -fx-border-color: #dc3545 !important;
+    -fx-border-width: 2px !important;
+}
+
+.error-field:focused {
+    -fx-border-color: #dc3545 !important;
+}
+
+/* SCROLLBAR */
+.scroll-bar:horizontal, .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .track, .scroll-bar:vertical .track {
+    -fx-background-color: #f1f1f1;
+    -fx-border-color: transparent;
+    -fx-background-radius: 2px;
+}
+
+.scroll-bar:horizontal .thumb, .scroll-bar:vertical .thumb {
+    -fx-background-color: #c1c1c1;
+    -fx-background-radius: 2px;
+}
+
+.scroll-bar:horizontal .thumb:hover, .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #a8a8a8;
+}

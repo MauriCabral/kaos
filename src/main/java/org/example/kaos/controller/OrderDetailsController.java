@@ -11,10 +11,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.kaos.entity.*;
+import org.example.kaos.service.IDeliveryService;
 import org.example.kaos.service.IOrderDetailService;
 import org.example.kaos.service.IOrderService;
+import org.example.kaos.service.implementation.DeliveryServiceImpl;
 import org.example.kaos.service.implementation.OrderDetailServiceImpl;
 import org.example.kaos.service.implementation.OrderServiceImpl;
+import org.example.kaos.service.implementation.TicketPrintServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 
@@ -47,6 +50,8 @@ public class OrderDetailsController {
 
     private final IOrderService orderService = new OrderServiceImpl();
     private final IOrderDetailService orderDetailService = new OrderDetailServiceImpl();
+    private final IDeliveryService deliveryService = new DeliveryServiceImpl();
+    private final TicketPrintServiceImpl ticketPrintService = new TicketPrintServiceImpl();
 
     private List<OrderDetail> orderDetails;
     private List<Delivery> deliveriesList = new ArrayList<>();
@@ -463,6 +468,7 @@ public class OrderDetailsController {
             order.setCustomerPhone(customerPhoneField.getText().trim());
             order.setIsDelivery(deliveryCheckBox.isSelected());
             order.setNotes(notesTextArea.getText());
+            order.setDelivery(deliveryComboBox.getValue());
 
             try {
                 if (deliveryCheckBox.isSelected()) {
@@ -561,6 +567,8 @@ public class OrderDetailsController {
                 }
 
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
+
+                ticketPrintService.generatePDF(savedOrder.getId());
 
                 if (stage != null) {
                     stage.close();
@@ -674,7 +682,11 @@ public class OrderDetailsController {
     }
 
     private void setupDeliveryComboBox() {
+        List<Delivery> deliveries = deliveryService.findByStoreId(Session.getInstance().getCurrentUser().getStore().getId());
+        deliveryComboBox.getItems().setAll(deliveries);
+
         deliveryComboBox.setVisible(true);
+
         deliveryComboBox.setCellFactory(param -> new ListCell<Delivery>() {
             @Override
             protected void updateItem(Delivery delivery, boolean empty) {
@@ -698,5 +710,14 @@ public class OrderDetailsController {
                 }
             }
         });
+
+        if (order.getDelivery() != null) {
+            for (Delivery delivery : deliveryComboBox.getItems()) {
+                if (delivery.getId().equals(order.getDelivery().getId())) {
+                    deliveryComboBox.setValue(delivery);
+                    break;
+                }
+            }
+        }
     }
 }

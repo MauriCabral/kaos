@@ -26,6 +26,10 @@ public class Delivery {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
+
     @Column(name = "created_date")
     private LocalDateTime createdDate;
 

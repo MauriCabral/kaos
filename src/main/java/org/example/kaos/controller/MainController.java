@@ -12,6 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.example.kaos.util.DialogUtil;
+import org.example.kaos.util.Session;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class MainController {
     @FXML private StackPane contentArea;
     @FXML private Button btnLogout;
     @FXML private HBox tabContainer;
+    @FXML private Button btnDelivery;
 
     private Map<String, TabInfo> openTabs = new HashMap<>();
     private String currentTabId;
@@ -40,6 +42,11 @@ public class MainController {
 
     @FXML
     private void initialize() {
+        if (Session.getInstance().getCurrentUser().getId() == 1) {
+            btnDelivery.setVisible(true);
+        } else {
+            btnDelivery.setVisible(false);
+        }
     }
 
     @FXML
@@ -183,5 +190,9 @@ public class MainController {
 
     public void handleOrderHistoryAction(ActionEvent actionEvent) {
         openNewOrderTab("Histórico Pedidos " + orderCounter, "/fxml/order-history.fxml");
+    }
+
+    public void handleDelivery(ActionEvent actionEvent) {
+        openNewOrderTab("Gestión Delivery " + orderCounter, "/fxml/delivery-manager.fxml");
     }
 }

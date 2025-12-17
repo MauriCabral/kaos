@@ -6,6 +6,8 @@ import jakarta.persistence.TypedQuery;
 import org.example.kaos.entity.Store;
 import org.example.kaos.util.JpaUtil;
 
+import java.util.List;
+
 public class StoreRepository {
 
     public Store findStoreById(Long storeId) {
@@ -21,5 +23,16 @@ public class StoreRepository {
             em.close();
         }
         return store;
+    }
+
+    public List<Store> findAll() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Store> query = em.createQuery(
+                    "SELECT s FROM Store s ORDER BY s.id", Store.class);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
     }
 }
