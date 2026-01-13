@@ -1,119 +1,126 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.kaos.controller.OrderDetailsController"
-      stylesheets="@../css/order-details.css" prefWidth="800" prefHeight="550" spacing="0">
+<VBox prefHeight="550" prefWidth="800" spacing="0" stylesheets="@../css/order-details.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.OrderDetailsController">
 
     <!-- HEADER -->
-    <HBox styleClass="header" alignment="CENTER" spacing="10">
-        <ImageView fitWidth="28" fitHeight="28" preserveRatio="true">
-            <Image url="@../image/logo.png"/>
+    <HBox alignment="CENTER" spacing="10" styleClass="header">
+        <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
+            <Image url="@../image/logo.png" />
         </ImageView>
-        <Label text="Detalle del Pedido" styleClass="header-title"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="orderNumberLabel" styleClass="order-number"/>
+        <Label styleClass="header-title" text="Detalle del Pedido" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="orderNumberLabel" styleClass="order-number" />
     </HBox>
 
     <!-- CONTENIDO PRINCIPAL -->
     <HBox spacing="0" VBox.vgrow="ALWAYS">
 
         <!-- PANEL IZQUIERDO - ITEMS -->
-        <VBox styleClass="items-panel" prefWidth="480" spacing="0">
+        <VBox prefWidth="480" spacing="0" styleClass="items-panel">
             <padding>
-                <Insets top="12" right="12" bottom="12" left="12"/>
+                <Insets bottom="12" left="12" right="12" top="12" />
             </padding>
 
-            <Label text="Items del Pedido" styleClass="section-title"/>
+            <Label styleClass="section-title" text="Items del Pedido" />
 
             <ScrollPane fitToWidth="true" styleClass="items-scroll" VBox.vgrow="ALWAYS">
-                <VBox fx:id="itemsContainer" spacing="6"/>
+                <VBox fx:id="itemsContainer" spacing="6" />
             </ScrollPane>
 
             <!-- RESUMEN -->
-            <VBox styleClass="summary-container" spacing="6">
+            <VBox spacing="6" styleClass="summary-container">
                 <HBox alignment="CENTER_LEFT" spacing="6">
-                    <Label text="Subtotal:" styleClass="summary-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="subtotalLabel" styleClass="summary-value" text="0.00"/>
+                    <Label styleClass="summary-label" text="Subtotal:" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="subtotalLabel" styleClass="summary-value" text="0.00" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
-                    <Label text="Delivery:" styleClass="summary-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="deliveryPriceLabel" styleClass="summary-value" text="0.00"/>
+                    <Label styleClass="summary-label" text="Delivery:" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="deliveryPriceLabel" styleClass="summary-value" text="0.00" />
                 </HBox>
-                <Separator styleClass="summary-separator"/>
+                <Separator styleClass="summary-separator" />
                 <HBox alignment="CENTER_LEFT" spacing="6">
-                    <Label text="TOTAL:" styleClass="total-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="totalLabel" styleClass="total-value" text="0.00"/>
+                    <Label styleClass="total-label" text="TOTAL:" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="totalLabel" styleClass="total-value" text="0.00" />
                 </HBox>
             </VBox>
         </VBox>
 
-        <Separator orientation="VERTICAL"/>
+        <Separator orientation="VERTICAL" />
 
         <!-- PANEL DERECHO COMPACTADO -->
-        <VBox styleClass="actions-panel" prefWidth="320" spacing="10">
+        <VBox prefWidth="320" spacing="10" styleClass="actions-panel">
             <padding>
-                <Insets top="12" right="12" bottom="12" left="12"/>
+                <Insets bottom="12" left="12" right="12" top="12" />
             </padding>
 
             <!-- DATOS CLIENTE COMPACTOS -->
-            <Label text="Datos del Cliente" styleClass="section-title"/>
+            <Label styleClass="section-title" text="Datos del Cliente" />
             <VBox spacing="4">
-                <TextField fx:id="customerNameField" promptText="Nombre*" prefHeight="32"/>
-                <TextField fx:id="customerAddressField" promptText="Dirección" prefHeight="32"/>
-                <TextField fx:id="customerPhoneField" promptText="Teléfono" prefHeight="32"/>
+                <TextField fx:id="customerNameField" prefHeight="32" promptText="Nombre*" />
+                <TextField fx:id="customerAddressField" prefHeight="32" promptText="Dirección" />
+                <TextField fx:id="customerPhoneField" prefHeight="32" promptText="Teléfono" />
 
                 <!-- DELIVERY COMPACTO -->
                 <VBox spacing="3">
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <CheckBox fx:id="deliveryCheckBox" text="Delivery"/>
-                        <TextField fx:id="deliveryPriceField" promptText="Precio" prefWidth="80" prefHeight="28" visible="false"/>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox fx:id="deliveryCheckBox" text="Delivery" />
+                        <TextField fx:id="deliveryPriceField" prefHeight="28" prefWidth="80" promptText="Precio" visible="false" />
                     </HBox>
-                    <ComboBox fx:id="deliveryComboBox" promptText="Seleccionar delivery"
-                              prefWidth="200" prefHeight="30" visible="false"/>
+                    <ComboBox fx:id="deliveryComboBox" prefHeight="30" prefWidth="200" promptText="Seleccionar delivery" visible="false" />
                 </VBox>
             </VBox>
 
             <!-- FORMA DE PAGO COMPACTA -->
-            <Label text="Forma de Pago" styleClass="section-title"/>
+            <Label styleClass="section-title" text="Forma de Pago" />
             <VBox spacing="2">
-                <HBox spacing="5" alignment="CENTER_LEFT">
-                    <CheckBox fx:id="cashCheckBox" text="Efectivo"/>
-                    <TextField fx:id="cashAmountField" promptText="Monto" prefWidth="80" prefHeight="26" visible="false"/>
+                <HBox alignment="CENTER_LEFT" spacing="5">
+                    <CheckBox fx:id="cashCheckBox" text="Efectivo" />
+                    <TextField fx:id="cashAmountField" prefHeight="26" prefWidth="80" promptText="Monto" visible="false" />
                 </HBox>
-                <HBox spacing="5" alignment="CENTER_LEFT">
-                    <CheckBox fx:id="transferCheckBox" text="Transferencia"/>
-                    <TextField fx:id="transferAmountField" promptText="Monto" prefWidth="80" prefHeight="26" visible="false"/>
+                <HBox alignment="CENTER_LEFT" spacing="5">
+                    <CheckBox fx:id="transferCheckBox" text="Transferencia" />
+                    <TextField fx:id="transferAmountField" prefHeight="26" prefWidth="80" promptText="Monto" visible="false" />
                 </HBox>
             </VBox>
 
             <!-- OBSERVACIONES -->
-            <Label text="Observaciones" styleClass="section-title"/>
-            <TextArea fx:id="notesTextArea" promptText="Observaciones..." wrapText="true" prefRowCount="3" prefHeight="65"/>
+            <Label styleClass="section-title" text="Observaciones" />
+            <TextArea fx:id="notesTextArea" prefHeight="65" prefRowCount="3" promptText="Observaciones..." wrapText="true" />
 
             <!-- BOTONES COMPACTOS -->
             <VBox spacing="5">
                 <HBox spacing="8">
-                    <Button text="Aceptar" fx:id="btnConfirm" styleClass="confirm-btn"
-                            onAction="#confirmOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="32"/>
-                    <Button text="Cancelar" fx:id="btnCancel" styleClass="cancel-btn"
-                            onAction="#cancelOrder" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="32"/>
+                    <Button fx:id="btnConfirm" maxWidth="Infinity" onAction="#confirmOrder" prefHeight="32" styleClass="confirm-btn" text="Aceptar" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btnCancel" maxWidth="Infinity" onAction="#cancelOrder" prefHeight="32" styleClass="cancel-btn" text="Cancelar" HBox.hgrow="ALWAYS" />
                 </HBox>
-                <Button text="← Volver" fx:id="btnBack" styleClass="back-btn"
-                        onAction="#goBack" prefHeight="30"/>
+            <HBox spacing="8">
+               <children>
+                  <Button fx:id="btnBack" onAction="#goBack" prefHeight="30" styleClass="back-btn" text="← Volver" />
+                  <Button fx:id="btnPrint" onAction="#orderPrint" prefHeight="30" styleClass="back-btn" text="🖨️" />
+               </children>
+            </HBox>
 
-                <!-- CHECKBOX BAJA-->
-                <HBox fx:id="adminContainer" visible="false" spacing="8" alignment="CENTER_LEFT"
-                      style="-fx-padding: 2 0 0 0;">
-                    <CheckBox fx:id="deletedCheckBox" text="Orden de Baja"/>
+                      <!-- CHECKBOX BAJA-->
+                <HBox fx:id="adminContainer" alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 2 0 0 0;" visible="false">
+                    <CheckBox fx:id="deletedCheckBox" text="Orden de Baja" />
                 </HBox>
             </VBox>
         </VBox>

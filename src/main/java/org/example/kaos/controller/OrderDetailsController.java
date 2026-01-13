@@ -21,6 +21,7 @@ import org.example.kaos.service.implementation.TicketPrintServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class OrderDetailsController {
     @FXML private CheckBox deletedCheckBox;
     @FXML private HBox adminContainer;
     @FXML private ComboBox<Delivery> deliveryComboBox;
+    @FXML private Button btnPrint;
 
     private final IOrderService orderService = new OrderServiceImpl();
     private final IOrderDetailService orderDetailService = new OrderDetailServiceImpl();
@@ -104,6 +106,7 @@ public class OrderDetailsController {
         btnConfirm.setVisible(true);
         btnCancel.setVisible(true);
         btnBack.setVisible(true);
+        btnPrint.setVisible(false);
 
         setFieldsEditable(true);
 
@@ -119,6 +122,7 @@ public class OrderDetailsController {
     private void setupViewMode() {
         loadOrderData();
 
+        btnPrint.setVisible(true);
         btnConfirm.setVisible(false);
         btnCancel.setVisible(false);
         btnBack.setVisible(true);
@@ -129,6 +133,7 @@ public class OrderDetailsController {
         deliveryCheckBox.setDisable(true);
         cashCheckBox.setDisable(true);
         transferCheckBox.setDisable(true);
+        deliveryComboBox.setDisable(true);
 
         showPaymentValues();
 
@@ -142,6 +147,7 @@ public class OrderDetailsController {
         btnConfirm.setVisible(true);
         btnCancel.setVisible(true);
         btnBack.setVisible(false);
+        btnPrint.setVisible(false);
 
         setFieldsEditable(true);
 
@@ -191,11 +197,11 @@ public class OrderDetailsController {
                 deliveryPriceField.setText(String.format("%.0f", order.getDeliveryAmount()));
             }
 
-            if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+            if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
                 cashAmountField.setText(String.format("%.0f", order.getCashAmount()));
             }
 
-            if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+            if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
                 transferAmountField.setText(String.format("%.0f", order.getTransferAmount()));
             }
         }
@@ -255,12 +261,12 @@ public class OrderDetailsController {
             setupDeliveryComboBox();
         }
 
-        if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+        if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
             cashCheckBox.setSelected(true);
             cashAmountField.setText(String.format("%.0f", order.getCashAmount()));
         }
 
-        if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+        if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
             transferCheckBox.setSelected(true);
             transferAmountField.setText(String.format("%.0f", order.getTransferAmount()));
         }
@@ -296,7 +302,15 @@ public class OrderDetailsController {
         for (OrderDetail detail : detailsToShow) {
             HBox itemCard = createItemCard(detail);
             itemsContainer.getChildren().add(itemCard);
-            subtotal += detail.getSubtotal();
+
+            boolean hasBurgerVariant = detail.getBurgerVariant() != null;
+            boolean hasToppings = detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty();
+
+            if (hasBurgerVariant || hasToppings) {
+                subtotal += detail.getTotal();
+            } else {
+                subtotal += detail.getSubtotal();
+            }
         }
 
         if (!isViewMode || isEditMode) {
@@ -472,27 +486,27 @@ public class OrderDetailsController {
 
             try {
                 if (deliveryCheckBox.isSelected()) {
-                    order.setDeliveryAmount(Double.parseDouble(deliveryPriceField.getText()));
+                    order.setDeliveryAmount(BigDecimal.valueOf(Double.parseDouble(deliveryPriceField.getText())));
                 } else {
-                    order.setDeliveryAmount(0.0);
+                    order.setDeliveryAmount(BigDecimal.ZERO);
                 }
 
                 if (cashCheckBox.isSelected()) {
-                    order.setCashAmount(Double.parseDouble(cashAmountField.getText()));
+                    order.setCashAmount(BigDecimal.valueOf(Double.parseDouble(cashAmountField.getText())));
                 } else {
-                    order.setCashAmount(0.0);
+                    order.setCashAmount(BigDecimal.ZERO);
                 }
 
                 if (transferCheckBox.isSelected()) {
-                    order.setTransferAmount(Double.parseDouble(transferAmountField.getText()));
+                    order.setTransferAmount(BigDecimal.valueOf(Double.parseDouble(transferAmountField.getText())));
                 } else {
-                    order.setTransferAmount(0.0);
+                    order.setTransferAmount(BigDecimal.ZERO);
                 }
             } catch (NumberFormatException e) {
                 DialogUtil.showError("Error", "Los montos deben ser números válidos");
                 return;
             }
-            order.setTotal(total);
+            order.setTotal(BigDecimal.valueOf(total));
 
             if (isAdmin && deletedCheckBox != null) {
                 if (deletedCheckBox.isSelected()) {
@@ -532,11 +546,11 @@ public class OrderDetailsController {
                         .customerAddress(customerAddressField.getText().trim())
                         .customerPhone(customerPhoneField.getText().trim())
                         .isDelivery(deliveryCheckBox.isSelected())
-                        .cashAmount(cash)
-                        .transferAmount(transfer)
-                        .deliveryAmount(delivery)
-                        .subtotal(subtotal)
-                        .total(total)
+                        .cashAmount(BigDecimal.valueOf(cash))
+                        .transferAmount(BigDecimal.valueOf(transfer))
+                        .deliveryAmount(BigDecimal.valueOf(delivery))
+                        .subtotal(BigDecimal.valueOf(subtotal))
+                        .total(BigDecimal.valueOf(total))
                         .notes(notesTextArea.getText())
                         .store(store)
                         .createdByUser(currentUser)
@@ -568,7 +582,7 @@ public class OrderDetailsController {
 
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
 
-                ticketPrintService.generatePDF(savedOrder.getId());
+                ticketPrintService.generatePDF(savedOrder.getId()); //CAMBIAR LUEGO
 
                 if (stage != null) {
                     stage.close();
@@ -595,11 +609,11 @@ public class OrderDetailsController {
             return false;
         }
 
-        if (customerPhoneField.getText().trim().isEmpty()) {
+        /*if (customerPhoneField.getText().trim().isEmpty()) {
             DialogUtil.showError("Error", "El teléfono del cliente es obligatorio");
             customerPhoneField.requestFocus();
             return false;
-        }
+        }*/
 
         try {
             cash = 0;
@@ -662,7 +676,13 @@ public class OrderDetailsController {
         if (detailsToCalculate == null || detailsToCalculate.isEmpty()) {
             return 0;
         }
-        return detailsToCalculate.stream().mapToDouble(OrderDetail::getSubtotal).sum();
+        return detailsToCalculate.stream().mapToDouble(detail -> {
+            if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
+                return detail.getTotal();
+            } else {
+                return detail.getSubtotal();
+            }
+        }).sum();
     }
 
     @FXML
@@ -719,5 +739,9 @@ public class OrderDetailsController {
                 }
             }
         }
+    }
+
+    public void orderPrint(ActionEvent actionEvent) {
+        ticketPrintService.generatePDF(order.getId());
     }
 }

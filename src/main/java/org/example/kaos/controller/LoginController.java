@@ -22,13 +22,8 @@ public class LoginController {
 
     private final IUserService userService = new UserServiceImpl();
 
-    private final String usernametest = "admin";
-    private final String passwordtest = "admin123";
-
     @FXML
     public void initialize() {
-        usernameField.setText(usernametest);
-        passwordField.setText(passwordtest);
         setupPasswordFields();
     }
 
@@ -43,7 +38,7 @@ public class LoginController {
         String password = passwordField.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            System.out.println("Campos vacíos");
+            DialogUtil.showError("Campos requeridos", "Por favor, ingrese usuario y contraseña");
             return;
         }
 
@@ -75,9 +70,5 @@ public class LoginController {
             passwordField.setManaged(true);
             togglePasswordButton.setText("○");
         }
-    }
-
-    public String getPassword() {
-        return passwordField.getText();
     }
 }

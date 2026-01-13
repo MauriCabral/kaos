@@ -8,7 +8,13 @@ import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.Order;
 import org.example.kaos.util.JpaUtil;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+@SuppressWarnings("unchecked")
 
 public class OrderRepository {
     public Order save(Order order) {
@@ -94,7 +100,7 @@ public class OrderRepository {
     public List<Order> findAll(Boolean isAdmin) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            StringBuilder jpql = new StringBuilder("SELECT o FROM Order o");
+            StringBuilder jpql = new StringBuilder("SELECT o FROM Order o LEFT JOIN FETCH o.store");
             if (!isAdmin) {
                 jpql.append(" WHERE o.deletedAt IS NULL");
             }
@@ -110,14 +116,96 @@ public class OrderRepository {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            em.merge(order);
+            order = em.merge(order);
             em.getTransaction().commit();
+            return order;
         } catch (Exception e) {
-            em.getTransaction().rollback();
-            e.printStackTrace();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error updating order", e);
         } finally {
             em.close();
         }
-        return order;
+    }
+
+    public Map<String, Integer> getBurgerSalesForDate(LocalDate date) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime nextDay = startOfDay.plusDays(1);
+
+            Query query = em.createQuery(
+                    "SELECT od.productName, od.variantName, SUM(od.quantity) " +
+                            "FROM OrderDetail od " +
+                            "WHERE od.productName IS NOT NULL AND od.createdAt >= :start AND od.createdAt < :end " +
+                            "GROUP BY od.productName, od.variantName " +
+                            "ORDER BY od.productName, od.variantName"
+            );
+            query.setParameter("start", startOfDay);
+            query.setParameter("end", nextDay);
+
+            List<Object[]> results = query.getResultList();
+            Map<String, Integer> sales = new HashMap<>();
+            for (Object[] row : results) {
+                String name = (String) row[0];
+                String type = (String) row[1];
+                Long totalQty = (Long) row[2];
+                sales.put(type != null ? name + " (" + type + ")" : name, totalQty.intValue());
+            }
+            return sales;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Map<String, Integer> getBurgerSalesForDateRange(LocalDate startDate, LocalDate endDate) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            Query query = em.createQuery(
+                    "SELECT od.productName, od.variantName, SUM(od.quantity) " +
+                            "FROM OrderDetail od " +
+                            "WHERE od.productName IS NOT NULL AND DATE(od.createdAt) BETWEEN :startDate AND :endDate " +
+                            "GROUP BY od.productName, od.variantName " +
+                            "ORDER BY od.productName, od.variantName"
+            );
+            query.setParameter("startDate", startDate);
+            query.setParameter("endDate", endDate);
+            List<Object[]> results = query.getResultList();
+            Map<String, Integer> sales = new HashMap<>();
+            for (Object[] row : results) {
+                String name = (String) row[0];
+                String type = (String) row[1];
+                Long totalQty = (Long) row[2];
+                sales.put(type != null ? name + " (" + type + ")" : name, totalQty.intValue());
+            }
+            return sales;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Map<String, Object>> getSalesPerDay(LocalDate startDate, LocalDate endDate) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            Query query = em.createQuery(
+                    "SELECT DATE(o.createdAt) as date, SUM(o.total) as total FROM Order o " +
+                    "WHERE DATE(o.createdAt) BETWEEN :startDate AND :endDate " +
+                    "GROUP BY DATE(o.createdAt) " +
+                    "ORDER BY DATE(o.createdAt)");
+            query.setParameter("startDate", startDate);
+            query.setParameter("endDate", endDate);
+            List<Object[]> results = query.getResultList();
+            List<Map<String, Object>> sales = new java.util.ArrayList<>();
+            for (Object[] row : results) {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("date", row[0].toString());
+                map.put("total", row[1]);
+                sales.add(map);
+            }
+            return sales;
+        } finally {
+            em.close();
+        }
     }
 }

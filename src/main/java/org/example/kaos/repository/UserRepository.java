@@ -8,6 +8,29 @@ import org.example.kaos.util.JpaUtil;
 
 public class UserRepository {
 
+    public User save(User user) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            if (user.getId() == null) {
+                em.persist(user);
+            } else {
+                user = em.merge(user);
+            }
+
+            em.getTransaction().commit();
+            return user;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error saving user", e);
+        } finally {
+            em.close();
+        }
+    }
+
     public User findByUsername(String username) {
         EntityManager em = JpaUtil.getEntityManager();
         User user = null;

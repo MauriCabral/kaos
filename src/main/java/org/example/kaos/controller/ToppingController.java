@@ -32,6 +32,7 @@ public class ToppingController implements Initializable {
         toppingsTable.getItems().setAll(toppingService.getAllToppings());
     }
 
+    @SuppressWarnings("unchecked")
     private void setupTable() {
 
         TableColumn<Topping, String> nameCol = new TableColumn<>("Nombre");

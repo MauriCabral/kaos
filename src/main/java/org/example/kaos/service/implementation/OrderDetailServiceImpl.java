@@ -57,14 +57,9 @@ public class OrderDetailServiceImpl implements IOrderDetailService {
 
     @Override
     public List<OrderDetail> orderDetailFindByIdOrder(Long orderId) {
-        List<OrderDetail> orderDetails = new ArrayList<>();
-        if (orderId > 0) {
-            orderDetails = orderDetailRepository.findByOrderId(orderId);
-            for (OrderDetail ord : orderDetails) {
-                ord.setOrderDetailToppings(orderDetailToppingRepository.findByOrderDetailId(ord.getId()));
-                ord.setBurgerVariant(burgerVariantRepository.findByBurgerVariantId(ord.getBurgerVariant().getId()));
-            }
+        if (orderId == null || orderId <= 0) {
+            return new ArrayList<>();
         }
-        return orderDetails;
+        return orderDetailRepository.findByOrderId(orderId);
     }
 }

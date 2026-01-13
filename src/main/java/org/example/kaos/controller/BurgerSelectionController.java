@@ -15,7 +15,6 @@ import org.example.kaos.service.IVariantService;
 import org.example.kaos.service.implementation.BurgerServiceImpl;
 import org.example.kaos.service.implementation.ToppingServiceImpl;
 import org.example.kaos.service.implementation.VariantServiceImpl;
-import org.example.kaos.util.WindowManager;
 
 import java.net.URL;
 import java.util.*;

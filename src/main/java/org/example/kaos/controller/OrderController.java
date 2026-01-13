@@ -57,28 +57,26 @@ public class OrderController implements Initializable {
     private String currentSelectedVariantName;
     private ExtraItem currentSelectedExtra;
     private ExtraItem currentSelectedCombo;
+    private boolean isAdmin = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         quantityLabel.setText(String.valueOf(quantity));
+        isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
+        configureButtonsByUser();
         loadAllProductsFromDatabase();
     }
 
-    private void buttonInitialize() {
-        if (Session.getInstance().getCurrentUser().getId() == 1) {
-            showAddButton();
-            editProductsBtn.setVisible(true);
-            toppingsBtn.setVisible(true);
-        } else {
-            editProductsBtn.setVisible(false);
-            toppingsBtn.setVisible(false);
-        }
+    private void configureButtonsByUser() {
+        editProductsBtn.setVisible(isAdmin);
+        toppingsBtn.setVisible(isAdmin);
+
+        editProductsBtn.setManaged(isAdmin);
+        toppingsBtn.setManaged(isAdmin);
     }
 
     private void loadAllProductsFromDatabase() {
         try {
-            buttonInitialize();
-
             productsFlowPane.getChildren().clear();
 
             List<Burger> burgers = burgerService.getAllBurgers();
@@ -98,9 +96,13 @@ public class OrderController implements Initializable {
                 VBox comboCard = createExtraItemCard(combo, "COMBO");
                 productsFlowPane.getChildren().add(comboCard);
             }
+
+            if (isAdmin && isEditMode) {
+                showAddButton();
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            if (Session.getInstance().getCurrentUser().getId() == 1) {
+            if (isAdmin && isEditMode) {
                 showAddButton();
             }
         }
@@ -129,10 +131,14 @@ public class OrderController implements Initializable {
             StackPane.setMargin(menuButton, new Insets(5, 5, 0, 0));
             imageContainer.getChildren().addAll(imageView, menuButton);
         } else {
-            Button deleteButton = createDeleteButton(burger);
-            StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
-            StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
-            imageContainer.getChildren().addAll(imageView, deleteButton);
+            if (isAdmin) {
+                Button deleteButton = createDeleteButton(burger);
+                StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
+                StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
+                imageContainer.getChildren().addAll(imageView, deleteButton);
+            } else {
+                imageContainer.getChildren().add(imageView);
+            }
         }
 
         Label nameLabel = new Label(burger.getName());
@@ -155,25 +161,14 @@ public class OrderController implements Initializable {
     private Button createMenuButton(Burger burger) {
         Button menuButton = new Button("⋮");
         menuButton.getStyleClass().add("menu-button");
-
-        if (!isEditMode) {
-            menuButton.setOnAction(e -> showVariantMenu(menuButton, burger));
-        } else {
-            menuButton.setDisable(true);
-            menuButton.setVisible(false);
-        }
-        menuButton.setMouseTransparent(false);
+        menuButton.setOnAction(e -> showVariantMenu(menuButton, burger));
         return menuButton;
     }
 
     private Button createDeleteButton(Object product) {
         Button deleteButton = new Button("X");
         deleteButton.getStyleClass().add("delete-button");
-
-        deleteButton.setOnAction(e -> {
-            deleteProduct(product);
-        });
-
+        deleteButton.setOnAction(e -> deleteProduct(product));
         return deleteButton;
     }
 
@@ -261,7 +256,7 @@ public class OrderController implements Initializable {
 
         ImageView imageView = createProductImageView(extraItem.getImageData());
 
-        if (isEditMode) {
+        if (isEditMode && "COMBO".equals(type)) {
             Button deleteButton = createDeleteButton(extraItem);
             StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
             StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
@@ -352,20 +347,14 @@ public class OrderController implements Initializable {
     }
 
     private void showAddButton() {
-        if (!isEditMode) {
-            VBox addButton = new VBox();
-            addButton.getStyleClass().add("add-button");
-            addButton.setAlignment(Pos.CENTER);
-
-            Label plusLabel = new Label("+");
-            plusLabel.getStyleClass().add("plus-label");
-
-            addButton.getChildren().add(plusLabel);
-
-            addButton.setOnMouseClicked(event -> openAddProductForm(isEditMode));
-
-            productsFlowPane.getChildren().add(addButton);
-        }
+        VBox addButton = new VBox();
+        addButton.getStyleClass().add("add-button");
+        addButton.setAlignment(Pos.CENTER);
+        Label plusLabel = new Label("+");
+        plusLabel.getStyleClass().add("plus-label");
+        addButton.getChildren().add(plusLabel);
+        addButton.setOnMouseClicked(event -> openAddProductForm(false));
+        productsFlowPane.getChildren().add(addButton);
     }
 
     private void openAddProductForm(boolean isEditMode) {
@@ -447,13 +436,6 @@ public class OrderController implements Initializable {
         clearSelection();
     }
 
-    private BurgerVariant getBurgerVariantById(Burger burger, Long variantId) {
-        return burger.getVariants().stream()
-                .filter(variant -> variant.getId().equals(variantId))
-                .findFirst()
-                .orElse(null);
-    }
-
     private void clearSelection() {
         currentSelectedBurger = null;
         currentSelectedVariantId = 0L;
@@ -481,27 +463,37 @@ public class OrderController implements Initializable {
     public void openEditProducts(ActionEvent actionEvent) {
         isEditMode = !isEditMode;
 
-        for (javafx.scene.Node node : productsFlowPane.getChildren()) {
-            if (node instanceof VBox) {
-                VBox productCard = (VBox) node;
-
-                if (isEditMode) {
-                    productCard.getStyleClass().add("edit-mode");
-                    productCard.setStyle("-fx-opacity: 0.8;");
-                } else {
-                    productCard.getStyleClass().remove("edit-mode");
-                    productCard.setStyle("-fx-opacity: 1.0;");
-                }
-            }
-        }
+//        for (javafx.scene.Node node : productsFlowPane.getChildren()) {
+//            if (node instanceof VBox) {
+//                VBox productCard = (VBox) node;
+//
+//                if (productCard.getStyleClass().contains("add-button")) {
+//                    productCard.setVisible(!isEditMode);
+//                    continue;
+//                }
+//
+//                if (isEditMode) {
+//                    productCard.getStyleClass().add("edit-mode");
+//                    productCard.setStyle("-fx-opacity: 0.8;");
+//                } else {
+//                    productCard.getStyleClass().remove("edit-mode");
+//                    productCard.setStyle("-fx-opacity: 1.0;");
+//                }
+//            }
+//        }
 
         if (isEditMode) {
             editProductsBtn.getStyleClass().add("edit-mode-active");
             editProductsBtn.setText("❌ Salir Edición");
 
+            toppingsBtn.setVisible(false);
+            toppingsBtn.setManaged(false);
         } else {
             editProductsBtn.getStyleClass().remove("edit-mode-active");
             editProductsBtn.setText("");
+
+            toppingsBtn.setVisible(isAdmin);
+            toppingsBtn.setManaged(isAdmin);
         }
 
         loadAllProductsFromDatabase();

@@ -102,6 +102,9 @@ public class ProductDialog {
         VBox descriptionBox = new VBox(3);
         Label descriptionLabel = new Label("Descripción *");
         descriptionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        //TextField descriptionField = new TextField();
+        //descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 30px;");
+        //descriptionBox.getChildren().addAll(descriptionLabel, descriptionField);
         TextArea descriptionField = new TextArea();
         descriptionField.setStyle("-fx-pref-width: 280px; -fx-pref-height: 60px; -fx-wrap-text: true;");
         descriptionField.setPrefRowCount(3);
@@ -271,6 +274,11 @@ public class ProductDialog {
         cancelBtn.setOnAction(e -> dialog.close());
 
         saveBtn.setOnAction(e -> {
+            if (Session.getInstance().getCurrentUser() == null) {
+                errorLabel.setText("Debe estar logueado para guardar productos");
+                errorLabel.setVisible(true);
+                return;
+            }
             String selectedType = typeComboBox.getValue();
             if (validateForm(selectedType, nameField.getText(), codeField.getText(),
                     descriptionField.getText(), priceField.getText(),
@@ -307,6 +315,10 @@ public class ProductDialog {
                                     Double.parseDouble(priceField.getText()), imageDataToUse, 2); // extra_id = 2
                             break;
                     }
+
+//                    if (mode == ProductMode.ADD) {
+//                        DialogUtil.showInfo("Éxito", "Producto agregado correctamente");
+//                    }
                     dialog.close();
 
                     if (onSuccessCallback != null) {
@@ -317,6 +329,10 @@ public class ProductDialog {
                     errorLabel.setText("Error al guardar: " + ex.getMessage());
                     errorLabel.setVisible(true);
                     ex.printStackTrace();
+                    // Call callback even on error to refresh list if something was saved
+                    if (onSuccessCallback != null) {
+                        onSuccessCallback.run();
+                    }
                 }
             }
         });
@@ -352,7 +368,7 @@ public class ProductDialog {
             return false;
         }
 
-        if (mode == ProductMode.ADD && image == null) {
+        if (mode == ProductMode.ADD && image == null && !"Burger".equals(type)) {
             errorLabel.setText("Debe seleccionar una imagen");
             errorLabel.setVisible(true);
             return false;
@@ -458,7 +474,7 @@ public class ProductDialog {
     private void saveBurger(String name, String code, String description, byte[] imageData, double simplePrice, double doblePrice, double triplePrice) {
         boolean res = false;
         Burger burger = Burger.builder()
-                .id(isBurger ? ((Burger) productToEdit).getId() : 0)
+                .id(isBurger ? ((Burger) productToEdit).getId() : null)
                 .name(name.trim())
                 .code(code.trim().toUpperCase())
                 .description(description.trim())

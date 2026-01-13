@@ -1,5 +1,7 @@
 package org.example.kaos.service.implementation;
 
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -17,8 +19,11 @@ import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
+import java.math.BigDecimal;
 
 public class TicketPrintServiceImpl implements Printable {
 
@@ -266,7 +271,7 @@ public class TicketPrintServiceImpl implements Printable {
             contentStream.endText();
             y -= 15;
 
-            if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDeliveryAmount() != null && order.getDeliveryAmount() > 0) {
+            if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDeliveryAmount() != null && order.getDeliveryAmount().compareTo(BigDecimal.ZERO) > 0) {
                 contentStream.beginText();
                 contentStream.newLineAtOffset(10, y);
                 contentStream.showText("Delivery:");
@@ -312,11 +317,11 @@ public class TicketPrintServiceImpl implements Printable {
             contentStream.setFont(PDType1Font.HELVETICA, 10);
             StringBuilder paymentMethod = new StringBuilder("Pago: ");
 
-            if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+            if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
                 paymentMethod.append("Efectivo");
             }
 
-            if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+            if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
                 if (paymentMethod.length() > 6) {
                     paymentMethod.append(" + ");
                 }
@@ -362,21 +367,30 @@ public class TicketPrintServiceImpl implements Printable {
 
             contentStream.close();
 
-            File ticketsDir = new File("/TicketsPDF");
-            if (!ticketsDir.exists()) {
-                ticketsDir.mkdirs();
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String fileName = order.getOrderNumber() + "_" + timestamp + ".pdf";
+
+            Stage stage = new Stage();
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+
+            fileChooser.setInitialFileName(fileName);
+
+            File selectedFile = fileChooser.showSaveDialog(stage);
+
+            if (selectedFile != null) {
+                File finalFile = new File(selectedFile.getParent(), fileName);
+
+                document.save(finalFile);
+
+                System.out.println("PDF generado exitosamente: " + finalFile.getName());
+                System.out.println("Archivo guardado en: " + finalFile.getAbsolutePath());
+                System.out.println("Tamaño del archivo: " + finalFile.length() + " bytes");
+            } else {
+                System.err.println("No se seleccionó una ubicación para guardar el archivo.");
             }
-
-            String fileName = "ticket_orden_" + order.getOrderNumber() + ".pdf";
-            File outputFile = new File(ticketsDir, fileName);
-            document.save(outputFile);
-
-            System.out.println("✅ PDF generado exitosamente: " + outputFile.getName());
-            System.out.println("📁 Archivo guardado en: " + outputFile.getAbsolutePath());
-            System.out.println("📄 Tamaño del archivo: " + outputFile.length() + " bytes");
-
         } catch (Exception e) {
-            System.err.println("❌ Error al generar PDF: " + e.getMessage());
+            System.err.println("Error al generar PDF: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {
@@ -461,8 +475,7 @@ public class TicketPrintServiceImpl implements Printable {
             y += 12;
         }
 
-        String tipoPedido = Boolean.TRUE.equals(order.getIsDelivery()) ?
-                "🚚 DELIVERY" : "🏪 PARA RETIRAR";
+        String tipoPedido = Boolean.TRUE.equals(order.getIsDelivery()) ? "🚚 DELIVERY" : "🏪 PARA RETIRAR";
         g2d.setFont(headerFont);
         g2d.drawString(tipoPedido, 10, y);
         y += 15;
@@ -534,7 +547,7 @@ public class TicketPrintServiceImpl implements Printable {
         g2d.drawString(subtotalStr, subtotalX, y);
         y += 12;
 
-        if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDeliveryAmount() != null && order.getDeliveryAmount() > 0) {
+        if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDeliveryAmount() != null && order.getDeliveryAmount().compareTo(BigDecimal.ZERO) > 0) {
             g2d.drawString("Delivery:", 10, y);
             String deliveryStr = String.format("$%.0f", order.getDeliveryAmount());
             int deliveryWidth = g2d.getFontMetrics().stringWidth(deliveryStr);
@@ -559,11 +572,11 @@ public class TicketPrintServiceImpl implements Printable {
         g2d.setFont(normalFont);
         StringBuilder paymentMethod = new StringBuilder("Pago: ");
 
-        if (order.getCashAmount() != null && order.getCashAmount() > 0) {
+        if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
             paymentMethod.append("Efectivo");
         }
 
-        if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
+        if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
             if (paymentMethod.length() > 6) {
                 paymentMethod.append(" + ");
             }

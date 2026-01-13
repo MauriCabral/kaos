@@ -91,8 +91,9 @@ public class BurgerRepository {
         try {
             em.getTransaction().begin();
             Burger savedBurger;
-            if (burger.getId() == 0) {
+            if (burger.getId() == null) {
                 em.persist(burger);
+                em.flush(); // Ensure id is assigned
                 savedBurger = burger;
             } else {
                 savedBurger = em.merge(burger);
@@ -106,6 +107,7 @@ public class BurgerRepository {
             em.close();
         }
     }
+
 
     public Burger updateBurger(Burger burger) {
         EntityManager em = JpaUtil.getEntityManager();
@@ -121,6 +123,7 @@ public class BurgerRepository {
             em.close();
         }
     }
+
 
     public Burger findBurgerById(int burgerId) {
         EntityManager em = JpaUtil.getEntityManager();

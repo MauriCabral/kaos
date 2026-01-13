@@ -29,6 +29,7 @@
                     <Button text="Pedidos" fx:id="btnOrder" styleClass="side-button" onAction="#handleOrderAction"/>
                     <Button text="Histórico" fx:id="btnOrderHistory" styleClass="side-button" onAction="#handleOrderHistoryAction"/>
                     <Button text="Delivery" fx:id="btnDelivery" styleClass="side-button" onAction="#handleDelivery" visible="false"/>
+                    <Button text="Estadísticas" fx:id="btnStatistics" styleClass="side-button" onAction="#handleStatistics" visible="false"/>
                 </VBox>
             </VBox>
 

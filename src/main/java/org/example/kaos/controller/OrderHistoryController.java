@@ -2,20 +2,28 @@ package org.example.kaos.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.kaos.entity.Order;
 import org.example.kaos.service.IOrderService;
 import org.example.kaos.service.implementation.OrderServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 import org.example.kaos.util.WindowManager;
+import java.math.BigDecimal;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,13 +44,12 @@ public class OrderHistoryController implements Initializable {
     @FXML private TableColumn<Order, String> typeColumn;
     @FXML private TableColumn<Order, String> storeColumn;
     @FXML private TableColumn<Order, String> createdByColumn;
-    @FXML private TableColumn<Order, Double> subtotalColumn;
-    @FXML private TableColumn<Order, Double> totalColumn;
+    @FXML private TableColumn<Order, BigDecimal> subtotalColumn;
+    @FXML private TableColumn<Order, BigDecimal> totalColumn;
     @FXML private TableColumn<Order, String> paymentMethodColumn;
     @FXML private TableColumn<Order, Void> actionsColumn;
     @FXML private TextField searchField;
     @FXML private Button searchBtn;
-    @FXML private Button clearBtn;
     @FXML private CheckBox deliveryCheck;
     @FXML private CheckBox pickupCheck;
     @FXML private CheckBox cashCheck;
@@ -71,6 +78,30 @@ public class OrderHistoryController implements Initializable {
             dateFromPicker.setValue(LocalDate.now().minusDays(1));
             dateToPicker.setValue(LocalDate.now());
 
+            dateFromPicker.setConverter(new StringConverter<LocalDate>() {
+                @Override
+                public String toString(LocalDate date) {
+                    return (date != null) ? date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
+                }
+
+                @Override
+                public LocalDate fromString(String string) {
+                    return (string != null && !string.isEmpty()) ? LocalDate.parse(string, DateTimeFormatter.ofPattern("dd/MM/yyyy")) : null;
+                }
+            });
+
+            dateToPicker.setConverter(new StringConverter<LocalDate>() {
+                @Override
+                public String toString(LocalDate date) {
+                    return (date != null) ? date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
+                }
+
+                @Override
+                public LocalDate fromString(String string) {
+                    return (string != null && !string.isEmpty()) ? LocalDate.parse(string, DateTimeFormatter.ofPattern("dd/MM/yyyy")) : null;
+                }
+            });
+
             setupView();
             setupTableColumns();
             loadOrders();
@@ -92,7 +123,7 @@ public class OrderHistoryController implements Initializable {
         customerAddressColumn.setVisible(false);
         createdByColumn.setVisible(false);
 
-        orderNumberColumn.setPrefWidth(100);
+        orderNumberColumn.setPrefWidth(80);
 
         if (filterContainer != null) {
             filterContainer.setSpacing(10);
@@ -119,7 +150,7 @@ public class OrderHistoryController implements Initializable {
             Order order = cellData.getValue();
             Boolean isDelivery = order.getIsDelivery();
             if (isDelivery == null) {
-                return new javafx.beans.property.SimpleStringProperty("🏪");
+                return new javafx.beans.property.SimpleStringProperty("👤");
             }
 
             if (Boolean.TRUE.equals(isDelivery) && order.getDelivery() == null) {
@@ -127,7 +158,7 @@ public class OrderHistoryController implements Initializable {
             }
 
             return new javafx.beans.property.SimpleStringProperty(
-                    Boolean.TRUE.equals(isDelivery) ? "🚚" : "🏪"
+                    Boolean.TRUE.equals(isDelivery) ? "🚚" : "👤"
             );
         });
 
@@ -150,48 +181,46 @@ public class OrderHistoryController implements Initializable {
         totalColumn.setCellValueFactory(new PropertyValueFactory<>("total"));
 
         paymentMethodColumn.setCellValueFactory(cellData -> {
-            Double cashAmount = cellData.getValue().getCashAmount();
-            Double transferAmount = cellData.getValue().getTransferAmount();
+            BigDecimal cashAmount = cellData.getValue().getCashAmount();
+            BigDecimal transferAmount = cellData.getValue().getTransferAmount();
 
             String paymentIcon = "-";
 
-            if (cashAmount != null && cashAmount > 0 && transferAmount != null && transferAmount > 0) {
+            if (cashAmount != null && cashAmount.compareTo(BigDecimal.ZERO) > 0 && transferAmount != null && transferAmount.compareTo(BigDecimal.ZERO) > 0) {
                 paymentIcon = "💰+💳";
-            }
-            else if (cashAmount != null && cashAmount > 0 && (transferAmount == null || transferAmount <= 0)) {
+            } else if (cashAmount != null && cashAmount.compareTo(BigDecimal.ZERO) > 0 && (transferAmount == null || transferAmount.compareTo(BigDecimal.ZERO) <= 0)) {
                 paymentIcon = "💰";
-            }
-            else if ((cashAmount == null || cashAmount <= 0) && transferAmount != null && transferAmount > 0) {
+            } else if ((cashAmount == null || cashAmount.compareTo(BigDecimal.ZERO) <= 0) && transferAmount != null && transferAmount.compareTo(BigDecimal.ZERO) > 0) {
                 paymentIcon = "💳";
             }
 
             return new javafx.beans.property.SimpleStringProperty(paymentIcon);
         });
 
-        subtotalColumn.setCellFactory(column -> new TableCell<Order, Double>() {
+        subtotalColumn.setCellFactory(column -> new TableCell<Order, BigDecimal>() {
             @Override
-            protected void updateItem(Double amount, boolean empty) {
+            protected void updateItem(BigDecimal amount, boolean empty) {
                 super.updateItem(amount, empty);
                 if (empty || amount == null) {
                     setText(null);
                     getStyleClass().removeAll("subtotal-cell");
                 } else {
-                    setText(String.format("$%.0f", amount));
+                    setText(String.format("$%.0f", amount.doubleValue()));
                     getStyleClass().add("subtotal-cell");
                     setStyle("-fx-padding: 0 5 0 0;");
                 }
             }
         });
 
-        totalColumn.setCellFactory(column -> new TableCell<Order, Double>() {
+        totalColumn.setCellFactory(column -> new TableCell<Order, BigDecimal>() {
             @Override
-            protected void updateItem(Double amount, boolean empty) {
+            protected void updateItem(BigDecimal amount, boolean empty) {
                 super.updateItem(amount, empty);
                 if (empty || amount == null) {
                     setText(null);
                     getStyleClass().removeAll("total-cell");
                 } else {
-                    setText(String.format("$%.0f", amount));
+                    setText(String.format("$%.0f", amount.doubleValue()));
                     getStyleClass().add("total-cell");
                     setStyle("-fx-padding: 0 10 0 0;");
                 }
@@ -312,15 +341,15 @@ public class OrderHistoryController implements Initializable {
     }
 
     private String getPaymentDetail(Order order) {
-        Double cashAmount = order.getCashAmount();
-        Double transferAmount = order.getTransferAmount();
+        BigDecimal cashAmount = order.getCashAmount();
+        BigDecimal transferAmount = order.getTransferAmount();
 
-        if (cashAmount != null && cashAmount > 0 && transferAmount != null && transferAmount > 0) {
-            return String.format("Mixto (💰 $%.0f + 💳 $%.0f)", cashAmount, transferAmount);
-        } else if (cashAmount != null && cashAmount > 0) {
-            return String.format("Efectivo (💰 $%.0f)", cashAmount);
-        } else if (transferAmount != null && transferAmount > 0) {
-            return String.format("Transferencia (💳 $%.0f)", transferAmount);
+        if (cashAmount != null && cashAmount.compareTo(BigDecimal.ZERO) > 0 && transferAmount != null && transferAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return String.format("Mixto (💰 $%.0f + 💳 $%.0f)", cashAmount.doubleValue(), transferAmount.doubleValue());
+        } else if (cashAmount != null && cashAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return String.format("Efectivo (💰 $%.0f)", cashAmount.doubleValue());
+        } else if (transferAmount != null && transferAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return String.format("Transferencia (💳 $%.0f)", transferAmount.doubleValue());
         } else {
             return "No especificado";
         }
@@ -343,7 +372,7 @@ public class OrderHistoryController implements Initializable {
     }
 
     private void deleteOrder(Order order) {
-        boolean res = DialogUtil.showConfirmation("Confirmar Eliminación","¿Estás seguro de eliminar la orden " + order.getOrderNumber() +"?");
+        boolean res = DialogUtil.showConfirmation("Confirmar Eliminación", "¿Estás seguro de eliminar la orden " + order.getOrderNumber() + "?");
 
         if (res) {
             try {
@@ -379,91 +408,83 @@ public class OrderHistoryController implements Initializable {
         boolean filterTransfer = transferCheck.isSelected();
         boolean filterToday = todayCheck.isSelected();
 
-        LocalTime startHour = LocalTime.of(15, 0);
-        LocalTime endHour = LocalTime.of(3, 0);
+        boolean noFiltersSelected = !filterDelivery && !filterPickup && !filterCash && !filterTransfer && !filterToday;
 
-        for (Order order : orders) {
-            boolean matches = true;
+        if (noFiltersSelected) {
+            filtered.addAll(orders);
+        } else {
+            for (Order order : orders) {
+                boolean matches = true;
 
-            if (matches && (filterDelivery || filterPickup)) {
-                Boolean isDelivery = order.getIsDelivery();
-
-                if (filterDelivery) {
-                    if (isDelivery == null || !isDelivery) {
+                if (matches && (filterDelivery || filterPickup)) {
+                    Boolean isDelivery = order.getIsDelivery();
+                    if (filterDelivery && (isDelivery == null || !isDelivery)) {
+                        matches = false;
+                    }
+                    if (filterPickup && (isDelivery != null && isDelivery)) {
                         matches = false;
                     }
                 }
 
-                if (filterPickup) {
-                    if (isDelivery != null && isDelivery) {
+                if (matches && (filterCash || filterTransfer)) {
+                    BigDecimal cashAmount = order.getCashAmount();
+                    BigDecimal transferAmount = order.getTransferAmount();
+
+                    if (filterCash && (cashAmount == null || cashAmount.compareTo(BigDecimal.ZERO) <= 0)) {
                         matches = false;
                     }
-                }
-            }
 
-            if (matches && (filterCash || filterTransfer)) {
-                Double cashAmount = order.getCashAmount();
-                Double transferAmount = order.getTransferAmount();
-
-                if (filterCash) {
-                    if (cashAmount == null || cashAmount <= 0) {
+                    if (filterTransfer && (transferAmount == null || transferAmount.compareTo(BigDecimal.ZERO) <= 0)) {
                         matches = false;
                     }
                 }
 
-                if (filterTransfer) {
-                    if (transferAmount == null || transferAmount <= 0) {
+                if (matches && filterToday) {
+                    if (order.getCreatedAt() == null) {
+                        matches = false;
+                    } else {
+                        LocalDateTime orderDateTime = order.getCreatedAt();
+                        LocalDate orderDate = orderDateTime.toLocalDate();
+                        LocalTime orderTime = orderDateTime.toLocalTime();
+
+                        boolean isInRange = false;
+
+                        if (orderDate.equals(today) && !orderTime.isBefore(LocalTime.of(15, 0))) {
+                            isInRange = true;
+                        }
+
+                        if (orderDate.equals(today.plusDays(1)) && !orderTime.isAfter(LocalTime.of(3, 0))) {
+                            isInRange = true;
+                        }
+
+                        if (orderDate.equals(today) && orderTime.isBefore(LocalTime.of(3, 0))) {
+                            isInRange = true;
+                        }
+
+                        if (!isInRange) {
+                            matches = false;
+                        }
+                    }
+                }
+
+                /*if (matches && order.getCreatedAt() != null) {
+                    LocalDate orderDate = order.getCreatedAt().toLocalDate();
+                    if (fromDate != null && orderDate.isBefore(fromDate)) {
                         matches = false;
                     }
-                }
-            }
-
-            if (matches && filterToday) {
-                if (order.getCreatedAt() == null) {
-                    matches = false;
-                } else {
-                    LocalDateTime orderDateTime = order.getCreatedAt();
-                    LocalDate orderDate = orderDateTime.toLocalDate();
-                    LocalTime orderTime = orderDateTime.toLocalTime();
-
-                    boolean isInRange = false;
-
-                    if (orderDate.equals(today) && !orderTime.isBefore(startHour)) {
-                        isInRange = true;
-                    }
-
-                    LocalDate tomorrow = today.plusDays(1);
-                    if (orderDate.equals(tomorrow) && !orderTime.isAfter(endHour)) {
-                        isInRange = true;
-                    }
-
-                    if (orderDate.equals(today) && orderTime.isBefore(endHour)) {
-                        isInRange = true;
-                    }
-
-                    if (!isInRange) {
+                    if (toDate != null && orderDate.isAfter(toDate)) {
                         matches = false;
                     }
-                }
-            }
+                }*/
 
-            if (matches && order.getCreatedAt() != null) {
-                LocalDate orderDate = order.getCreatedAt().toLocalDate();
-
-                if (fromDate != null && orderDate.isBefore(fromDate)) {
-                    matches = false;
+                if (matches) {
+                    filtered.add(order);
                 }
-                if (toDate != null && orderDate.isAfter(toDate)) {
-                    matches = false;
-                }
-            }
-
-            if (matches) {
-                filtered.add(order);
             }
         }
 
         ordersTable.setItems(filtered);
+
         updateCounters(filtered);
     }
 
@@ -534,16 +555,16 @@ public class OrderHistoryController implements Initializable {
         double deliveryTotal = 0;
 
         for (Order order : ordersToCount) {
-            if (order.getCashAmount() != null && order.getCashAmount() > 0) {
-                cashTotal += order.getCashAmount();
+            if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
+                cashTotal += order.getCashAmount().doubleValue();
             }
 
-            if (order.getTransferAmount() != null && order.getTransferAmount() > 0) {
-                transferTotal += order.getTransferAmount();
+            if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
+                transferTotal += order.getTransferAmount().doubleValue();
             }
 
-            if (order.getDeliveryAmount() != null && order.getDeliveryAmount() > 0) {
-                deliveryTotal += order.getDeliveryAmount();
+            if (order.getDeliveryAmount() != null && order.getDeliveryAmount().compareTo(BigDecimal.ZERO) > 0) {
+                deliveryTotal += order.getDeliveryAmount().doubleValue();
             }
         }
 
@@ -551,5 +572,190 @@ public class OrderHistoryController implements Initializable {
         cashTotalLabel.setText(String.format("$%.0f", cashTotal));
         transferTotalLabel.setText(String.format("$%.0f", transferTotal));
         deliveryTotalLabel.setText(String.format("$%.0f", deliveryTotal));
+    }
+
+    public void orderExcel(ActionEvent actionEvent) {
+        try {
+            String userHome = System.getProperty("user.home");
+            File desktopDir = new File(userHome, "Desktop");
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exportar órdenes a Excel");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Archivos Excel", "*.xlsx")
+            );
+
+            fileChooser.setInitialDirectory(desktopDir);
+
+            fileChooser.setInitialFileName("orders_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx");
+
+            Stage stage = (Stage) ordersTable.getScene().getWindow();
+            File file = fileChooser.showSaveDialog(stage);
+
+            if (file == null) {
+                return;
+            }
+
+            List<Order> ordersToExport = ordersTable.getItems();
+
+            if (ordersToExport.isEmpty()) {
+                DialogUtil.showWarning("Exportar", "No hay órdenes para exportar.");
+                return;
+            }
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Órdenes");
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.getIndex());
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            CellStyle dataStyle = workbook.createCellStyle();
+            dataStyle.setBorderBottom(BorderStyle.THIN);
+            dataStyle.setBorderTop(BorderStyle.THIN);
+            dataStyle.setBorderLeft(BorderStyle.THIN);
+            dataStyle.setBorderRight(BorderStyle.THIN);
+
+            CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.cloneStyleFrom(dataStyle);
+            dateStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("dd/MM/yyyy HH:mm"));
+
+            CellStyle currencyStyle = workbook.createCellStyle();
+            currencyStyle.cloneStyleFrom(dataStyle);
+            currencyStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("[$$-es-AR]#,##0"));
+
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {
+                    "Número Orden", "Fecha/Hora", "Cliente",
+                    "Teléfono", "Dirección", "Tipo", "Local",
+                    "Subtotal", "Delivery", "Total",
+                    "Efectivo", "Transferencia", "Método Pago", "Observaciones"
+            };
+
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 1;
+            for (Order order : ordersToExport) {
+                Row row = sheet.createRow(rowNum++);
+                int colIndex = 0;
+
+                org.apache.poi.ss.usermodel.Cell cell0 = row.createCell(colIndex++);
+                cell0.setCellValue(order.getOrderNumber() != null ? order.getOrderNumber() : "");
+
+                org.apache.poi.ss.usermodel.Cell cell1 = row.createCell(colIndex++);
+                if (order.getCreatedAt() != null) {
+                    cell1.setCellValue(order.getCreatedAt());
+                    cell1.setCellStyle(dateStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(colIndex++);
+                cell2.setCellValue(order.getCustomerName() != null ? order.getCustomerName() : "");
+
+                org.apache.poi.ss.usermodel.Cell cell3 = row.createCell(colIndex++);
+                cell3.setCellValue(order.getCustomerPhone() != null ? order.getCustomerPhone() : "");
+
+                org.apache.poi.ss.usermodel.Cell cell4 = row.createCell(colIndex++);
+                cell4.setCellValue(order.getCustomerAddress() != null ? order.getCustomerAddress() : "");
+
+                org.apache.poi.ss.usermodel.Cell cell5 = row.createCell(colIndex++);
+                String tipo = "Pickup";
+                if (Boolean.TRUE.equals(order.getIsDelivery())) {
+                    tipo = "Delivery";
+                    if (order.getDelivery() == null) {
+                        tipo = "Delivery (sin datos)";
+                    }
+                }
+                cell5.setCellValue(tipo);
+
+                org.apache.poi.ss.usermodel.Cell cell6 = row.createCell(colIndex++);
+                String local = "-";
+                if (order.getStore() != null && order.getStore().getName() != null) {
+                    local = order.getStore().getName();
+                }
+                cell6.setCellValue(local);
+
+                org.apache.poi.ss.usermodel.Cell cell7 = row.createCell(colIndex++);
+                if (order.getSubtotal() != null) {
+                    cell7.setCellValue(order.getSubtotal().doubleValue());
+                    cell7.setCellStyle(currencyStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell8 = row.createCell(colIndex++);
+                if (order.getDeliveryAmount() != null && order.getDeliveryAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    cell8.setCellValue(order.getDeliveryAmount().doubleValue());
+                    cell8.setCellStyle(currencyStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell9 = row.createCell(colIndex++);
+                if (order.getTotal() != null) {
+                    cell9.setCellValue(order.getTotal().doubleValue());
+                    cell9.setCellStyle(currencyStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell10 = row.createCell(colIndex++);
+                if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    cell10.setCellValue(order.getCashAmount().doubleValue());
+                    cell10.setCellStyle(currencyStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell11 = row.createCell(colIndex++);
+                if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    cell11.setCellValue(order.getTransferAmount().doubleValue());
+                    cell11.setCellStyle(currencyStyle);
+                }
+
+                org.apache.poi.ss.usermodel.Cell cell12 = row.createCell(colIndex++);
+                String metodoPago = getPaymentDetail(order);
+                cell12.setCellValue(metodoPago);
+
+                org.apache.poi.ss.usermodel.Cell cell13 = row.createCell(colIndex);
+                String observations = "";
+                if (order.getNotes() != null) {
+                    observations = order.getNotes();
+                }
+                cell13.setCellValue(observations);
+
+                for (int i = 0; i < headers.length; i++) {
+                    org.apache.poi.ss.usermodel.Cell cell = row.getCell(i);
+                    if (cell != null && cell.getCellStyle() == null) {
+                        cell.setCellStyle(dataStyle);
+                    }
+                }
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                workbook.write(fileOut);
+            }
+
+            workbook.close();
+
+            String successMessage = String.format(
+                    "Archivo guardado en:\n%s",
+                    file.getAbsolutePath()
+            );
+
+            DialogUtil.showInfo("Exportación Exitosa", successMessage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            DialogUtil.showError("Error", "No se pudo exportar a Excel: " + e.getMessage());
+        }
     }
 }

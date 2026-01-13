@@ -6,27 +6,35 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainController {
+    private static final Logger logger = LoggerFactory.getLogger(MainController.class);
+
     @FXML private StackPane contentArea;
     @FXML private Button btnLogout;
     @FXML private HBox tabContainer;
     @FXML private Button btnDelivery;
+    @FXML private Button btnStatistics;
 
     private Map<String, TabInfo> openTabs = new HashMap<>();
     private String currentTabId;
     private int orderCounter = 1;
+    private static final int MAX_TABS = 10;
 
     private static class TabInfo {
         String title;
@@ -42,22 +50,35 @@ public class MainController {
 
     @FXML
     private void initialize() {
-        if (Session.getInstance().getCurrentUser().getId() == 1) {
+        if (Session.getInstance().getCurrentUser().getId() == 1 || "ADMIN".equals(Session.getInstance().getCurrentUser().getRole())) {
             btnDelivery.setVisible(true);
+            btnStatistics.setVisible(true);
         } else {
             btnDelivery.setVisible(false);
+            btnStatistics.setVisible(false);
         }
+
+        // Add keyboard shortcuts
+        Platform.runLater(() -> {
+            Scene scene = tabContainer.getScene();
+            if (scene != null) {
+                scene.setOnKeyPressed(this::handleKeyPressed);
+            }
+        });
     }
 
     @FXML
     public void handleOrderAction(ActionEvent actionEvent) {
+        if (openTabs.size() >= MAX_TABS) {
+            DialogUtil.showWarning("Límite alcanzado", "No puedes tener más de " + MAX_TABS + " pestañas abiertas.");
+            return;
+        }
         openNewOrderTab("Pedido " + orderCounter, "/fxml/order.fxml");
     }
 
     @FXML
     public void handleLogoutAction(ActionEvent actionEvent) {
-        boolean confirm = DialogUtil.showConfirmation("Cerrar Sesión", "¿Estás seguro de que deseas cerrar sesión?"
-        );
+        boolean confirm = DialogUtil.showConfirmation("Cerrar Sesión", "¿Estás seguro de que deseas cerrar sesión?");
 
         if (confirm) {
             performLogout();
@@ -66,7 +87,7 @@ public class MainController {
 
     private void performLogout() {
         try {
-            System.out.println("Cerrando sesión y reiniciando aplicación...");
+            logger.info("Cerrando sesión y reiniciando aplicación...");
 
             Stage currentStage = (Stage) btnLogout.getScene().getWindow();
             currentStage.close();
@@ -74,7 +95,8 @@ public class MainController {
             restartApplication();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during logout", e);
+            DialogUtil.showError("Error", "Error during logout: " + e.getMessage());
             Platform.exit();
         }
     }
@@ -91,8 +113,7 @@ public class MainController {
             loginStage.show();
 
         } catch (IOException e) {
-            e.printStackTrace();
-            DialogUtil.showError("Error", "No se pudo cargar la ventana de login. La aplicación se cerrará.");
+            DialogUtil.showError("Error", "No se pudo cargar la ventana de login: " + e.getMessage() + ". La aplicación se cerrará.");
             Platform.exit();
         }
     }
@@ -110,8 +131,7 @@ public class MainController {
             switchToTab(tabId);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            DialogUtil.showError("Error", "No se pudo cargar: " + title);
+            DialogUtil.showError("Error", "No se pudo cargar: " + title + ". " + e.getMessage());
         }
     }
 
@@ -129,6 +149,19 @@ public class MainController {
 
         tabItem.getChildren().addAll(titleLabel, closeBtn);
         tabItem.setOnMouseClicked(e -> switchToTab(tabId));
+
+        // Add context menu
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem closeItem = new MenuItem("Cerrar");
+        closeItem.setOnAction(e -> closeTab(tabId));
+        MenuItem closeOthersItem = new MenuItem("Cerrar otras");
+        closeOthersItem.setOnAction(e -> closeOtherTabs(tabId));
+        MenuItem closeAllItem = new MenuItem("Cerrar todas");
+        closeAllItem.setOnAction(e -> closeAllTabs());
+        contextMenu.getItems().addAll(closeItem, closeOthersItem, closeAllItem);
+        tabItem.setOnContextMenuRequested(event -> {
+            contextMenu.show(tabItem, event.getScreenX(), event.getScreenY());
+        });
 
         tabContainer.getChildren().add(tabItem);
     }
@@ -183,6 +216,39 @@ public class MainController {
         }
     }
 
+    private void handleKeyPressed(KeyEvent event) {
+        if (event.isControlDown()) {
+            switch (event.getCode()) {
+                case N:
+                    handleOrderAction(null);
+                    event.consume();
+                    break;
+                case W:
+                    if (currentTabId != null) {
+                        closeTab(currentTabId);
+                    }
+                    event.consume();
+                    break;
+                case TAB:
+                    switchToNextTab();
+                    event.consume();
+                    break;
+            }
+        }
+    }
+
+    private void switchToNextTab() {
+        if (openTabs.isEmpty()) return;
+        List<String> tabIds = new ArrayList<>(openTabs.keySet());
+        if (currentTabId == null) {
+            switchToTab(tabIds.get(0));
+            return;
+        }
+        int currentIndex = tabIds.indexOf(currentTabId);
+        int nextIndex = (currentIndex + 1) % tabIds.size();
+        switchToTab(tabIds.get(nextIndex));
+    }
+
     public void openNewOrderTab(String title, String fxmlPath) {
         openTab(title, fxmlPath);
         orderCounter++;
@@ -194,5 +260,28 @@ public class MainController {
 
     public void handleDelivery(ActionEvent actionEvent) {
         openNewOrderTab("Gestión Delivery " + orderCounter, "/fxml/delivery-manager.fxml");
+    }
+
+    public void handleStatistics(ActionEvent actionEvent) {
+        openNewOrderTab("Estadísticas Pedidos " + orderCounter, "/fxml/order-statistics.fxml");
+    }
+
+    private void closeOtherTabs(String keepTabId) {
+        List<String> toClose = new ArrayList<>();
+        for (String tabId : openTabs.keySet()) {
+            if (!tabId.equals(keepTabId)) {
+                toClose.add(tabId);
+            }
+        }
+        for (String tabId : toClose) {
+            closeTab(tabId);
+        }
+    }
+
+    private void closeAllTabs() {
+        List<String> toClose = new ArrayList<>(openTabs.keySet());
+        for (String tabId : toClose) {
+            closeTab(tabId);
+        }
     }
 }

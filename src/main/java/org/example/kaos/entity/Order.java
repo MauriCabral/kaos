@@ -1,12 +1,18 @@
 package org.example.kaos.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents an order in the system.
+ * Contains customer information, payment details, and associated order details.
+ */
 @Entity
 @Table(name = "orders")
 @Getter
@@ -22,6 +28,8 @@ public class Order {
     @Column(name = "order_number", unique = true)
     private String orderNumber;
 
+    @NotNull(message = "Customer name is required")
+    @Size(min = 1, max = 100, message = "Customer name must be between 1 and 100 characters")
     @Column(name = "customer_name", nullable = false)
     private String customerName;
 
@@ -32,36 +40,46 @@ public class Order {
     private String customerPhone;
 
     @Column(name = "is_delivery")
+    @Builder.Default
     private Boolean isDelivery = false;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delivery_id", nullable = true)
     private Delivery delivery;
 
     @Column(name = "cash_amount")
-    private Double cashAmount = 0.0;
+    @Builder.Default
+    private BigDecimal cashAmount = BigDecimal.ZERO;
 
     @Column(name = "transfer_amount")
-    private Double transferAmount = 0.0;
+    @Builder.Default
+    private BigDecimal transferAmount = BigDecimal.ZERO;
 
     @Column(name = "delivery_amount")
-    private Double deliveryAmount = 0.0;
+    @Builder.Default
+    private BigDecimal deliveryAmount = BigDecimal.ZERO;
 
+    @NotNull(message = "Subtotal is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Subtotal must be non-negative")
     @Column(name = "subtotal", nullable = false)
-    private Double subtotal = 0.0;
+    @Builder.Default
+    private BigDecimal subtotal = BigDecimal.ZERO;
 
+    @NotNull(message = "Total is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Total must be non-negative")
     @Column(name = "total", nullable = false)
-    private Double total = 0.0;
+    @Builder.Default
+    private BigDecimal total = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdByUser;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch =  FetchType.EAGER)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<OrderDetail> orderDetails = new ArrayList<>();
 
@@ -81,12 +99,5 @@ public class Order {
 
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
-    }
-
-    @PostPersist
-    public void generateOrderNumber() {
-        if (orderNumber == null && id != null) {
-            orderNumber = String.format("ORD-%04d", id);
-        }
     }
 }
