@@ -82,3 +82,8 @@
     -fx-border-radius: 5px 0 0 5px;
     -fx-background-radius: 5px 0 0 5px;
 }
+
+.version-label {
+    -fx-text-fill: #999;
+    -fx-font-size: 8;
+}

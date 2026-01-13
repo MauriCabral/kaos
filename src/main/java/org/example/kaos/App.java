@@ -18,9 +18,9 @@ public class App extends Application {
         // Check for updates
         if (UpdateManager.checkForUpdate()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Update Available");
-            alert.setHeaderText("A new version is available: " + UpdateManager.getLatestVersion());
-            alert.setContentText("Do you want to download and install the update? The application will restart.");
+            alert.setTitle("Actualización Disponible");
+            alert.setHeaderText("Hay una nueva versión disponible: " + UpdateManager.getLatestVersion());
+            alert.setContentText("¿Desea descargar e instalar la actualización? La aplicación se reiniciará.");
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -29,8 +29,8 @@ public class App extends Application {
                     return; // Exit since restart will happen
                 } catch (IOException | InterruptedException e) {
                     Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                    errorAlert.setTitle("Update Failed");
-                    errorAlert.setContentText("Failed to download the update. Continuing with current version.");
+                    errorAlert.setTitle("Actualización Fallida");
+                    errorAlert.setContentText("Error al descargar la actualización. Continuando con la versión actual.");
                     errorAlert.showAndWait();
                 }
             }

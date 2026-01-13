@@ -582,7 +582,7 @@ public class OrderDetailsController {
 
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
 
-                ticketPrintService.generatePDF(savedOrder.getId()); //CAMBIAR LUEGO
+                ticketPrintService.print(savedOrder.getId());
 
                 if (stage != null) {
                     stage.close();

@@ -12,10 +12,10 @@
 
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.ToggleButton?>
-<AnchorPane prefHeight="425.0" prefWidth="468.0" stylesheets="@../css/login.css" xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.LoginController">
+<AnchorPane prefHeight="450.0" prefWidth="468.0" stylesheets="@../css/login.css" xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.LoginController">
     <children>
         <!-- Card central -->
-        <VBox alignment="CENTER" layoutX="25.0" layoutY="25.0" prefHeight="354.0" prefWidth="416.0" spacing="25.0" styleClass="login-card">
+        <VBox alignment="CENTER" layoutX="25.0" layoutY="25.0" prefHeight="375.0" prefWidth="416.0" spacing="20.0" styleClass="login-card">
             <padding>
                 <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
             </padding>
@@ -51,6 +51,9 @@
 
             <!-- Enlace olvidé contraseña -->
             <Hyperlink styleClass="forgot-link" text="¿Olvidaste tu contraseña?" />
+
+            <!-- Versión -->
+            <Label fx:id="versionLabel" styleClass="version-label" text="Versión 1.0.0" />
         </VBox>
     </children>
 </AnchorPane>

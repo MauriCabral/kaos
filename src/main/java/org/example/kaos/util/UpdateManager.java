@@ -79,6 +79,13 @@ public class UpdateManager {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "kaos_update.exe");
         client.send(request, HttpResponse.BodyHandlers.ofFile(tempFile));
 
+        // Replace the old exe with the new one
+        String exePath = ProcessHandle.current().info().command().orElse(null);
+        if (exePath != null) {
+            Path exePathObj = Paths.get(exePath);
+            Files.move(tempFile, exePathObj, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
+
         restartApp();
     }
 

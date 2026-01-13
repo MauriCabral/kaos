@@ -2,6 +2,7 @@ package org.example.kaos.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ToggleButton;
@@ -19,12 +20,15 @@ public class LoginController {
     @FXML private PasswordField passwordField;
     @FXML private TextField visiblePasswordField;
     @FXML private ToggleButton togglePasswordButton;
+    @FXML private Label versionLabel;
 
     private final IUserService userService = new UserServiceImpl();
+    private final String version = "v1..0.0";
 
     @FXML
     public void initialize() {
         setupPasswordFields();
+        versionLabel.setText(version);
     }
 
     private void setupPasswordFields() {
