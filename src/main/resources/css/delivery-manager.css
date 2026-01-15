@@ -5,10 +5,16 @@
 }
 
 /* TÍTULO */
+.title-bar {
+    -fx-background-color: #e9500e;
+    -fx-background-radius: 6px;
+    -fx-padding: 10px;
+}
+
 .title-label {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #e9500e;
+    -fx-text-fill: white;
 }
 
 /* BARRA DE BÚSQUEDA */
@@ -27,10 +33,12 @@
 }
 
 .search-btn {
-    -fx-background-color: #e9500e;
-    -fx-text-fill: white;
+    -fx-background-color: white;
+    -fx-text-fill: #e9500e;
     -fx-background-radius: 6px;
     -fx-border-radius: 6px;
+    -fx-border-color: white;
+    -fx-border-width: 1px;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-padding: 8px 16px;
@@ -38,7 +46,7 @@
 }
 
 .search-btn:hover {
-    -fx-background-color: #ff6b35;
+    -fx-background-color: #f8f9fa;
 }
 
 /* FORMULARIO */

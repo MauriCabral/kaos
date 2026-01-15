@@ -1,0 +1,83 @@
+.root {
+    -fx-font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    -fx-background-color: #f8f9fa;
+}
+
+.container {
+    -fx-padding: 15;
+    -fx-spacing: 12;
+}
+
+.stats-main-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.header-section {
+    -fx-background-color: linear-gradient(to right, #e9500e, #ff6b35);
+    -fx-background-radius: 6px;
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}
+
+.stats-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: #e1e5e9;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+}
+
+.stats-scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.stats-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6px;
+    -fx-pref-width: 12px;
+    -fx-opacity: 0.7;
+}
+
+.stats-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: #c1c9d2;
+    -fx-background-radius: 6px;
+}
+
+.stats-scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #a8b1bb;
+}
+
+.stats-container {
+    -fx-padding: 10px;
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 8px;
+}
+
+.store-section {
+    -fx-background-color: white;
+    -fx-background-radius: 12px;
+    -fx-border-color: #e1e5e9;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 20px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 8, 0.3, 0, 2);
+}
+
+.store-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #e9500e;
+    -fx-padding: 0 0 10px 0;
+    -fx-border-color: #e9500e;
+    -fx-border-width: 0 0 2px 0;
+}
+
+.chart-container {
+    -fx-background-color: white;
+    -fx-background-radius: 8px;
+    -fx-border-color: #e1e5e9;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+}

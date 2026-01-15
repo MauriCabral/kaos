@@ -20,7 +20,7 @@
     <VBox spacing="15" styleClass="container" AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="15" AnchorPane.rightAnchor="15" AnchorPane.topAnchor="15">
 
         <!-- PANEL SUPERIOR -->
-        <HBox alignment="CENTER_LEFT" spacing="10">
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="title-bar">
             <Label styleClass="compact-title" text="Histórico de Pedidos" />
             <Region HBox.hgrow="ALWAYS" />
             <TextField fx:id="searchField" prefWidth="200" promptText="Buscar..." styleClass="compact-search-field" />
@@ -43,6 +43,12 @@
             <Label styleClass="filter-label" text="Hasta:" />
             <DatePicker fx:id="dateToPicker" prefWidth="110" promptText="dd/mm/aaaa" styleClass="compact-date-filter" />
 
+            <Button fx:id="assignDeliveryBtn" onAction="#assignDeliveryToSelected" prefHeight="30" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0; -fx-cursor: hand;" text="🚚">
+                <tooltip>
+                    <Tooltip text="Asignar Delivery" />
+                </tooltip>
+            </Button>
+
             <Button fx:id="excelButtom" onAction="#orderExcel" prefHeight="30" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0; -fx-cursor: hand;">
                 <graphic>
                     <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
@@ -55,6 +61,7 @@
         <!-- TABLA AGRANDADA -->
         <TableView fx:id="ordersTable" styleClass="compact-order-table" VBox.vgrow="ALWAYS">
             <columns>
+                <TableColumn fx:id="checkboxColumn" styleClass="compact-checkbox-column" text="" />
                 <TableColumn fx:id="idColumn" styleClass="compact-id-column" text="ID" />
                 <TableColumn fx:id="orderNumberColumn" styleClass="compact-order-column" text="N° Pedido" />
                 <TableColumn fx:id="dateColumn" styleClass="compact-date-column" text="Fecha" />
@@ -98,6 +105,10 @@
                 <Label styleClass="counter-label" text="Delivery" />
                 <Label fx:id="deliveryTotalLabel" styleClass="counter-value delivery-counter" />
             </VBox>
+
+            <Region HBox.hgrow="ALWAYS" />
+
+            <Button fx:id="closeCashBtn" onAction="#closeCash" styleClass="close-cash-btn" text="Cerrar Caja" />
         </HBox>
     </VBox>
 

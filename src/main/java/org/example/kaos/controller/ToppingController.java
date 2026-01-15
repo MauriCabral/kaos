@@ -53,8 +53,8 @@ public class ToppingController implements Initializable {
             private final Button editBtn = new Button("Editar");
             private final Button deleteBtn = new Button("Eliminar");
             {
-                editBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 5;");
-                deleteBtn.setStyle("-fx-background-color: #E53935; -fx-text-fill: white; -fx-background-radius: 5;");
+                editBtn.getStyleClass().add("table-edit-btn");
+                deleteBtn.getStyleClass().add("table-delete-btn");
 
                 editBtn.setOnAction(event -> {
                     Topping topping = getTableView().getItems().get(getIndex());

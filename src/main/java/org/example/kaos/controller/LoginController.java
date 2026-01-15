@@ -1,11 +1,15 @@
 package org.example.kaos.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import org.example.kaos.entity.User;
 import org.example.kaos.service.IUserService;
@@ -23,12 +27,25 @@ public class LoginController {
     @FXML private Label versionLabel;
 
     private final IUserService userService = new UserServiceImpl();
-    private final String version = "v1..0.0";
+    private final String version = "v1.0.4";
 
     @FXML
     public void initialize() {
         setupPasswordFields();
         versionLabel.setText(version);
+
+        // Add global key event filter for ENTER
+        Platform.runLater(() -> {
+            Scene scene = usernameField.getScene();
+            if (scene != null) {
+                scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == KeyCode.ENTER) {
+                        handleLogin(null);
+                        event.consume();
+                    }
+                });
+            }
+        });
     }
 
     private void setupPasswordFields() {
@@ -75,4 +92,5 @@ public class LoginController {
             togglePasswordButton.setText("○");
         }
     }
+
 }

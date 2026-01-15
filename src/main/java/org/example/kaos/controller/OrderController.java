@@ -1,17 +1,20 @@
 package org.example.kaos.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.*;
 import org.example.kaos.entity.*;
 import org.example.kaos.service.IBurgerService;
 import org.example.kaos.service.IVariantService;
@@ -38,10 +41,14 @@ public class OrderController implements Initializable {
     @FXML private ImageView selectedProductImage;
     @FXML private Label selectedProductName;
     @FXML private Label quantityLabel;
-    @FXML private ListView<String> orderItemsList;
+    @FXML private VBox orderItemsContainer;
     @FXML private Label totalAmount;
+    @FXML private Label totalLabel;
+    @FXML private VBox totalsContainer;
     @FXML private Button editProductsBtn;
     @FXML private Button toppingsBtn;
+
+    private static ContextMenu currentContextMenu;
 
     private final IBurgerService burgerService = new BurgerServiceImpl();
     private final IExtraItemService extraItemService = new ExtraItemServiceImpl();
@@ -65,6 +72,72 @@ public class OrderController implements Initializable {
         isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
         configureButtonsByUser();
         loadAllProductsFromDatabase();
+
+        // Add keyboard support for space key to trigger addToOrder and enter key to trigger viewOrder
+        Platform.runLater(() -> {
+            Scene scene = productsFlowPane.getScene();
+            if (scene != null) {
+                scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == KeyCode.SPACE && selectedProductPanel.isVisible()) {
+                        addToOrder();
+                        event.consume();
+                    } else if (event.getCode() == KeyCode.ENTER) {
+                        viewOrder();
+                        event.consume();
+                    }
+                });
+            }
+        });
+    }
+
+    private void updateOrderSummary() {
+        orderItemsContainer.getChildren().clear();
+        double subtotal = 0;
+        for (OrderDetail detail : currentOrderDetails) {
+            HBox itemBox = new HBox(10);
+            itemBox.setAlignment(Pos.CENTER_LEFT);
+            String displayName = detail.getProductName();
+            if (detail.getVariantName() != null && !detail.getVariantName().isEmpty()) {
+                displayName += " (" + detail.getVariantName() + ")";
+            }
+            Label nameLabel = new Label(displayName);
+            nameLabel.setStyle("-fx-font-size: 12px;");
+            Label qtyLabel = new Label("x" + detail.getQuantity());
+            qtyLabel.setStyle("-fx-font-size: 12px;");
+            Label priceLabel = new Label("$" + String.valueOf(detail.getSubtotal().intValue()));
+            priceLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            itemBox.getChildren().addAll(nameLabel, spacer, qtyLabel, priceLabel);
+            orderItemsContainer.getChildren().add(itemBox);
+
+            // Add toppings if any
+            if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
+                for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
+                    if (topping.getQuantity() > 0) {
+                        HBox toppingBox = new HBox(10);
+                        toppingBox.setAlignment(Pos.CENTER_LEFT);
+                        toppingBox.setPadding(new Insets(0, 0, 0, 20)); // Indent by 20 pixels
+
+                        String toppingDisplay = "+ " + topping.getTopping().getName() + " x" + topping.getQuantity();
+                        Label toppingNameLabel = new Label(toppingDisplay);
+                        toppingNameLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666;");
+                        Label toppingPriceLabel = new Label("$" + String.valueOf(topping.getTotalPrice().intValue()));
+                        toppingPriceLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #666;");
+                        Region toppingSpacer = new Region();
+                        HBox.setHgrow(toppingSpacer, Priority.ALWAYS);
+                        toppingBox.getChildren().addAll(toppingNameLabel, toppingSpacer, toppingPriceLabel);
+                        orderItemsContainer.getChildren().add(toppingBox);
+                    }
+                }
+            }
+
+            subtotal += detail.getSubtotal();
+        }
+        totalsContainer.setVisible(!currentOrderDetails.isEmpty());
+        if (!currentOrderDetails.isEmpty()) {
+            totalLabel.setText("$" + String.valueOf((int)subtotal));
+        }
     }
 
     private void configureButtonsByUser() {
@@ -148,10 +221,19 @@ public class OrderController implements Initializable {
         card.setAlignment(Pos.CENTER);
 
         card.setOnMouseClicked(event -> {
-            if (isEditMode) {
-                editProduct(burger);
+            if (event.getButton() == MouseButton.SECONDARY) {
+                if (currentContextMenu != null) {
+                    currentContextMenu.hide();
+                }
+                ContextMenu variantMenu = createVariantMenu(burger);
+                variantMenu.show(card, event.getScreenX(), event.getScreenY());
+                currentContextMenu = variantMenu;
             } else {
-                openBurgerSelection(burger);
+                if (isEditMode) {
+                    editProduct(burger);
+                } else {
+                    openBurgerSelection(burger);
+                }
             }
         });
 
@@ -161,18 +243,18 @@ public class OrderController implements Initializable {
     private Button createMenuButton(Burger burger) {
         Button menuButton = new Button("⋮");
         menuButton.getStyleClass().add("menu-button");
-        menuButton.setOnAction(e -> showVariantMenu(menuButton, burger));
+        menuButton.setOnAction(e -> {
+            if (currentContextMenu != null) {
+                currentContextMenu.hide();
+            }
+            ContextMenu variantMenu = createVariantMenu(burger);
+            variantMenu.show(menuButton, Side.BOTTOM, 0, 0);
+            currentContextMenu = variantMenu;
+        });
         return menuButton;
     }
 
-    private Button createDeleteButton(Object product) {
-        Button deleteButton = new Button("X");
-        deleteButton.getStyleClass().add("delete-button");
-        deleteButton.setOnAction(e -> deleteProduct(product));
-        return deleteButton;
-    }
-
-    private void showVariantMenu(Button menuButton, Burger burger) {
+    private ContextMenu createVariantMenu(Burger burger) {
         ContextMenu variantMenu = new ContextMenu();
 
         List<VariantType> variants = variantService.getAllVariants();
@@ -190,8 +272,16 @@ public class OrderController implements Initializable {
             variantMenu.getItems().add(menuItem);
         }
 
-        variantMenu.show(menuButton, Side.BOTTOM, 0, 0);
+        return variantMenu;
     }
+
+    private Button createDeleteButton(Object product) {
+        Button deleteButton = new Button("X");
+        deleteButton.getStyleClass().add("delete-button");
+        deleteButton.setOnAction(e -> deleteProduct(product));
+        return deleteButton;
+    }
+
 
     private void selectBurgerVariant(Burger burger, Long variantId, String variantName) {
         selectedProductPanel.setVisible(true);
@@ -430,6 +520,7 @@ public class OrderController implements Initializable {
 
         if (orderDetail != null) {
             currentOrderDetails.add(orderDetail);
+            updateOrderSummary();
             System.out.println("Agregado al pedido: " + orderDetail.getProductName());
         }
 
@@ -453,6 +544,7 @@ public class OrderController implements Initializable {
         }
 
         WindowManager.openOrderDetailsWindow(currentOrderDetails, null, false);
+        updateOrderSummary();
     }
 
     @FXML
@@ -497,6 +589,7 @@ public class OrderController implements Initializable {
         }
 
         loadAllProductsFromDatabase();
+        updateOrderSummary();
     }
 
     private void editProduct(Object product) {
@@ -574,6 +667,7 @@ public class OrderController implements Initializable {
             List<OrderDetailTopping> toppings = controller.getSelectedToppings();
 
             currentOrderDetails.add(orderDetail);
+            updateOrderSummary();
 
             if (toppings != null && !toppings.isEmpty()) {
                 System.out.println("Toppings agregados: " + toppings.size());

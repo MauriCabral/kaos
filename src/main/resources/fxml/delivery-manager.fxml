@@ -11,16 +11,13 @@
     </padding>
 
     <!-- TÍTULO Y BARRA DE BÚSQUEDA -->
-    <HBox spacing="20" alignment="CENTER_LEFT">
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="title-bar">
         <!-- TÍTULO -->
-        <Label text="Gestión de Deliverys" styleClass="title-label" HBox.hgrow="ALWAYS"/>
-
-        <!-- BARRA DE BÚSQUEDA -->
-        <HBox spacing="8" alignment="CENTER_RIGHT">
-            <TextField fx:id="searchField" promptText="Buscar por nombre..." styleClass="search-field"
-                       prefWidth="200" prefHeight="35"/>
-            <Button text="Buscar" styleClass="search-btn" onAction="#handleSearch" minWidth="80"/>
-        </HBox>
+        <Label text="Gestión de Deliverys" styleClass="title-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="searchField" promptText="Buscar por nombre..." styleClass="search-field"
+                   prefWidth="200" prefHeight="32"/>
+        <Button text="Buscar" styleClass="search-btn" onAction="#handleSearch" minWidth="80"/>
     </HBox>
 
     <!-- FORMULARIO DE AGREGAR/EDITAR -->

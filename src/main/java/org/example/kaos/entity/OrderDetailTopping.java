@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "order_detail_toppings")
+@Table(name = "order_detail_topping")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,8 +29,9 @@ public class OrderDetailTopping {
     @JoinColumn(name = "burger_variant_id")
     private BurgerVariant burgerVariant;
 
-    @Column(name = "is_added", nullable = false)
-    private Boolean isAdded;
+    @Column(name = "quantity", nullable = false)
+    @Builder.Default
+    private Integer quantity = 0;
 
     @Column(name = "price_per_unit")
     private Double pricePerUnit;
@@ -55,10 +56,10 @@ public class OrderDetailTopping {
     }
 
     public void calculateTotalPrice() {
-        if (Boolean.TRUE.equals(isAdded) && pricePerUnit != null) {
-            this.totalPrice = pricePerUnit;
+        if (quantity != null && quantity > 0 && pricePerUnit != null) {
+            this.totalPrice = quantity * pricePerUnit;
         } else {
-            this.totalPrice = 0.0; // quitar topping = 0
+            this.totalPrice = 0.0;
         }
     }
 }

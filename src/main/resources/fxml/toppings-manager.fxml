@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.kaos.controller.ToppingController"
-      stylesheets="@../css/toppings-manager.css"
-      prefWidth="600" prefHeight="500" spacing="15">
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="500" prefWidth="600" spacing="15" stylesheets="@../css/toppings-manager.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.ToppingController">
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets bottom="20" left="20" right="20" top="20" />
     </padding>
 
     <!-- TÍTULO -->
-    <Label text="Gestión de Toppings" styleClass="title-label"/>
+    <Label prefHeight="48.0" prefWidth="562.0" styleClass="title-label,title-bar" text="Gestión de Toppings" />
 
     <!-- FORMULARIO DE AGREGAR/EDITAR -->
     <VBox spacing="10" styleClass="form-container">
-        <Label text="Agregar/Editar Topping" styleClass="form-title"/>
+        <Label styleClass="form-title" text="Agregar/Editar Topping" />
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" spacing="10">
             <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Nombre:" styleClass="field-label"/>
-                <TextField fx:id="nameField" promptText="Nombre del topping" styleClass="text-field"/>
+                <Label styleClass="field-label" text="Nombre:" />
+                <TextField fx:id="nameField" promptText="Nombre del topping" styleClass="text-field" />
             </VBox>
 
             <VBox spacing="5">
-                <Label text="Precio:" styleClass="field-label"/>
-                <TextField fx:id="priceField" promptText="0.00" styleClass="price-field"/>
+                <Label styleClass="field-label" text="Precio:" />
+                <TextField fx:id="priceField" promptText="0.00" styleClass="price-field" />
             </VBox>
 
             <VBox spacing="5">
-                <Label text="‎" styleClass="field-label"/>
+                <Label styleClass="field-label" text="‎" />
                 <HBox spacing="5">
-                    <Button fx:id="actionButton" styleClass="add-btn" onAction="#handleAddOrUpdate">
+                    <Button fx:id="actionButton" onAction="#handleAddOrUpdate" styleClass="add-btn">
                         <graphic>
-                            <Label text="+" styleClass="plus-icon"/>
+                            <Label styleClass="plus-icon" text="+" />
                         </graphic>
                     </Button>
-                    <Button fx:id="cancelEditBtn" text="✕" styleClass="cancel-edit-btn"
-                            onAction="#cancelEdit" visible="false"/>
+                    <Button fx:id="cancelEditBtn" onAction="#cancelEdit" styleClass="cancel-edit-btn" text="✕" visible="false" />
                 </HBox>
             </VBox>
         </HBox>
@@ -49,18 +49,18 @@
 
     <!-- TABLA DE TOPPINGS -->
     <VBox spacing="8" VBox.vgrow="ALWAYS">
-        <Label text="Toppings Existentes" styleClass="table-title"/>
+        <Label styleClass="table-title" text="Toppings Existentes" />
 
         <TableView fx:id="toppingsTable" styleClass="toppings-table" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn text="Nombre" styleClass="table-column">
+                <TableColumn styleClass="table-column" text="Nombre">
                     <cellValueFactory>
-                        <PropertyValueFactory property="name"/>
+                        <PropertyValueFactory property="name" />
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn text="Precio" styleClass="table-column">
+                <TableColumn styleClass="table-column" text="Precio">
                     <cellValueFactory>
-                        <PropertyValueFactory property="price"/>
+                        <PropertyValueFactory property="price" />
                     </cellValueFactory>
                 </TableColumn>
             </columns>
@@ -68,7 +68,7 @@
     </VBox>
 
     <!-- BOTONES DE ACCIÓN -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Cerrar" styleClass="cancel-btn" onAction="#handleClose" minWidth="80"/>
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button minWidth="80" onAction="#handleClose" styleClass="cancel-btn" text="Cerrar" />
     </HBox>
 </VBox>

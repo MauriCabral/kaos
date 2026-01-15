@@ -1,10 +1,13 @@
 package org.example.kaos.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -72,6 +75,7 @@ public class OrderDetailsController {
     public void initialize() {
         setupDefaultData();
         setupListeners();
+        setupKeyboardShortcuts();
 
         isAdmin = Session.getInstance().getCurrentUser().getId() == 1;
         adminContainer.setVisible(isAdmin);
@@ -233,13 +237,35 @@ public class OrderDetailsController {
         cashCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             cashAmountField.setVisible(newVal);
             if (isEditMode) cashAmountField.setText(order.getCashAmount().toString().trim());
-            else if (!newVal) cashAmountField.setText("0");
+            else if (newVal) cashAmountField.setText(totalLabel.getText().replace("$", ""));
+            else cashAmountField.setText("0");
         });
 
         transferCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             transferAmountField.setVisible(newVal);
             if (isEditMode) transferAmountField.setText(order.getTransferAmount().toString().trim());
-            else if (!newVal) transferAmountField.setText("0");
+            else if (newVal) transferAmountField.setText(totalLabel.getText().replace("$", ""));
+            else transferAmountField.setText("0");
+        });
+    }
+
+    private void setupKeyboardShortcuts() {
+        Platform.runLater(() -> {
+            if (stage != null) {
+                stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == KeyCode.ESCAPE) {
+                        goBack();
+                        event.consume();
+                    } else if (event.getCode() == KeyCode.SPACE) {
+                        // Only confirm order if focus is not on notesTextArea
+                        if (!notesTextArea.isFocused()) {
+                            confirmOrder(null);
+                            event.consume();
+                        }
+                        // If focused on notesTextArea, do nothing (allow space to be typed)
+                    }
+                });
+            }
         });
     }
 
@@ -389,49 +415,21 @@ public class OrderDetailsController {
             VBox toppingsBox = new VBox(3);
             toppingsBox.setPadding(new Insets(5, 0, 0, 10));
 
-            List<OrderDetailTopping> addedToppings = new ArrayList<>();
-            List<OrderDetailTopping> notAddedToppings = new ArrayList<>();
+            List<OrderDetailTopping> toppingsWithQuantity = detail.getOrderDetailToppings().stream()
+                    .filter(t -> t.getQuantity() != null && t.getQuantity() > 0)
+                    .toList();
 
-            for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
-                if (Boolean.TRUE.equals(topping.getIsAdded())) {
-                    addedToppings.add(topping);
-                } else {
-                    notAddedToppings.add(topping);
-                }
-            }
+            if (!toppingsWithQuantity.isEmpty()) {
+                Label toppingsLabel = new Label("Toppings:");
+                toppingsLabel.setStyle("-fx-text-fill: #28a745; -fx-font-weight: bold;");
+                toppingsBox.getChildren().add(toppingsLabel);
 
-            if (!addedToppings.isEmpty() || !notAddedToppings.isEmpty()) {
-                HBox toppingsColumns = new HBox(20);
-
-                if (!addedToppings.isEmpty()) {
-                    VBox addedColumn = new VBox(3);
-                    Label addedLabel = new Label("Agregados:");
-                    addedLabel.setStyle("-fx-text-fill: #28a745; -fx-font-weight: bold;");
-                    addedColumn.getChildren().add(addedLabel);
-
-                    for (OrderDetailTopping topping : addedToppings) {
-                        Label toppingLabel = new Label("✓ " + topping.getTopping().getName() + " -  $" + String.valueOf(topping.getTopping().getPrice().intValue()).trim());
-                        toppingLabel.setStyle("-fx-text-fill: #28a745;");
-                        addedColumn.getChildren().add(toppingLabel);
-                    }
-                    toppingsColumns.getChildren().add(addedColumn);
+                for (OrderDetailTopping topping : toppingsWithQuantity) {
+                    Label toppingLabel = new Label("• " + topping.getTopping().getName() + " x" + topping.getQuantity() + " - $" + String.valueOf(topping.getTotalPrice().intValue()).trim());
+                    toppingLabel.setStyle("-fx-text-fill: #28a745;");
+                    toppingsBox.getChildren().add(toppingLabel);
                 }
 
-                if (!notAddedToppings.isEmpty()) {
-                    VBox notAddedColumn = new VBox(3);
-                    Label notAddedLabel = new Label("No agregados:");
-                    notAddedLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-weight: bold;");
-                    notAddedColumn.getChildren().add(notAddedLabel);
-
-                    for (OrderDetailTopping topping : notAddedToppings) {
-                        Label toppingLabel = new Label("✗ " + topping.getTopping().getName());
-                        toppingLabel.setStyle("-fx-text-fill: #dc3545;");
-                        notAddedColumn.getChildren().add(toppingLabel);
-                    }
-                    toppingsColumns.getChildren().add(notAddedColumn);
-                }
-
-                toppingsBox.getChildren().add(toppingsColumns);
                 infoBox.getChildren().add(toppingsBox);
             }
         }
@@ -540,6 +538,11 @@ public class OrderDetailsController {
                 Store store = Session.getInstance().getCurrentUser().getStore();
                 User currentUser = Session.getInstance().getCurrentUser();
 
+                if (store == null) {
+                    DialogUtil.showError("Error", "No se pudo determinar la tienda actual. Contacte al administrador.");
+                    return;
+                }
+
                 Order order = Order.builder()
                         .orderNumber(orderNumberLabel.getText())
                         .customerName(customerNameField.getText().trim())
@@ -581,6 +584,8 @@ public class OrderDetailsController {
                 }
 
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
+
+                orderDetails.clear();
 
                 ticketPrintService.print(savedOrder.getId());
 
@@ -691,6 +696,7 @@ public class OrderDetailsController {
             goBack();
         } else {
             if (DialogUtil.showConfirmation("Cancelar", "¿Estás seguro de cancelar?")) {
+                orderDetails.clear();
                 goBack();
             }
         }

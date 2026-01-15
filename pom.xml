@@ -292,7 +292,7 @@
                             <stayAlive>false</stayAlive>
                             <restartOnCrash>false</restartOnCrash>
                             <manifest></manifest>
-                            <icon></icon>
+                            <icon>src/main/resources/image/Inicio.ico</icon>
                             <classPath>
                                 <mainClass>org.example.kaos.Launcher</mainClass>
                             </classPath>

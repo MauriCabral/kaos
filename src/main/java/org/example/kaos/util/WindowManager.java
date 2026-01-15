@@ -65,7 +65,7 @@ public class WindowManager {
             controller.setStage(stage);
             stage.setScene(new Scene(root, 800, 600));
             stage.setResizable(false);
-            stage.show();
+            stage.showAndWait();
 
             return stage;
         } catch (IOException e) {

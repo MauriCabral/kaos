@@ -206,24 +206,22 @@ public class TicketPrintServiceImpl implements Printable {
 
                     if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
                         for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
-                            String toppingSymbol = Boolean.TRUE.equals(topping.getIsAdded()) ? "+" : "-";
-                            String toppingLine = "  " + toppingSymbol + " " + topping.getTopping().getName();
+                            if (topping.getQuantity() > 0) {
+                                String toppingLine = "  + " + topping.getTopping().getName() + " x" + topping.getQuantity();
 
                             contentStream.beginText();
                             contentStream.newLineAtOffset(20, y);
                             contentStream.showText(toppingLine);
                             contentStream.endText();
 
-                            if (Boolean.TRUE.equals(topping.getIsAdded()) && topping.getTotalPrice() > 0) {
-                                String toppingPrice = String.format("$%.0f", topping.getTotalPrice());
-                                float toppingPriceWidth = PDType1Font.HELVETICA.getStringWidth(toppingPrice) / 1000 * 9;
-                                float toppingPriceX = 216.77f - 10 - toppingPriceWidth;
+                            String toppingPrice = String.format("$%.0f", topping.getTotalPrice());
+                            float toppingPriceWidth = PDType1Font.HELVETICA.getStringWidth(toppingPrice) / 1000 * 9;
+                            float toppingPriceX = 216.77f - 10 - toppingPriceWidth;
 
-                                contentStream.beginText();
-                                contentStream.newLineAtOffset(toppingPriceX, y);
-                                contentStream.showText(toppingPrice);
-                                contentStream.endText();
-                            }
+                            contentStream.beginText();
+                            contentStream.newLineAtOffset(toppingPriceX, y);
+                            contentStream.showText(toppingPrice);
+                            contentStream.endText();
 
                             y -= 10;
                         }
@@ -241,7 +239,8 @@ public class TicketPrintServiceImpl implements Printable {
 
                     y -= 5;
                 }
-            } else {
+            }
+        } else {
                 contentStream.beginText();
                 contentStream.newLineAtOffset(10, y);
                 contentStream.showText("No hay items en esta orden");
@@ -389,7 +388,8 @@ public class TicketPrintServiceImpl implements Printable {
             } else {
                 System.err.println("No se seleccionó una ubicación para guardar el archivo.");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.err.println("Error al generar PDF: " + e.getMessage());
             e.printStackTrace();
         } finally {
@@ -507,18 +507,18 @@ public class TicketPrintServiceImpl implements Printable {
 
             if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
                 for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
-                    String toppingSymbol = Boolean.TRUE.equals(topping.getIsAdded()) ? "✓" : "✗";
-                    String toppingLine = "  " + toppingSymbol + " " + topping.getTopping().getName();
+                    if (topping.getQuantity() > 0) {
+                        String toppingLine = "  + " + topping.getTopping().getName() + " x" + topping.getQuantity();
 
-                    g2d.drawString(toppingLine, 20, y);
+                        g2d.drawString(toppingLine, 20, y);
 
-                    if (Boolean.TRUE.equals(topping.getIsAdded()) && topping.getTotalPrice() > 0) {
                         String toppingPrice = String.format("$%.0f", topping.getTotalPrice());
                         int toppingPriceWidth = g2d.getFontMetrics().stringWidth(toppingPrice);
                         int toppingPriceX = pageWidth - 10 - toppingPriceWidth;
                         g2d.drawString(toppingPrice, toppingPriceX, y);
+
+                        y += 10;
                     }
-                    y += 10;
                 }
             }
 

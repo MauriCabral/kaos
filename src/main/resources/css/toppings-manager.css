@@ -3,10 +3,16 @@
     -fx-background-color: #ffffff;
 }
 
+.title-bar {
+    -fx-background-color: #e9500e;
+    -fx-background-radius: 6px;
+    -fx-padding: 20px;
+}
+
 .title-label {
-    -fx-font-size: 20px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333333;
+    -fx-text-fill: white;
 }
 
 .form-container {
@@ -55,7 +61,7 @@
 }
 
 .add-btn:hover {
-    -fx-background-color: #218838;
+    -fx-background-color: #333333;
 }
 
 .plus-icon {
@@ -121,10 +127,34 @@
     -fx-padding: 8;
 }
 
+.edit-btn:hover {
+    -fx-background-color: #333333;
+}
+
 .check-icon {
     -fx-text-fill: white;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
+}
+
+.table-edit-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+}
+
+.table-edit-btn:hover {
+    -fx-background-color: #333333;
+}
+
+.table-delete-btn {
+    -fx-background-color: #E53935;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+}
+
+.table-delete-btn:hover {
+    -fx-background-color: #333333;
 }
 
 .add-btn {

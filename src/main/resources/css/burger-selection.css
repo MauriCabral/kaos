@@ -121,13 +121,22 @@
     -fx-padding: 0 0 0 5px;
 }
 
+.topping-unit {
+    -fx-font-size: 13px;
+    -fx-text-fill: #333;
+    -fx-font-weight: 600;
+    -fx-pref-width: 35px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0;
+}
+
 .topping-price {
     -fx-font-size: 13px;
-    -fx-text-fill: #28a745;
+    -fx-text-fill: #333;
     -fx-font-weight: 600;
-    -fx-pref-width: 75px;
+    -fx-pref-width: 40px;
     -fx-alignment: CENTER_LEFT;
-    -fx-padding: 0 0 0 5px;
+    -fx-padding: 0;
 }
 
 .radio-button {
@@ -288,8 +297,8 @@
 }
 
 .counter-btn:hover {
-    -fx-background-color: #d84315;
-    -fx-effect: dropshadow(gaussian, rgba(233, 80, 14, 0.3), 4, 0.3, 0, 1);
+    -fx-background-color: #666666;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 4, 0.3, 0, 1);
 }
 
 .counter-btn:pressed {

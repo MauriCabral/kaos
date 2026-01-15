@@ -1,11 +1,15 @@
 package org.example.kaos.controller;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.example.kaos.entity.*;
@@ -43,7 +47,6 @@ public class BurgerSelectionController implements Initializable {
     private Burger selectedBurger;
     private BurgerVariant selectedVariant;
     private List<Topping> availableToppings;
-    private Map<Topping, ToggleGroup> toppingRadioGroups = new HashMap<>();
     private List<OrderDetailTopping> selectedToppings = new ArrayList<>();
     private boolean confirmed = false;
     private OrderDetail resultOrderDetail;
@@ -60,6 +63,22 @@ public class BurgerSelectionController implements Initializable {
 
         setupVariantComboBox();
         setupCounterBurger();
+
+        // Add global key event filter for ESC and SPACE
+        Platform.runLater(() -> {
+            Scene scene = toppingsContainer.getScene();
+            if (scene != null) {
+                scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == KeyCode.ESCAPE) {
+                        handleCancel();
+                        event.consume();
+                    } else if (event.getCode() == KeyCode.SPACE) {
+                        handleAddToOrder();
+                        event.consume();
+                    }
+                });
+            }
+        });
     }
 
     private void setupVariantComboBox() {
@@ -153,7 +172,6 @@ public class BurgerSelectionController implements Initializable {
 
     private void updateToppingsGrid() {
         toppingsContainer.getChildren().clear();
-        toppingRadioGroups.clear();
         selectedToppings.clear();
 
         for (Topping topping : availableToppings) {
@@ -164,64 +182,83 @@ public class BurgerSelectionController implements Initializable {
             Label nameLabel = new Label(topping.getName());
             nameLabel.getStyleClass().add("topping-name");
 
+            Label unitLabel = new Label("c/u ");
+            unitLabel.getStyleClass().add("topping-unit");
+
             Label priceLabel = new Label("$" + String.valueOf(topping.getPrice().intValue()).trim());
             priceLabel.getStyleClass().add("topping-price");
 
-            RadioButton rbYes = new RadioButton("Sí");
-            RadioButton rbNo = new RadioButton("No");
+            // Counter controls
+            Button decreaseBtn = new Button("-");
+            decreaseBtn.getStyleClass().add("counter-btn");
+            decreaseBtn.setMinWidth(30);
+            decreaseBtn.setMaxWidth(30);
 
-            rbYes.getStyleClass().add("radio-button");
-            rbNo.getStyleClass().add("radio-button");
+            TextField quantityField = new TextField("0");
+            quantityField.getStyleClass().add("counter-field");
+            quantityField.setMinWidth(50);
+            quantityField.setMaxWidth(50);
+            quantityField.setAlignment(Pos.CENTER);
 
-            rbYes.setSelected(false);
-            rbNo.setSelected(false);
+            Button increaseBtn = new Button("+");
+            increaseBtn.getStyleClass().add("counter-btn");
+            increaseBtn.setMinWidth(30);
+            increaseBtn.setMaxWidth(30);
 
-            rbYes.setUserData(topping);
-            rbNo.setUserData(topping);
+            HBox counterBox = new HBox(4, decreaseBtn, quantityField, increaseBtn);
+            counterBox.setAlignment(Pos.CENTER_RIGHT);
 
-            rbYes.setOnAction(e -> {
-                Topping currentTopping = (Topping) rbYes.getUserData();
+            // Get current quantity if exists
+            int currentQuantity = selectedToppings.stream()
+                    .filter(odt -> odt.getTopping().equals(topping))
+                    .mapToInt(OrderDetailTopping::getQuantity)
+                    .findFirst()
+                    .orElse(0);
+            quantityField.setText(String.valueOf(currentQuantity));
 
-                if (rbYes.isSelected()) {
-                    rbNo.setSelected(false);
-                    handleToppingSelection(currentTopping, true);
-                } else {
-                    handleToppingSelection(currentTopping, null);
+            decreaseBtn.setOnAction(e -> {
+                int qty = Integer.parseInt(quantityField.getText());
+                if (qty > 0) {
+                    qty--;
+                    quantityField.setText(String.valueOf(qty));
+                    handleToppingSelection(topping, qty);
+                    updatePrice();
                 }
+            });
+
+            increaseBtn.setOnAction(e -> {
+                int qty = Integer.parseInt(quantityField.getText());
+                qty++;
+                quantityField.setText(String.valueOf(qty));
+                handleToppingSelection(topping, qty);
                 updatePrice();
             });
 
-            rbNo.setOnAction(e -> {
-                Topping currentTopping = (Topping) rbNo.getUserData();
-
-                if (rbNo.isSelected()) {
-                    rbYes.setSelected(false);
-                    handleToppingSelection(currentTopping, false);
+            quantityField.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal.matches("\\d*")) {
+                    quantityField.setText(oldVal);
                 } else {
-                    handleToppingSelection(currentTopping, null);
+                    int qty = newVal.isEmpty() ? 0 : Integer.parseInt(newVal);
+                    handleToppingSelection(topping, qty);
+                    updatePrice();
                 }
-                updatePrice();
             });
-
-            HBox radioBox = new HBox(8, rbYes, rbNo);
-            radioBox.getStyleClass().add("radio-box");
-            radioBox.setAlignment(Pos.CENTER_RIGHT);
 
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            row.getChildren().addAll(nameLabel, priceLabel, spacer, radioBox);
+            row.getChildren().addAll(nameLabel, unitLabel, priceLabel, spacer, counterBox);
             toppingsContainer.getChildren().add(row);
         }
     }
 
-    private void handleToppingSelection(Topping topping, Boolean isAdded) {
+    private void handleToppingSelection(Topping topping, int quantity) {
         selectedToppings.removeIf(odt -> odt.getTopping().equals(topping));
 
-        if (isAdded != null) {
+        if (quantity > 0) {
             OrderDetailTopping odt = new OrderDetailTopping();
             odt.setTopping(topping);
-            odt.setIsAdded(isAdded);
+            odt.setQuantity(quantity);
             odt.setPricePerUnit(topping.getPrice());
             odt.calculateTotalPrice();
             selectedToppings.add(odt);
@@ -287,16 +324,14 @@ public class BurgerSelectionController implements Initializable {
         for (OrderDetailTopping toppingSelection : selectedToppings) {
             OrderDetailTopping odt = new OrderDetailTopping();
             odt.setTopping(toppingSelection.getTopping());
-            odt.setIsAdded(toppingSelection.getIsAdded());
+            odt.setQuantity(toppingSelection.getQuantity());
             odt.setPricePerUnit(toppingSelection.getPricePerUnit());
             odt.calculateTotalPrice();
 
             odt.setOrderDetail(orderDetail);
             orderDetail.getOrderDetailToppings().add(odt);
 
-            if (Boolean.TRUE.equals(toppingSelection.getIsAdded())) {
-                toppingsTotal += odt.getTotalPrice();
-            }
+            toppingsTotal += odt.getTotalPrice();
         }
 
         orderDetail.setUnitPrice(basePrice);
@@ -355,4 +390,5 @@ public class BurgerSelectionController implements Initializable {
     public int getQuantity() {
         return quantity;
     }
+
 }

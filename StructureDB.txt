@@ -34,5 +34,11 @@ CREATE TABLE order_detail (
 CREATE TABLE order_detail_topping (
     id SERIAL PRIMARY KEY,
     order_detail_id INT REFERENCES order_detail(id),
-    topping_id INT NOT NULL
+    topping_id INT NOT NULL,
+    burger_variant_id BIGINT,
+    quantity INT NOT NULL DEFAULT 0,
+    price_per_unit NUMERIC(10,2),
+    total_price NUMERIC(10,2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    deleted_at TIMESTAMP
 );

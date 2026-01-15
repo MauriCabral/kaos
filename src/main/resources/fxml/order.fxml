@@ -16,33 +16,31 @@
                 <Insets top="25" right="25" bottom="25" left="25"/>
             </padding>
 
-            <AnchorPane>
-                <Label text="Gestión de Pedidos" styleClass="title-label" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0"/>
-
-                <!-- BOTONES DE ADMINISTRACIÓN -->
-                <HBox spacing="10" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                    <Button fx:id="toppingsBtn" styleClass="edit-products-btn" onAction="#openToppingsManager" visible="false" text="T">
-                        <tooltip>
-                            <Tooltip text="Gestionar Toppings" />
-                        </tooltip>
-                        <graphic>
-                            <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
-                                <Image url="@../image/Edit.png"/>
-                            </ImageView>
-                        </graphic>
-                    </Button>
-                    <Button fx:id="editProductsBtn" styleClass="edit-products-btn" onAction="#openEditProducts">
-                        <tooltip>
-                            <Tooltip text="Editar Productos" />
-                        </tooltip>
-                        <graphic>
-                            <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
-                                <Image url="@../image/Edit.png"/>
-                            </ImageView>
-                        </graphic>
-                    </Button>
-                </HBox>
-            </AnchorPane>
+            <!-- TÍTULO Y BOTONES -->
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="title-bar">
+                <Label text="Gestión de Pedidos" styleClass="title-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="toppingsBtn" styleClass="edit-products-btn" onAction="#openToppingsManager" visible="false" text="T">
+                    <tooltip>
+                        <Tooltip text="Gestionar Toppings" />
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
+                            <Image url="@../image/Edit.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="editProductsBtn" styleClass="edit-products-btn" onAction="#openEditProducts">
+                    <tooltip>
+                        <Tooltip text="Editar Productos" />
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
+                            <Image url="@../image/Edit.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
 
             <!-- SCROLL -->
             <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS" prefViewportHeight="600">
@@ -53,35 +51,48 @@
         <Separator orientation="VERTICAL"/>
 
         <!-- DETALLE DEL PEDIDO -->
-        <VBox spacing="25" prefWidth="350" styleClass="details-panel">
+        <BorderPane prefWidth="350" styleClass="details-panel">
             <padding>
-                <Insets top="25" right="25" bottom="25" left="25"/>
+                <Insets top="15" right="25" bottom="15" left="25"/>
             </padding>
 
-            <Label text="Detalle del Pedido" styleClass="details-title"/>
-
-            <VBox spacing="20" styleClass="selected-product" visible="false" fx:id="selectedProductPanel" VBox.vgrow="ALWAYS" alignment="TOP_CENTER">
-                <ImageView fitWidth="150" fitHeight="150" preserveRatio="true" styleClass="selected-product-image" fx:id="selectedProductImage"/>
-                <Label styleClass="selected-product-name" fx:id="selectedProductName" wrapText="true" textAlignment="CENTER" maxWidth="300"/>
-
-                <VBox spacing="15" alignment="CENTER">
-                    <HBox spacing="15" alignment="CENTER">
-                        <Button text="-" styleClass="quantity-btn" onAction="#decreaseQuantity" minWidth="40" minHeight="40"/>
-                        <Label text="1" styleClass="quantity-label" fx:id="quantityLabel"/>
-                        <Button text="+" styleClass="quantity-btn" onAction="#increaseQuantity" minWidth="40" minHeight="40"/>
-                    </HBox>
-
-                    <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder" minWidth="200" minHeight="45"/>
+            <top>
+                <VBox spacing="5" styleClass="order-summary">
+                    <Label text="Resumen del Pedido" style="-fx-font-weight: bold; -fx-font-size: 18px;"/>
+                    <ScrollPane fitToWidth="true" styleClass="order-items-scroll" prefViewportHeight="150">
+                        <VBox spacing="3">
+                            <VBox fx:id="orderItemsContainer" spacing="3"/>
+                            <VBox fx:id="totalsContainer" spacing="3" styleClass="totals-container" visible="false">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label text="Total:" styleClass="total-label"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="totalLabel" text="0.00" styleClass="total-value"/>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+                    </ScrollPane>
                 </VBox>
-                <Region VBox.vgrow="ALWAYS"/>
-            </VBox>
+            </top>
 
-            <!-- BOTÓN "VER PEDIDO"-->
-            <VBox spacing="15" alignment="BOTTOM_CENTER">
-                <Region VBox.vgrow="ALWAYS"/>
-                <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder" minWidth="250" minHeight="50" prefHeight="50"/>
-            </VBox>
-        </VBox>
+            <center>
+                <VBox spacing="10" styleClass="selected-product" visible="false" fx:id="selectedProductPanel" alignment="TOP_CENTER" prefHeight="120">
+                    <ImageView fitWidth="100" fitHeight="100" preserveRatio="true" styleClass="selected-product-image" fx:id="selectedProductImage"/>
+                    <Label styleClass="selected-product-name" fx:id="selectedProductName" wrapText="true" textAlignment="CENTER" maxWidth="250"/>
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="-" styleClass="quantity-btn" onAction="#decreaseQuantity" minWidth="30" minHeight="30"/>
+                        <Label text="1" styleClass="quantity-label" fx:id="quantityLabel"/>
+                        <Button text="+" styleClass="quantity-btn" onAction="#increaseQuantity" minWidth="30" minHeight="30"/>
+                    </HBox>
+                    <Button text="Agregar al Pedido" styleClass="add-to-order-btn" onAction="#addToOrder" minWidth="160" minHeight="30"/>
+                </VBox>
+            </center>
+
+            <bottom>
+                <HBox alignment="CENTER_RIGHT" styleClass="bottom-bar">
+                    <Button text="Ver Pedido" styleClass="confirm-btn" onAction="#viewOrder" minWidth="280" minHeight="45" prefHeight="45"/>
+                </HBox>
+            </bottom>
+        </BorderPane>
     </HBox>
 
 </AnchorPane>

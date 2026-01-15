@@ -51,9 +51,16 @@ public class OrderRepository {
         Order order = null;
         try {
             TypedQuery<Order> query = em.createQuery(
-                    "SELECT o FROM Order o WHERE o.id = :orderId", Order.class);
+                    "SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.id = :orderId", Order.class);
             query.setParameter("orderId", id);
             order = query.getSingleResult();
+            // Force initialization of collections before session closes
+            if (order != null) {
+                order.getOrderDetails().size();
+                for (var od : order.getOrderDetails()) {
+                    od.getOrderDetailToppings().size();
+                }
+            }
         } catch (NoResultException e) {
         } finally {
             em.close();
@@ -130,20 +137,30 @@ public class OrderRepository {
     }
 
     public Map<String, Integer> getBurgerSalesForDate(LocalDate date) {
+        return getBurgerSalesForDate(date, null);
+    }
+
+    public Map<String, Integer> getBurgerSalesForDate(LocalDate date, Long storeId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime nextDay = startOfDay.plusDays(1);
 
-            Query query = em.createQuery(
-                    "SELECT od.productName, od.variantName, SUM(od.quantity) " +
-                            "FROM OrderDetail od " +
-                            "WHERE od.productName IS NOT NULL AND od.createdAt >= :start AND od.createdAt < :end " +
-                            "GROUP BY od.productName, od.variantName " +
-                            "ORDER BY od.productName, od.variantName"
-            );
+            String jpql = "SELECT od.productName, od.variantName, SUM(od.quantity) " +
+                    "FROM OrderDetail od JOIN od.order o " +
+                    "WHERE od.productName IS NOT NULL AND od.createdAt >= :start AND od.createdAt < :end AND o.deletedAt IS NULL";
+            if (storeId != null) {
+                jpql += " AND o.store.id = :storeId";
+            }
+            jpql += " GROUP BY od.productName, od.variantName " +
+                    "ORDER BY od.productName, od.variantName";
+
+            Query query = em.createQuery(jpql);
             query.setParameter("start", startOfDay);
             query.setParameter("end", nextDay);
+            if (storeId != null) {
+                query.setParameter("storeId", storeId);
+            }
 
             List<Object[]> results = query.getResultList();
             Map<String, Integer> sales = new HashMap<>();
@@ -160,17 +177,27 @@ public class OrderRepository {
     }
 
     public Map<String, Integer> getBurgerSalesForDateRange(LocalDate startDate, LocalDate endDate) {
+        return getBurgerSalesForDateRange(startDate, endDate, null);
+    }
+
+    public Map<String, Integer> getBurgerSalesForDateRange(LocalDate startDate, LocalDate endDate, Long storeId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            Query query = em.createQuery(
-                    "SELECT od.productName, od.variantName, SUM(od.quantity) " +
-                            "FROM OrderDetail od " +
-                            "WHERE od.productName IS NOT NULL AND DATE(od.createdAt) BETWEEN :startDate AND :endDate " +
-                            "GROUP BY od.productName, od.variantName " +
-                            "ORDER BY od.productName, od.variantName"
-            );
+            String jpql = "SELECT od.productName, od.variantName, SUM(od.quantity) " +
+                    "FROM OrderDetail od JOIN od.order o " +
+                    "WHERE od.productName IS NOT NULL AND DATE(od.createdAt) BETWEEN :startDate AND :endDate AND o.deletedAt IS NULL";
+            if (storeId != null) {
+                jpql += " AND o.store.id = :storeId";
+            }
+            jpql += " GROUP BY od.productName, od.variantName " +
+                    "ORDER BY od.productName, od.variantName";
+
+            Query query = em.createQuery(jpql);
             query.setParameter("startDate", startDate);
             query.setParameter("endDate", endDate);
+            if (storeId != null) {
+                query.setParameter("storeId", storeId);
+            }
             List<Object[]> results = query.getResultList();
             Map<String, Integer> sales = new HashMap<>();
             for (Object[] row : results) {
@@ -186,15 +213,26 @@ public class OrderRepository {
     }
 
     public List<Map<String, Object>> getSalesPerDay(LocalDate startDate, LocalDate endDate) {
+        return getSalesPerDay(startDate, endDate, null);
+    }
+
+    public List<Map<String, Object>> getSalesPerDay(LocalDate startDate, LocalDate endDate, Long storeId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            Query query = em.createQuery(
-                    "SELECT DATE(o.createdAt) as date, SUM(o.total) as total FROM Order o " +
-                    "WHERE DATE(o.createdAt) BETWEEN :startDate AND :endDate " +
-                    "GROUP BY DATE(o.createdAt) " +
-                    "ORDER BY DATE(o.createdAt)");
+            String jpql = "SELECT DATE(o.createdAt) as date, SUM(o.total) as total FROM Order o " +
+                    "WHERE DATE(o.createdAt) BETWEEN :startDate AND :endDate AND o.deletedAt IS NULL";
+            if (storeId != null) {
+                jpql += " AND o.store.id = :storeId";
+            }
+            jpql += " GROUP BY DATE(o.createdAt) " +
+                    "ORDER BY DATE(o.createdAt)";
+
+            Query query = em.createQuery(jpql);
             query.setParameter("startDate", startDate);
             query.setParameter("endDate", endDate);
+            if (storeId != null) {
+                query.setParameter("storeId", storeId);
+            }
             List<Object[]> results = query.getResultList();
             List<Map<String, Object>> sales = new java.util.ArrayList<>();
             for (Object[] row : results) {

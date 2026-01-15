@@ -6,52 +6,23 @@
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
+
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane stylesheets="@../css/order-history.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.OrderStatisticsController">
+<?import javafx.scene.control.ScrollPane?>
+<AnchorPane stylesheets="@../css/order-statistics.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.kaos.controller.OrderStatisticsController">
 
-    <VBox spacing="15" styleClass="container" AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="15" AnchorPane.rightAnchor="15" AnchorPane.topAnchor="15">
+    <VBox spacing="20" styleClass="container" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.topAnchor="20">
 
-        <!-- TITLE -->
-        <Label styleClass="compact-title" text="Estadísticas de Pedidos" />
+        <!-- HEADER SECTION -->
+        <VBox spacing="10" styleClass="header-section">
+            <Label styleClass="stats-main-title" text="Estadísticas de Pedidos" />
+        </VBox>
 
-        <!-- CHARTS GRID -->
-        <GridPane hgap="15" vgap="15" VBox.vgrow="ALWAYS">
-
-            <!-- Pie Chart: Most Sold Burgers Today -->
-            <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="5" styleClass="chart-container">
-                <HBox alignment="CENTER">
-                    <Label text="Más Vendidas - Hoy" styleClass="chart-title" />
-                </HBox>
-                <PieChart fx:id="dailyBurgersPieChart" VBox.vgrow="ALWAYS" />
-            </VBox>
-
-            <!-- Pie Chart: Most Sold Burgers This Week -->
-            <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="5" styleClass="chart-container">
-                <HBox alignment="CENTER">
-                    <Label text="Más Vendidas - Semana" styleClass="chart-title" />
-                </HBox>
-                <PieChart fx:id="weeklyBurgersPieChart" VBox.vgrow="ALWAYS" />
-            </VBox>
-
-            <!-- Bar Chart: Total Sales Per Day -->
-            <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2" spacing="5" styleClass="chart-container">
-                <HBox alignment="CENTER">
-                    <Label text="Ventas Totales por Día" styleClass="chart-title" />
-                </HBox>
-                <BarChart fx:id="salesPerDayBarChart" VBox.vgrow="ALWAYS">
-                    <xAxis>
-                        <CategoryAxis label="" />
-                    </xAxis>
-                    <yAxis>
-                        <NumberAxis label="Total" />
-                    </yAxis>
-                </BarChart>
-            </VBox>
-
-        </GridPane>
+        <!-- CHARTS CONTAINER -->
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="stats-scroll-pane" VBox.vgrow="ALWAYS">
+            <VBox fx:id="chartsContainer" spacing="30" styleClass="stats-container" />
+        </ScrollPane>
 
     </VBox>
 

@@ -40,17 +40,28 @@ public class UpdateManager {
             return false;
         }
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(UPDATE_URL)).build();
+            HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(UPDATE_URL))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Update check status: " + response.statusCode());
+            System.out.println("Update check response: " + response.body());
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode json = mapper.readTree(response.body());
-            latestVersion = json.get("version").asText();
-            downloadUrl = json.get("url").asText();
-
-            return isNewerVersion(latestVersion, CURRENT_VERSION);
+            if (json.has("version") && json.has("url")) {
+                latestVersion = json.get("version").asText();
+                downloadUrl = json.get("url").asText();
+                return isNewerVersion(latestVersion, CURRENT_VERSION);
+            } else {
+                System.out.println("JSON does not contain 'version' and 'url' fields");
+                return false;
+            }
         } catch (Exception e) {
+            System.out.println("Error checking for update: " + e.getMessage());
             return false;
         }
     }
@@ -72,21 +83,37 @@ public class UpdateManager {
     }
 
     public static void downloadUpdate() throws IOException, InterruptedException {
-        if (downloadUrl == null) return;
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(downloadUrl)).build();
-        Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "kaos_update.exe");
-        client.send(request, HttpResponse.BodyHandlers.ofFile(tempFile));
-
-        // Replace the old exe with the new one
-        String exePath = ProcessHandle.current().info().command().orElse(null);
-        if (exePath != null) {
-            Path exePathObj = Paths.get(exePath);
-            Files.move(tempFile, exePathObj, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        if (downloadUrl == null) {
+            System.out.println("Download URL is null");
+            return;
         }
 
-        restartApp();
+        System.out.println("Downloading from: " + downloadUrl);
+
+        HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(downloadUrl))
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .build();
+
+        // Download to Desktop
+        String userHome = System.getProperty("user.home");
+        Path desktopPath = Paths.get(userHome, "Desktop");
+        Path updateFile = desktopPath.resolve("kaos_update.jar"); // Assuming it's a jar
+
+        HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(updateFile));
+
+        System.out.println("Download status: " + response.statusCode());
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Download failed with status: " + response.statusCode());
+        }
+
+        // Since we can't replace a running jar, just notify the user
+        System.out.println("Update downloaded to: " + updateFile.toString());
+        // Optionally, show a dialog or something, but since this is called from App, perhaps throw an exception with the path
+
+        throw new IOException("Update downloaded to Desktop. Please replace the old kaos.jar manually and restart.");
     }
 
     private static void restartApp() {
