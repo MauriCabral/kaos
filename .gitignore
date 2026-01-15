@@ -1,4 +1,8 @@
 target/
+*.jar
+*.exe
+*.war
+*.ear
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
