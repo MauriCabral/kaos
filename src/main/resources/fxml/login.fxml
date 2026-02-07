@@ -50,7 +50,7 @@
             </Button>
 
             <!-- Enlace olvidé contraseña -->
-            <Hyperlink styleClass="forgot-link" text="¿Olvidaste tu contraseña?" />
+            <!-- <Hyperlink styleClass="forgot-link" text="¿Olvidaste tu contraseña?" /> -->
 
             <!-- Versión -->
             <Label fx:id="versionLabel" styleClass="version-label" text="Versión 1.0.0" />

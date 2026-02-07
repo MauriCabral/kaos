@@ -33,6 +33,9 @@ public class DeliveryController implements Initializable {
     @FXML private TextField lastNameField;
     @FXML private TextField phoneField;
     @FXML private ComboBox<Store> storeCombo;
+    @FXML private ComboBox<Store> deliveryStoreCombo;
+    @FXML private TextField deliveryPriceField;
+    @FXML private Button deliveryPriceButton;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
     @FXML private Label counterLabel;
@@ -54,9 +57,50 @@ public class DeliveryController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupStoreComboBox();
+        setupDeliveryStoreComboBox();
         setupTable();
         loadDeliveries();
         clearForm();
+    }
+
+    @FXML
+    public void handleStoreSelection(ActionEvent event) {
+        Store selectedStore = deliveryStoreCombo.getValue();
+        if (selectedStore != null) {
+            Double price = selectedStore.getDeliveryPrice();
+            if (price != null) {
+                deliveryPriceField.setText(String.valueOf(price));
+            } else {
+                deliveryPriceField.setText("0.00");
+            }
+            // Agregar efecto de foco verde al campo de precio
+            deliveryPriceField.getStyleClass().add("price-field-focused");
+        }
+    }
+
+    @FXML
+    public void handleApplyDeliveryPrice(ActionEvent event) {
+        Store selectedStore = deliveryStoreCombo.getValue();
+        if (selectedStore != null) {
+            try {
+                String priceText = deliveryPriceField.getText().trim();
+                Double price = Double.parseDouble(priceText);
+                
+                selectedStore.setDeliveryPrice(price);
+                storeService.update(selectedStore);
+                
+                DialogUtil.showWarning("Éxito", "Precio de delivery actualizado");
+                // Quitar el efecto de foco verde
+                deliveryPriceField.getStyleClass().removeAll("price-field-focused");
+            } catch (NumberFormatException e) {
+                DialogUtil.showWarning("Error", "El precio debe ser un número válido");
+                deliveryPriceField.getStyleClass().add("error-field");
+            } catch (Exception e) {
+                DialogUtil.showWarning("Error", e.getMessage());
+            }
+        } else {
+            DialogUtil.showWarning("Error", "Debe seleccionar una sucursal");
+        }
     }
 
     private void setupStoreComboBox() {
@@ -72,6 +116,27 @@ public class DeliveryController implements Initializable {
         });
 
         storeCombo.setButtonCell(new ListCell<Store>() {
+            @Override
+            protected void updateItem(Store store, boolean empty) {
+                super.updateItem(store, empty);
+                setText(empty || store == null ? "Selecciona sucursal" : store.getName());
+            }
+        });
+    }
+
+    private void setupDeliveryStoreComboBox() {
+        List<Store> stores = storeService.getAllStore();
+        deliveryStoreCombo.getItems().setAll(stores);
+
+        deliveryStoreCombo.setCellFactory(lv -> new ListCell<Store>() {
+            @Override
+            protected void updateItem(Store store, boolean empty) {
+                super.updateItem(store, empty);
+                setText(empty || store == null ? null : store.getName());
+            }
+        });
+
+        deliveryStoreCombo.setButtonCell(new ListCell<Store>() {
             @Override
             protected void updateItem(Store store, boolean empty) {
                 super.updateItem(store, empty);
@@ -297,11 +362,15 @@ public class DeliveryController implements Initializable {
         lastNameField.clear();
         phoneField.clear();
         storeCombo.setValue(null);
+        deliveryStoreCombo.setValue(null);
+        deliveryPriceField.clear();
 
         nameField.getStyleClass().removeAll("error-field");
         lastNameField.getStyleClass().removeAll("error-field");
         phoneField.getStyleClass().removeAll("error-field");
         storeCombo.getStyleClass().removeAll("error-field");
+        deliveryStoreCombo.getStyleClass().removeAll("error-field");
+        deliveryPriceField.getStyleClass().removeAll("error-field");
 
         isEditing = false;
         deliveryToEdit = null;

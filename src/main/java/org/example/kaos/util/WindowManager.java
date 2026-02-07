@@ -42,7 +42,7 @@ public class WindowManager {
         }
     }
 
-    public static Stage openOrderDetailsWindow(List<OrderDetail> orderDetails, Order order, boolean isEditMode) {
+    public static OrderDetailsController openOrderDetailsWindow(List<OrderDetail> orderDetails, Order order, boolean isEditMode) {
         try {
             FXMLLoader loader = new FXMLLoader(WindowManager.class.getResource("/fxml/order-details.fxml"));
             Parent root = loader.load();
@@ -67,7 +67,7 @@ public class WindowManager {
             stage.setResizable(false);
             stage.showAndWait();
 
-            return stage;
+            return controller;
         } catch (IOException e) {
             e.printStackTrace();
             DialogUtil.showError("Error", "No se pudo abrir el detalle del pedido.");

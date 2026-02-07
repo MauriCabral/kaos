@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.example.kaos.entity.Order;
 import org.example.kaos.entity.OrderDetail;
 import org.example.kaos.entity.OrderDetailTopping;
@@ -37,9 +38,10 @@ public class TicketPrintServiceImpl implements Printable {
 
     public TicketPrintServiceImpl() {
         try {
-            logo = ImageIO.read(new File("C:/Kaos/kaoslogo.png"));
-        } catch (IOException e) {
-            System.err.println("No se pudo cargar el logo: " + e.getMessage());
+            var stream = getClass().getClassLoader().getResourceAsStream("image/kaoslogo.png");
+            logo = stream != null ? ImageIO.read(stream) : null;
+        } catch (Exception e) {
+            logo = null;
         }
     }
 
@@ -87,9 +89,6 @@ public class TicketPrintServiceImpl implements Printable {
     }
 
     public void generatePDF(Long orderId) {
-        System.out.println("¿Desea imprimir un PDF?");
-        System.out.println("Generando PDF para la orden: " + orderId);
-
         orderLoad(orderId);
 
         if (order == null) {
@@ -97,60 +96,54 @@ public class TicketPrintServiceImpl implements Printable {
             return;
         }
 
-        System.out.println("Orden cargada: " + order.getOrderNumber());
-        System.out.println("Total de items: " + (orderDetailList != null ? orderDetailList.size() : 0));
-
         PDDocument document = null;
         PDPageContentStream contentStream = null;
 
         try {
             document = new PDDocument();
-
             PDPage page = new PDPage(new PDRectangle(226.77f, 841.89f));
             document.addPage(page);
-
             contentStream = new PDPageContentStream(document, page);
 
+            // ======= TITULO =======
             contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
-
-            String title = "******** TICKET ********";
+            String title = isCopy ? "******** COPIA ********" : "****** TICKET *******";
             float titleWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(title) / 1000 * 12;
             float titleX = (226.77f - titleWidth) / 2;
+            float y = 800;
 
             contentStream.beginText();
-            contentStream.newLineAtOffset(titleX, 800);
+            contentStream.newLineAtOffset(titleX, y);
             contentStream.showText(title);
             contentStream.endText();
 
-            contentStream.setFont(PDType1Font.HELVETICA, 10);
+            // ======= LOGO =======
+            y -= 5;
+            if (logo != null) {
+                float logoWidth = 100;
+                float logoHeight = (logo.getHeight() * logoWidth) / logo.getWidth();
+                float logoX = (226.77f - logoWidth) / 2;
+                contentStream.drawImage(LosslessFactory.createFromImage(document, logo), logoX, y - logoHeight, logoWidth, logoHeight);
+                y -= logoHeight + 15;
+            }
 
-            contentStream.beginText();
-            contentStream.newLineAtOffset(10, 770);
-            contentStream.showText("Orden: " + order.getOrderNumber());
-            contentStream.endText();
-
+            // ======= FECHA Y CLIENTE =======
+            contentStream.setFont(PDType1Font.HELVETICA, 8); // Smaller font for date
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             String fechaStr = order.getCreatedAt() != null ? order.getCreatedAt().format(formatter) : "N/A";
+
             contentStream.beginText();
-            contentStream.newLineAtOffset(10, 755);
+            contentStream.newLineAtOffset(10, y);
             contentStream.showText("Fecha: " + fechaStr);
             contentStream.endText();
+            y -= 15;
 
             String cliente = order.getCustomerName() != null ? order.getCustomerName() : "";
             contentStream.beginText();
-            contentStream.newLineAtOffset(10, 740);
-            contentStream.showText("Cliente: " + cliente);
+            contentStream.newLineAtOffset(10, y);
+            contentStream.showText("Cliente: " + cliente.toUpperCase());
             contentStream.endText();
-
-            float y = 725;
-
-            if (order.getCustomerPhone() != null && !order.getCustomerPhone().isEmpty()) {
-                contentStream.beginText();
-                contentStream.newLineAtOffset(10, y);
-                contentStream.showText("Tel: " + order.getCustomerPhone());
-                contentStream.endText();
-                y -= 15;
-            }
+            y -= 12;
 
             if (order.getCustomerAddress() != null && !order.getCustomerAddress().isEmpty()) {
                 contentStream.beginText();
@@ -165,29 +158,29 @@ public class TicketPrintServiceImpl implements Printable {
             contentStream.newLineAtOffset(10, y);
             contentStream.showText(tipoPedido);
             contentStream.endText();
-            y -= 20;
+            y -= 10;
 
             contentStream.moveTo(10, y);
             contentStream.lineTo(216.77f, y);
             contentStream.stroke();
             y -= 15;
 
+            // ======= ENCABEZADO DE ITEMS =======
             contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
             contentStream.beginText();
-            contentStream.newLineAtOffset(10, y);
-            contentStream.showText("CANT  DESCRIPCION");
-            contentStream.endText();
             y -= 15;
 
+            // ======= ITEMS, TOPPINGS Y OBSERVACIONES =======
+            contentStream.setFont(PDType1Font.HELVETICA, 9);
             if (orderDetailList != null && !orderDetailList.isEmpty()) {
                 for (OrderDetail detail : orderDetailList) {
-                    contentStream.setFont(PDType1Font.HELVETICA, 9);
 
+                    // Producto principal
                     String itemLine = detail.getQuantity() + "x " + detail.getProductName();
                     if (detail.getVariantName() != null && !detail.getVariantName().isEmpty()) {
                         itemLine += " (" + detail.getVariantName() + ")";
                     }
-
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 9);
                     contentStream.beginText();
                     contentStream.newLineAtOffset(10, y);
                     contentStream.showText(itemLine);
@@ -196,63 +189,55 @@ public class TicketPrintServiceImpl implements Printable {
                     String priceLine = String.format("$%.0f", detail.getSubtotal());
                     float priceWidth = PDType1Font.HELVETICA.getStringWidth(priceLine) / 1000 * 9;
                     float priceX = 216.77f - 10 - priceWidth;
-
                     contentStream.beginText();
                     contentStream.newLineAtOffset(priceX, y);
                     contentStream.showText(priceLine);
                     contentStream.endText();
-
                     y -= 12;
 
-                    if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
+                    // TOPPINGS
+                    if (detail.getOrderDetailToppings() != null) {
                         for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
                             if (topping.getQuantity() > 0) {
                                 String toppingLine = "  + " + topping.getTopping().getName() + " x" + topping.getQuantity();
+                                contentStream.beginText();
+                                contentStream.newLineAtOffset(20, y);
+                                contentStream.showText(toppingLine);
+                                contentStream.endText();
 
-                            contentStream.beginText();
-                            contentStream.newLineAtOffset(20, y);
-                            contentStream.showText(toppingLine);
-                            contentStream.endText();
-
-                            String toppingPrice = String.format("$%.0f", topping.getTotalPrice());
-                            float toppingPriceWidth = PDType1Font.HELVETICA.getStringWidth(toppingPrice) / 1000 * 9;
-                            float toppingPriceX = 216.77f - 10 - toppingPriceWidth;
-
-                            contentStream.beginText();
-                            contentStream.newLineAtOffset(toppingPriceX, y);
-                            contentStream.showText(toppingPrice);
-                            contentStream.endText();
-
-                            y -= 10;
+                                String toppingPrice = String.format("$%.0f", topping.getTotalPrice());
+                                float toppingPriceWidth = PDType1Font.HELVETICA.getStringWidth(toppingPrice) / 1000 * 9;
+                                float toppingPriceX = 216.77f - 10 - toppingPriceWidth;
+                                contentStream.beginText();
+                                contentStream.newLineAtOffset(toppingPriceX, y);
+                                contentStream.showText(toppingPrice);
+                                contentStream.endText();
+                                y -= 10;
+                            }
                         }
                     }
 
+                    // OBSERVACIONES
                     if (detail.getObservations() != null && !detail.getObservations().isEmpty()) {
                         contentStream.setFont(PDType1Font.HELVETICA_OBLIQUE, 8);
                         contentStream.beginText();
                         contentStream.newLineAtOffset(20, y);
                         contentStream.showText("Obs: " + detail.getObservations());
                         contentStream.endText();
-                        y -= 10;
                         contentStream.setFont(PDType1Font.HELVETICA, 9);
+                        y -= 10;
                     }
 
                     y -= 5;
                 }
             }
-        } else {
-                contentStream.beginText();
-                contentStream.newLineAtOffset(10, y);
-                contentStream.showText("No hay items en esta orden");
-                contentStream.endText();
-                y -= 20;
-            }
 
+            // ======= SUBTOTAL, DELIVERY, TOTAL =======
             y -= 5;
             contentStream.moveTo(10, y);
             contentStream.lineTo(216.77f, y);
             contentStream.stroke();
-            y -= 15;
+            y -= 10;
 
             contentStream.setFont(PDType1Font.HELVETICA, 10);
             contentStream.beginText();
@@ -263,12 +248,11 @@ public class TicketPrintServiceImpl implements Printable {
             String subtotalStr = String.format("$%.0f", order.getSubtotal());
             float subtotalWidth = PDType1Font.HELVETICA.getStringWidth(subtotalStr) / 1000 * 10;
             float subtotalX = 216.77f - 10 - subtotalWidth;
-
             contentStream.beginText();
             contentStream.newLineAtOffset(subtotalX, y);
             contentStream.showText(subtotalStr);
             contentStream.endText();
-            y -= 15;
+            y -= 12;
 
             if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDeliveryAmount() != null && order.getDeliveryAmount().compareTo(BigDecimal.ZERO) > 0) {
                 contentStream.beginText();
@@ -279,129 +263,100 @@ public class TicketPrintServiceImpl implements Printable {
                 String deliveryStr = String.format("$%.0f", order.getDeliveryAmount());
                 float deliveryWidth = PDType1Font.HELVETICA.getStringWidth(deliveryStr) / 1000 * 10;
                 float deliveryX = 216.77f - 10 - deliveryWidth;
-
                 contentStream.beginText();
                 contentStream.newLineAtOffset(deliveryX, y);
                 contentStream.showText(deliveryStr);
                 contentStream.endText();
-                y -= 15;
+                y -= 10;
             }
 
             contentStream.moveTo(10, y);
             contentStream.lineTo(216.77f, y);
             contentStream.stroke();
-
-            contentStream.moveTo(10, y - 2);
-            contentStream.lineTo(216.77f, y - 2);
-            contentStream.stroke();
-
             y -= 15;
 
-            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(10, y);
             contentStream.showText("TOTAL:");
             contentStream.endText();
 
             String totalStr = String.format("$%.0f", order.getTotal());
-            float totalWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(totalStr) / 1000 * 12;
+            float totalWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(totalStr) / 1000 * 14;
             float totalX = 216.77f - 10 - totalWidth;
-
             contentStream.beginText();
             contentStream.newLineAtOffset(totalX, y);
             contentStream.showText(totalStr);
             contentStream.endText();
-            y -= 25;
+            y -= 20;
 
+            // ======= PAGO =======
             contentStream.setFont(PDType1Font.HELVETICA, 10);
             StringBuilder paymentMethod = new StringBuilder("Pago: ");
+            boolean hasCash = order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0;
+            boolean hasTransfer = order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0;
 
-            if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
+            if (hasCash && hasTransfer) {
+                paymentMethod.append("Efectivo + Transferencia");
+            } else if (hasCash) {
                 paymentMethod.append("Efectivo");
-            }
-
-            if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
-                if (paymentMethod.length() > 6) {
-                    paymentMethod.append(" + ");
-                }
+            } else if (hasTransfer) {
                 paymentMethod.append("Transferencia");
+            } else {
+                paymentMethod.append("No especificado");
             }
 
             contentStream.beginText();
             contentStream.newLineAtOffset(10, y);
             contentStream.showText(paymentMethod.toString());
             contentStream.endText();
-            y -= 15;
+            y -= 12;
 
+            // ======= NOTAS =======
             if (order.getNotes() != null && !order.getNotes().isEmpty()) {
                 contentStream.beginText();
                 contentStream.newLineAtOffset(10, y);
                 contentStream.showText("Notas: " + order.getNotes());
                 contentStream.endText();
-                y -= 15;
+                y -= 12;
             }
 
-            y -= 10;
-
+            // ======= GRACIAS =======
             contentStream.setFont(PDType1Font.HELVETICA, 9);
-            String gracias = "¡Gracias por su compra!";
+            String gracias = "¡Gracias por comprar en KAOS!";
             float graciasWidth = PDType1Font.HELVETICA.getStringWidth(gracias) / 1000 * 9;
             float graciasX = (226.77f - graciasWidth) / 2;
-
             contentStream.beginText();
             contentStream.newLineAtOffset(graciasX, y);
             contentStream.showText(gracias);
             contentStream.endText();
 
-            y -= 12;
-
-            String kaos = "Kaos";
-            float kaosWidth = PDType1Font.HELVETICA.getStringWidth(kaos) / 1000 * 9;
-            float kaosX = (226.77f - kaosWidth) / 2;
-
-            contentStream.beginText();
-            contentStream.newLineAtOffset(kaosX, y);
-            contentStream.showText(kaos);
-            contentStream.endText();
-
             contentStream.close();
 
+            // ======= GUARDAR PDF =======
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
             String fileName = order.getOrderNumber() + "_" + timestamp + ".pdf";
 
             Stage stage = new Stage();
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-
             fileChooser.setInitialFileName(fileName);
 
             File selectedFile = fileChooser.showSaveDialog(stage);
-
             if (selectedFile != null) {
                 File finalFile = new File(selectedFile.getParent(), fileName);
-
                 document.save(finalFile);
-
-                System.out.println("PDF generado exitosamente: " + finalFile.getName());
-                System.out.println("Archivo guardado en: " + finalFile.getAbsolutePath());
-                System.out.println("Tamaño del archivo: " + finalFile.length() + " bytes");
-            } else {
-                System.err.println("No se seleccionó una ubicación para guardar el archivo.");
+                System.out.println("PDF generado exitosamente: " + finalFile.getAbsolutePath());
             }
-        }
-        catch (Exception e) {
-            System.err.println("Error al generar PDF: " + e.getMessage());
+
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
-                if (contentStream != null) {
-                    contentStream.close();
-                }
-                if (document != null) {
-                    document.close();
-                }
+                if (contentStream != null) contentStream.close();
+                if (document != null) document.close();
             } catch (IOException e) {
-                System.err.println("Error al cerrar recursos: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
@@ -430,64 +385,70 @@ public class TicketPrintServiceImpl implements Printable {
         Graphics2D g2d = (Graphics2D) graphics;
         g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
-        Font titleFont = new Font("Monospaced", Font.BOLD, 12);
-        Font headerFont = new Font("Monospaced", Font.BOLD, 10);
-        Font normalFont = new Font("Monospaced", Font.PLAIN, 9);
-        Font smallFont = new Font("Monospaced", Font.PLAIN, 8);
+        Font titleFont = new Font("SansSerif", Font.BOLD, 12);
+        Font headerFont = new Font("SansSerif", Font.BOLD, 10);
+        Font totalFont = new Font("Arial", Font.BOLD, 12);
+        Font normalFont = new Font("SansSerif", Font.PLAIN, 9);
+        Font smallFont = new Font("SansSerif", Font.ITALIC, 8);
 
         int y = 20;
         int pageWidth = (int) pageFormat.getImageableWidth();
 
         g2d.setFont(titleFont);
-        String title = isCopy ? "******** COPIA ********" : "******** TICKET ********";
+        String title = isCopy ? "******** COPIA ********" : "****** TICKET *******";
         int titleWidth = g2d.getFontMetrics().stringWidth(title);
         int titleX = (pageWidth - titleWidth) / 2;
         g2d.drawString(title, titleX, y);
-        y += 20;
 
+        y += 15;
         if (logo != null) {
             int logoWidth = 80;
-            int logoHeight = 20;
+            int logoHeight = (logo.getHeight() * logoWidth) / logo.getWidth();
             int logoX = (pageWidth - logoWidth) / 2;
             g2d.drawImage(logo, logoX, y, logoWidth, logoHeight, null);
-            y += 30;
+            y += logoHeight + 15;
         }
 
-        g2d.setFont(headerFont);
-        g2d.drawString("Orden: " + order.getOrderNumber(), 10, y);
-        y += 15;
+        //g2d.drawString("Orden: " + order.getOrderNumber(), 10, y);
+        //y += 15;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        g2d.setFont(smallFont); // Use smaller font for date
         g2d.drawString("Fecha: " + order.getCreatedAt().format(formatter), 10, y);
         y += 15;
 
         g2d.setFont(normalFont);
-        g2d.drawString("Cliente: " + order.getCustomerName(), 10, y);
+        g2d.drawString("Cliente: " + order.getCustomerName().toUpperCase(), 10, y);
         y += 12;
 
-        if (order.getCustomerPhone() != null && !order.getCustomerPhone().isEmpty()) {
-            g2d.drawString("Tel: " + order.getCustomerPhone(), 10, y);
-            y += 12;
-        }
+//        if (order.getCustomerPhone() != null && !order.getCustomerPhone().isEmpty()) {
+//            g2d.drawString("Tel: " + order.getCustomerPhone(), 10, y);
+//            y += 12;
+//        }
 
         if (order.getCustomerAddress() != null && !order.getCustomerAddress().isEmpty()) {
             g2d.drawString("Dir: " + order.getCustomerAddress(), 10, y);
             y += 12;
         }
 
-        String tipoPedido = Boolean.TRUE.equals(order.getIsDelivery()) ? "🚚 DELIVERY" : "🏪 PARA RETIRAR";
+        String tipoPedido = Boolean.TRUE.equals(order.getIsDelivery()) ? "DELIVERY" : "PARA RETIRAR";
         g2d.setFont(headerFont);
         g2d.drawString(tipoPedido, 10, y);
-        y += 15;
+        y += 10;
+        Stroke originalStroke = g2d.getStroke();
+        Color originalColor = g2d.getColor();
 
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(3));
         g2d.drawLine(10, y, pageWidth - 10, y);
+
+        g2d.setStroke(originalStroke);
+        g2d.setColor(originalColor);
         y += 10;
 
         g2d.setFont(headerFont);
-        g2d.drawString("CANT  DESCRIPCION", 10, y);
         y += 15;
 
-        g2d.setFont(normalFont);
         for (OrderDetail detail : orderDetailList) {
             String itemLine = String.format("%dx %s",
                     detail.getQuantity(),
@@ -497,6 +458,7 @@ public class TicketPrintServiceImpl implements Printable {
                 itemLine += " (" + detail.getVariantName() + ")";
             }
 
+            g2d.setFont(headerFont); // Bold font for burger names
             g2d.drawString(itemLine, 10, y);
 
             String priceLine = String.format("$%.0f", detail.getSubtotal());
@@ -523,20 +485,18 @@ public class TicketPrintServiceImpl implements Printable {
             }
 
             if (detail.getObservations() != null && !detail.getObservations().isEmpty()) {
-                String[] obsLines = wrapText("Obs: " + detail.getObservations(), g2d, pageWidth - 40);
-                for (String line : obsLines) {
-                    g2d.setFont(smallFont);
-                    g2d.drawString(line, 20, y);
-                    y += 10;
-                }
+                g2d.setFont(smallFont);
+                g2d.drawString("Obs: " + detail.getObservations(), 20, y);
+                y += 5;
                 g2d.setFont(normalFont);
             }
 
             y += 5;
         }
-
+        g2d.setStroke(new BasicStroke(2));
         g2d.drawLine(10, y, pageWidth - 10, y);
-        y += 15;
+        g2d.setStroke(originalStroke);
+        y += 10;
 
         g2d.setFont(normalFont);
 
@@ -553,15 +513,20 @@ public class TicketPrintServiceImpl implements Printable {
             int deliveryWidth = g2d.getFontMetrics().stringWidth(deliveryStr);
             int deliveryX = pageWidth - 10 - deliveryWidth;
             g2d.drawString(deliveryStr, deliveryX, y);
-            y += 12;
+            y += 5;
         }
 
         g2d.setFont(headerFont);
-        g2d.drawLine(10, y, pageWidth - 10, y);
-        y += 5;
-        g2d.drawLine(10, y, pageWidth - 10, y);
-        y += 10;
 
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawLine(10, y, pageWidth - 10, y);
+
+        g2d.setStroke(originalStroke);
+        g2d.setColor(originalColor);
+        y += 12;
+
+        g2d.setFont(totalFont);
         g2d.drawString("TOTAL:", 10, y);
         String totalStr = String.format("$%.0f", order.getTotal());
         int totalWidth = g2d.getFontMetrics().stringWidth(totalStr);
@@ -571,16 +536,17 @@ public class TicketPrintServiceImpl implements Printable {
 
         g2d.setFont(normalFont);
         StringBuilder paymentMethod = new StringBuilder("Pago: ");
+        boolean hasCash = order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0;
+        boolean hasTransfer = order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0;
 
-        if (order.getCashAmount() != null && order.getCashAmount().compareTo(BigDecimal.ZERO) > 0) {
+        if (hasCash && hasTransfer) {
+            paymentMethod.append("Efectivo + Transferencia");
+        } else if (hasCash) {
             paymentMethod.append("Efectivo");
-        }
-
-        if (order.getTransferAmount() != null && order.getTransferAmount().compareTo(BigDecimal.ZERO) > 0) {
-            if (paymentMethod.length() > 6) {
-                paymentMethod.append(" + ");
-            }
+        } else if (hasTransfer) {
             paymentMethod.append("Transferencia");
+        } else {
+            paymentMethod.append("No especificado");
         }
 
         g2d.drawString(paymentMethod.toString(), 10, y);
@@ -588,46 +554,24 @@ public class TicketPrintServiceImpl implements Printable {
 
         if (order.getNotes() != null && !order.getNotes().isEmpty()) {
             g2d.drawString("Notas: " + order.getNotes(), 10, y);
-            y += 12;
+            y += 15;
         }
 
-        y += 10;
+        y += 15;
         g2d.setFont(smallFont);
 
-        String gracias = "¡Gracias por su compra!";
+        String gracias = "¡Gracias por comprar en KAOS!";
         int graciasWidth = g2d.getFontMetrics().stringWidth(gracias);
         int graciasX = (pageWidth - graciasWidth) / 2;
         g2d.drawString(gracias, graciasX, y);
-        y += 10;
+        y += 12;
 
-        String kaos = "Kaos";
-        int kaosWidth = g2d.getFontMetrics().stringWidth(kaos);
-        int kaosX = (pageWidth - kaosWidth) / 2;
-        g2d.drawString(kaos, kaosX, y);
+//        String kaos = "Kaos";
+//        int kaosWidth = g2d.getFontMetrics().stringWidth(kaos);
+//        int kaosX = (pageWidth - kaosWidth) / 2;
+//        g2d.drawString(kaos, kaosX, y);
+
 
         return PAGE_EXISTS;
-    }
-
-    private String[] wrapText(String text, Graphics2D g2d, int maxWidth) {
-        FontMetrics fm = g2d.getFontMetrics();
-        java.util.List<String> lines = new java.util.ArrayList<>();
-
-        String[] words = text.split(" ");
-        StringBuilder currentLine = new StringBuilder();
-
-        for (String word : words) {
-            if (fm.stringWidth(currentLine.toString() + word) > maxWidth) {
-                lines.add(currentLine.toString());
-                currentLine = new StringBuilder(word + " ");
-            } else {
-                currentLine.append(word).append(" ");
-            }
-        }
-
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString().trim());
-        }
-
-        return lines.toArray(new String[0]);
     }
 }

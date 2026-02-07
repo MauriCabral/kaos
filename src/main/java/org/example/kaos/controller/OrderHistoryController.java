@@ -7,6 +7,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
@@ -24,6 +26,7 @@ import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 import org.example.kaos.util.WindowManager;
 import java.math.BigDecimal;
+import org.example.kaos.entity.Delivery;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,6 +54,7 @@ public class OrderHistoryController implements Initializable {
     @FXML private TableColumn<Order, BigDecimal> subtotalColumn;
     @FXML private TableColumn<Order, BigDecimal> totalColumn;
     @FXML private TableColumn<Order, String> paymentMethodColumn;
+    @FXML private TableColumn<Order, String> observationsColumn;
     @FXML private TableColumn<Order, Void> actionsColumn;
     @FXML private TextField searchField;
     @FXML private Button searchBtn;
@@ -239,6 +243,11 @@ public class OrderHistoryController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty(paymentIcon);
         });
 
+        observationsColumn.setCellValueFactory(cellData -> {
+            String notes = cellData.getValue().getNotes();
+            return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "");
+        });
+
         subtotalColumn.setCellFactory(column -> new TableCell<Order, BigDecimal>() {
             @Override
             protected void updateItem(BigDecimal amount, boolean empty) {
@@ -371,7 +380,7 @@ public class OrderHistoryController implements Initializable {
 
     private void loadOrders() {
         try {
-            List<Order> allOrders = orderService.getAllOrders(isAdmin);
+            List<Order> allOrders = orderService.getAllOrders(isAdmin, Session.getInstance().getCurrentUser().getStore().getId().intValue());
             orders.setAll(allOrders);
             ordersTable.setItems(orders);
 
@@ -419,9 +428,9 @@ public class OrderHistoryController implements Initializable {
         try {
             Order fullOrder = orderService.getOrderById(order.getId());
             if (fullOrder != null && fullOrder.getOrderDetails() != null) {
-                Stage editStage = WindowManager.openOrderDetailsWindow(null, fullOrder, true);
-                if (editStage != null) {
-                    editStage.setOnHidden(e -> {
+                OrderDetailsController controller = WindowManager.openOrderDetailsWindow(null, fullOrder, true);
+                if (controller != null && controller.getStage() != null) {
+                    controller.getStage().setOnHidden(e -> {
                         loadOrders();
                     });
                 }
@@ -519,15 +528,11 @@ public class OrderHistoryController implements Initializable {
 
                         boolean isInRange = false;
 
-                        if (orderDate.equals(today) && !orderTime.isBefore(LocalTime.of(15, 0))) {
+                        if (orderDate.equals(today) && !orderTime.isBefore(LocalTime.of(3, 0))) {
                             isInRange = true;
                         }
 
                         if (orderDate.equals(today.plusDays(1)) && !orderTime.isAfter(LocalTime.of(3, 0))) {
-                            isInRange = true;
-                        }
-
-                        if (orderDate.equals(today) && orderTime.isBefore(LocalTime.of(3, 0))) {
                             isInRange = true;
                         }
 
@@ -676,111 +681,98 @@ public class OrderHistoryController implements Initializable {
                 return;
             }
 
-            // Collect delivery orders with assigned delivery
+            LocalDate today = LocalDate.now();
+            LocalDate yesterday = today.minusDays(1);
+            
+            LocalDateTime startTime;
+            LocalDateTime endTime;
+            
+            LocalTime currentTime = LocalTime.now();
+            
+            if (currentTime.isBefore(LocalTime.of(3, 0))) {
+                startTime = yesterday.atTime(18, 0);
+                endTime = today.atTime(3, 0);
+            } else {
+                startTime = today.atTime(18, 0);
+                endTime = today.plusDays(1).atTime(3, 0);
+            }
+
+            int currentStoreId = Session.getInstance().getCurrentUser().getStore().getId().intValue();
             List<Order> deliveryOrders = ordersTable.getItems().stream()
-                    .filter(order -> Boolean.TRUE.equals(order.getIsDelivery()) && order.getDelivery() != null)
+                    .filter(order -> Boolean.TRUE.equals(order.getIsDelivery())
+                            && order.getDelivery() != null
+                            && (order.getStore() != null && order.getStore().getId().intValue() == currentStoreId)
+                            && order.getCreatedAt() != null
+                            && !order.getCreatedAt().isBefore(startTime)
+                            && !order.getCreatedAt().isAfter(endTime))
                     .toList();
 
             if (deliveryOrders.isEmpty()) {
-                DialogUtil.showWarning("Cerrar Caja", "No hay órdenes de delivery asignadas para cerrar caja.");
+                DialogUtil.showWarning("Cerrar Caja", "No hay órdenes de delivery asignadas para hoy para cerrar caja.");
                 return;
             }
 
-            // Group data by store and delivery
-            java.util.Map<Long, String> storeNames = new java.util.HashMap<>();
-            java.util.Map<Long, java.util.Map<Long, DeliveryData>> data = new java.util.HashMap<>();
+            // Group data by delivery
+            java.util.Map<Long, DeliveryData> data = new java.util.HashMap<>();
 
             for (Order order : deliveryOrders) {
-                Long storeId = order.getStore() != null ? order.getStore().getId() : 0L;
-                String storeName = order.getStore() != null ? order.getStore().getName() : "Sin Local";
-                storeNames.put(storeId, storeName);
-
                 Long deliveryId = order.getDelivery().getId();
-                // Fetch delivery to avoid lazy loading
                 org.example.kaos.entity.Delivery delivery = deliveryService.findById(deliveryId);
                 if (delivery == null) continue;
                 String deliveryName = delivery.getName();
                 BigDecimal cash = order.getCashAmount() != null ? order.getCashAmount() : BigDecimal.ZERO;
 
-                data.computeIfAbsent(storeId, k -> new java.util.HashMap<>())
-                    .computeIfAbsent(deliveryId, k -> new DeliveryData(deliveryName))
+                data.computeIfAbsent(deliveryId, k -> new DeliveryData(deliveryName))
                     .addOrder(cash);
             }
 
-            // Create Excel
+            // Create simple Excel
             Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Cierre de Caja");
 
+            // Header style
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
-            headerFont.setColor(IndexedColors.WHITE.getIndex());
             headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
+            // Data style
             CellStyle dataStyle = workbook.createCellStyle();
-            dataStyle.setBorderBottom(BorderStyle.THIN);
-            dataStyle.setBorderTop(BorderStyle.THIN);
-            dataStyle.setBorderLeft(BorderStyle.THIN);
-            dataStyle.setBorderRight(BorderStyle.THIN);
 
             CellStyle currencyStyle = workbook.createCellStyle();
-            currencyStyle.cloneStyleFrom(dataStyle);
             currencyStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("[$$-es-AR]#,##0"));
 
-            for (java.util.Map.Entry<Long, java.util.Map<Long, DeliveryData>> storeEntry : data.entrySet()) {
-                Long storeId = storeEntry.getKey();
-                String storeName = storeNames.get(storeId);
-                java.util.Map<Long, DeliveryData> deliveries = storeEntry.getValue();
+            // Headers
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"Delivery", "Efectivo", "Cantidad de Pedidos"};
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
 
-                Sheet sheet = workbook.createSheet(storeName);
+            // Data rows
+            int rowNum = 1;
+            for (DeliveryData dd : data.values()) {
+                Row row = sheet.createRow(rowNum++);
+                int colIndex = 0;
 
-                Row titleRow = sheet.createRow(0);
-                org.apache.poi.ss.usermodel.Cell titleCell = titleRow.createCell(0);
-                titleCell.setCellValue(storeName);
-                titleCell.setCellStyle(headerStyle);
-                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 2));
+                org.apache.poi.ss.usermodel.Cell cell0 = row.createCell(colIndex++);
+                cell0.setCellValue(dd.name);
+                cell0.setCellStyle(dataStyle);
 
-                Row headerRow = sheet.createRow(1);
-                String[] headers = {"Delivery", "Efectivo", "Cantidad de Pedidos"};
+                org.apache.poi.ss.usermodel.Cell cell1 = row.createCell(colIndex++);
+                cell1.setCellValue(dd.cash.doubleValue());
+                cell1.setCellStyle(currencyStyle);
 
-                for (int i = 0; i < headers.length; i++) {
-                    org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-                    cell.setCellValue(headers[i]);
-                    cell.setCellStyle(headerStyle);
-                }
+                org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(colIndex);
+                cell2.setCellValue(dd.orderCount);
+                cell2.setCellStyle(dataStyle);
+            }
 
-                int rowNum = 2;
-                for (DeliveryData dd : deliveries.values()) {
-                    Row row = sheet.createRow(rowNum++);
-                    int colIndex = 0;
-
-                    org.apache.poi.ss.usermodel.Cell cell0 = row.createCell(colIndex++);
-                    cell0.setCellValue(dd.name);
-
-                    org.apache.poi.ss.usermodel.Cell cell1 = row.createCell(colIndex++);
-                    cell1.setCellValue(dd.cash.doubleValue());
-                    cell1.setCellStyle(currencyStyle);
-
-                    org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(colIndex);
-                    cell2.setCellValue(dd.orderCount);
-
-                    for (int i = 0; i < headers.length; i++) {
-                        org.apache.poi.ss.usermodel.Cell cell = row.getCell(i);
-                        if (cell != null && cell.getCellStyle() == null) {
-                            cell.setCellStyle(dataStyle);
-                        }
-                    }
-                }
-
-                for (int i = 0; i < headers.length; i++) {
-                    sheet.autoSizeColumn(i);
-                }
+            // Auto size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
             }
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
@@ -1042,7 +1034,7 @@ public class OrderHistoryController implements Initializable {
         }
 
         // Show modal to select delivery
-        org.example.kaos.entity.Delivery selectedDelivery = showDeliverySelectionDialog(availableDeliveries);
+        Delivery selectedDelivery = showDeliverySelectionDialog(availableDeliveries);
 
         if (selectedDelivery != null) {
             // Assign delivery to all selected orders
@@ -1062,18 +1054,18 @@ public class OrderHistoryController implements Initializable {
         }
     }
 
-    private org.example.kaos.entity.Delivery showDeliverySelectionDialog(List<org.example.kaos.entity.Delivery> deliveries) {
-        javafx.scene.control.Dialog<org.example.kaos.entity.Delivery> dialog = new javafx.scene.control.Dialog<>();
+    private Delivery showDeliverySelectionDialog(List<Delivery> deliveries) {
+        Dialog<Delivery> dialog = new Dialog<>();
         dialog.setTitle("Seleccionar Delivery");
         dialog.setHeaderText("Selecciona un delivery para asignar a los pedidos:");
 
         // Create table for deliveries
-        TableView<org.example.kaos.entity.Delivery> deliveryTable = new TableView<>();
-        TableColumn<org.example.kaos.entity.Delivery, String> nameCol = new TableColumn<>("Nombre");
+        TableView<Delivery> deliveryTable = new TableView<>();
+        TableColumn<Delivery, String> nameCol = new TableColumn<>("Nombre");
         nameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getName()));
         nameCol.setPrefWidth(200);
 
-        TableColumn<org.example.kaos.entity.Delivery, String> phoneCol = new TableColumn<>("Teléfono");
+        TableColumn<Delivery, String> phoneCol = new TableColumn<>("Teléfono");
         phoneCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPhoneNumber()));
         phoneCol.setPrefWidth(150);
 
@@ -1082,10 +1074,10 @@ public class OrderHistoryController implements Initializable {
         deliveryTable.setPrefHeight(300);
 
         dialog.getDialogPane().setContent(deliveryTable);
-        dialog.getDialogPane().getButtonTypes().addAll(javafx.scene.control.ButtonType.OK, javafx.scene.control.ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         dialog.setResultConverter(buttonType -> {
-            if (buttonType == javafx.scene.control.ButtonType.OK) {
+            if (buttonType == ButtonType.OK) {
                 return deliveryTable.getSelectionModel().getSelectedItem();
             }
             return null;

@@ -17,4 +17,9 @@ public class StoreServiceImpl implements IStoreService {
         }
         return null;
     }
+
+    @Override
+    public void update(Store store) {
+        storeRepository.update(store);
+    }
 }

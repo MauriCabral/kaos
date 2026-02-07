@@ -10,6 +10,7 @@ import org.example.kaos.util.JpaUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,15 +105,25 @@ public class OrderRepository {
         return orderNumber;
     }
 
-    public List<Order> findAll(Boolean isAdmin) {
+    public List<Order> findAll(Boolean isAdmin, int storeId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
             StringBuilder jpql = new StringBuilder("SELECT o FROM Order o LEFT JOIN FETCH o.store");
+            List<String> conditions = new ArrayList<>();
             if (!isAdmin) {
-                jpql.append(" WHERE o.deletedAt IS NULL");
+                conditions.add("o.deletedAt IS NULL");
+            }
+            if (storeId > 0) {
+                conditions.add("o.store.id = :storeId");
+            }
+            if (!conditions.isEmpty()) {
+                jpql.append(" WHERE ").append(String.join(" AND ", conditions));
             }
             jpql.append(" ORDER BY o.id DESC");
             TypedQuery<Order> query = em.createQuery(jpql.toString(), Order.class);
+            if (storeId > 0) {
+                query.setParameter("storeId", storeId);
+            }
             return query.getResultList();
         } finally {
             em.close();
@@ -143,7 +154,7 @@ public class OrderRepository {
     public Map<String, Integer> getBurgerSalesForDate(LocalDate date, Long storeId) {
         EntityManager em = JpaUtil.getEntityManager();
         try {
-            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime startOfDay = date.atTime(3, 0);
             LocalDateTime nextDay = startOfDay.plusDays(1);
 
             String jpql = "SELECT od.productName, od.variantName, SUM(od.quantity) " +

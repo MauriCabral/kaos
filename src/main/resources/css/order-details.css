@@ -55,7 +55,7 @@
 }
 
 .item-name {
-    -fx-font-size: 13px;
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: #333333;
 }

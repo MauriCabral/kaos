@@ -74,6 +74,7 @@
                 <!-- Creador para todos -->
                 <TableColumn fx:id="createdByColumn" styleClass="compact-creator-column" text="Creador" visible="false" />
                 <TableColumn fx:id="paymentMethodColumn" styleClass="compact-payment-column" text="Pago" />
+                <TableColumn fx:id="observationsColumn" styleClass="compact-observations-column" text="Observaciones" />
                 <TableColumn fx:id="subtotalColumn" styleClass="compact-money-column" text="Subtotal" />
                 <TableColumn fx:id="totalColumn" styleClass="compact-total-column" text="Total" />
                 <TableColumn fx:id="actionsColumn" styleClass="compact-actions-column" text=" " />

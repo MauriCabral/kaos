@@ -17,8 +17,11 @@ import org.example.kaos.service.implementation.UserServiceImpl;
 import org.example.kaos.util.DialogUtil;
 import org.example.kaos.util.Session;
 import org.example.kaos.util.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoginController {
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
@@ -27,10 +30,14 @@ public class LoginController {
     @FXML private Label versionLabel;
 
     private final IUserService userService = new UserServiceImpl();
-    private final String version = "v1.0.4";
+    private final String version = "v1.0.21";
 
     @FXML
     public void initialize() {
+        logger.info("Inicializando LoginController. Versión: {}", version);
+        usernameField.setText("admin");
+        passwordField.setText("admin123456");
+
         setupPasswordFields();
         versionLabel.setText(version);
 
@@ -40,12 +47,16 @@ public class LoginController {
             if (scene != null) {
                 scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
                     if (event.getCode() == KeyCode.ENTER) {
+                        logger.debug("Tecla ENTER presionada. Iniciando login...");
                         handleLogin(null);
                         event.consume();
                     }
                 });
+            } else {
+                logger.warn("No se pudo obtener la escena del campo de usuario");
             }
         });
+        logger.debug("LoginController inicializado correctamente");
     }
 
     private void setupPasswordFields() {
@@ -58,19 +69,30 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
+        logger.info("Intento de login para usuario: {}", username);
+
         if (username.isEmpty() || password.isEmpty()) {
+            logger.warn("Login fallido - Campos requeridos vacíos para usuario: {}", username);
             DialogUtil.showError("Campos requeridos", "Por favor, ingrese usuario y contraseña");
             return;
         }
 
-        User user = userService.login(username, password);
+        try {
+            User user = userService.login(username, password);
 
-        if (user == null) {
-            DialogUtil.showError("Error de login", "Usuario o contraseña incorrectos");
-        } else {
-            Session.getInstance().setCurrentUser(user);
-            WindowManager.openWindow("/fxml/main.fxml", "Menú", null);
-            ((Stage) usernameField.getScene().getWindow()).close();
+            if (user == null) {
+                logger.warn("Login fallido - Credenciales incorrectas para usuario: {}", username);
+                DialogUtil.showError("Error de login", "Usuario o contraseña incorrectos");
+            } else {
+                logger.info("Login exitoso para usuario: {} (ID: {})", username, user.getId());
+                Session.getInstance().setCurrentUser(user);
+                logger.debug("Abriendo ventana principal...");
+                WindowManager.openWindow("/fxml/main.fxml", "Menú", null);
+                ((Stage) usernameField.getScene().getWindow()).close();
+            }
+        } catch (Exception e) {
+            logger.error("Error durante el login para usuario: {}", username, e);
+            DialogUtil.showError("Error de login", "Ocurrió un error durante el login: " + e.getMessage());
         }
     }
 
@@ -92,5 +114,4 @@ public class LoginController {
             togglePasswordButton.setText("○");
         }
     }
-
 }

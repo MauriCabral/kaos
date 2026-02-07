@@ -20,49 +20,88 @@
         <Button text="Buscar" styleClass="search-btn" onAction="#handleSearch" minWidth="80"/>
     </HBox>
 
-    <!-- FORMULARIO DE AGREGAR/EDITAR -->
+    <!-- FORMULARIO DE AGREGAR/EDITAR Y CONFIGURACIÓN -->
     <VBox spacing="12" styleClass="form-container">
         <Label text="Nuevo/Editar Delivery" styleClass="form-title"/>
 
-        <GridPane hgap="15" vgap="12">
-            <columnConstraints>
-                <ColumnConstraints percentWidth="30"/>
-                <ColumnConstraints percentWidth="30"/>
-                <ColumnConstraints percentWidth="25"/>
-                <ColumnConstraints percentWidth="15"/>
-            </columnConstraints>
+        <HBox spacing="20">
+            <!-- SECCIÓN IZQUIERDA: DATOS DEL DELIVERY -->
+            <GridPane hgap="15" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
 
-            <!-- FILA 1 -->
-            <VBox spacing="5" GridPane.columnIndex="0">
-                <Label text="Nombre:" styleClass="field-label"/>
-                <TextField fx:id="nameField" promptText="Nombre" styleClass="text-field"/>
+                <!-- FILA 1 -->
+                <VBox spacing="5" GridPane.columnIndex="0">
+                    <Label text="Nombre:" styleClass="field-label"/>
+                    <TextField fx:id="nameField" promptText="Nombre" styleClass="text-field"/>
+                </VBox>
+
+                <VBox spacing="5" GridPane.columnIndex="1">
+                    <Label text="Apellido:" styleClass="field-label"/>
+                    <TextField fx:id="lastNameField" promptText="Apellido" styleClass="text-field"/>
+                </VBox>
+
+                <!-- FILA 2 -->
+                <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                    <Label text="Local Asignado:" styleClass="field-label"/>
+                    <ComboBox fx:id="storeCombo" styleClass="combo-box" prefHeight="30" prefWidth="200"/>
+                </VBox>
+
+                <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <Label text="Teléfono:" styleClass="field-label"/>
+                    <TextField fx:id="phoneField" promptText="+54 9..." styleClass="text-field"/>
+                </VBox>
+
+                <!-- FILA VACÍA PARA ALINEAR BOTÓN -->
+                <Region GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+                
+                <!-- BOTONES DE ACCIÓN DEL FORMULARIO -->
+                <HBox spacing="10" alignment="CENTER_RIGHT" GridPane.rowIndex="3"
+                      GridPane.columnIndex="0" GridPane.columnSpan="2">
+                    <Button fx:id="saveButton" text="Guardar" styleClass="save-btn"
+                            onAction="#handleSave" minWidth="90"/>
+                    <Button fx:id="cancelButton" text="Cancelar" styleClass="cancel-edit-btn"
+                            onAction="#handleCancel" minWidth="90" visible="false"/>
+                </HBox>
+            </GridPane>
+
+            <!-- SEPARADOR VERTICAL -->
+            <Region style="-fx-background-color: #e0e0e0; -fx-min-width: 1; -fx-pref-width: 1; -fx-max-width: 1;"/>
+
+            <!-- SECCIÓN DERECHA: CONFIGURACIÓN DE PRECIO DELIVERY -->
+            <VBox spacing="10">
+                <Label text="Precio Delivery" styleClass="form-title"/>
+                <GridPane hgap="15" vgap="12">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+
+                    <VBox spacing="5" GridPane.columnIndex="0">
+                        <Label text="Local:" styleClass="field-label"/>
+                        <ComboBox fx:id="deliveryStoreCombo" styleClass="combo-box" prefHeight="30" prefWidth="180"
+                                  onAction="#handleStoreSelection"/>
+                    </VBox>
+
+                    <VBox spacing="5" GridPane.columnIndex="1">
+                        <Label text="Precio:" styleClass="field-label"/>
+                        <TextField fx:id="deliveryPriceField" promptText="0.00" styleClass="text-field"/>
+                    </VBox>
+
+                    <!-- FILA VACÍA PARA ALINEAR BOTÓN -->
+                    <Region GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+                    
+                    <!-- BOTÓN DE APLICAR PRECIO -->
+                    <HBox spacing="10" alignment="CENTER" GridPane.rowIndex="3"
+                          GridPane.columnIndex="0" GridPane.columnSpan="2">
+                        <Button fx:id="deliveryPriceButton" text="Aplicar" styleClass="save-btn"
+                                onAction="#handleApplyDeliveryPrice" minWidth="90"/>
+                    </HBox>
+                </GridPane>
             </VBox>
-
-            <VBox spacing="5" GridPane.columnIndex="1">
-                <Label text="Apellido:" styleClass="field-label"/>
-                <TextField fx:id="lastNameField" promptText="Apellido" styleClass="text-field"/>
-            </VBox>
-
-            <VBox spacing="5" GridPane.columnIndex="2">
-                <Label text="Teléfono:" styleClass="field-label"/>
-                <TextField fx:id="phoneField" promptText="+54 9..." styleClass="text-field"/>
-            </VBox>
-
-            <!-- FILA 2 -->
-            <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                <Label text="Local Asignado:" styleClass="field-label"/>
-                <ComboBox fx:id="storeCombo" styleClass="combo-box" prefHeight="30" prefWidth="250"/>
-            </VBox>
-
-            <!-- BOTONES DE ACCIÓN DEL FORMULARIO -->
-            <HBox spacing="10" alignment="CENTER_RIGHT" GridPane.rowIndex="1"
-                  GridPane.columnIndex="2" GridPane.columnSpan="2">
-                <Button fx:id="saveButton" text="Guardar" styleClass="save-btn"
-                        onAction="#handleSave" minWidth="90"/>
-                <Button fx:id="cancelButton" text="Cancelar" styleClass="cancel-edit-btn"
-                        onAction="#handleCancel" minWidth="90" visible="false"/>
-            </HBox>
-        </GridPane>
+        </HBox>
     </VBox>
 
     <!-- TABLA DE DELIVERYS -->

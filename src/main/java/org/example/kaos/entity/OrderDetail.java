@@ -34,7 +34,7 @@ public class OrderDetail {
     @Column(name = "product_name", nullable = false, length = 50)
     private String productName;
 
-    @Column(name = "variant_name", length = 50)
+    @Column(name = "variant_name", length = 200)
     private String variantName;
 
     @Column(name = "unit_price", nullable = false)
@@ -51,6 +51,8 @@ public class OrderDetail {
 
     @Column(name = "observations", length = 500)
     private String observations;
+
+
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

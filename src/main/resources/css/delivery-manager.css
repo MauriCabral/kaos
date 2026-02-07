@@ -243,6 +243,22 @@
     -fx-background-color: #5a6268;
 }
 
+/* SEPARADOR VERTICAL */
+.vertical-separator {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 1px;
+    -fx-padding: 0 1px;
+    -fx-min-width: 2;
+    -fx-pref-width: 2;
+    -fx-max-width: 2;
+}
+
+/* ESTILO PARA CAMPO PRECIO DELIVERY EN FOCO */
+.price-field-focused {
+    -fx-border-color: #28a745 !important;
+    -fx-border-width: 2px !important;
+}
+
 /* BOTÓN CERRAR */
 .cancel-btn {
     -fx-background-color: #e9500e;

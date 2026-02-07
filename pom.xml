@@ -16,7 +16,6 @@
         <maven.compiler.target>21</maven.compiler.target>
         <junit.version>5.12.1</junit.version>
         <javafx.version>21.0.2</javafx.version>
-        <javafx.jdk.path>C:/kaos/javafx-jdk</javafx.jdk.path>
     </properties>
 
     <dependencies>
@@ -52,12 +51,6 @@
             <groupId>com.dlsc.formsfx</groupId>
             <artifactId>formsfx-core</artifactId>
             <version>11.6.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
@@ -73,12 +66,6 @@
             <groupId>eu.hansolo</groupId>
             <artifactId>tilesfx</artifactId>
             <version>21.0.9</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Database -->
@@ -218,13 +205,12 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputFile>c:/kaos/kaos.jar</outputFile>
+                            <outputFile>${project.build.directory}/kaos.jar</outputFile>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.example.kaos.Launcher</mainClass>
                                 </transformer>
-                                <!-- Incluir archivos de recursos -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.handlers</resource>
@@ -249,24 +235,7 @@
                 </executions>
             </plugin>
 
-            <!-- JavaFX Maven Plugin (para desarrollo) -->
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>org.example.kaos.Launcher</mainClass>
-                    <options>
-                        <!-- Para desarrollo local -->
-                        <option>--module-path</option>
-                        <option>${javafx.jdk.path}/lib</option>
-                        <option>--add-modules</option>
-                        <option>javafx.controls,javafx.fxml,javafx.web,javafx.swing</option>
-                    </options>
-                </configuration>
-            </plugin>
-
-            <!-- Launch4j Plugin para crear .exe -->
+            <!-- Launch4j Plugin configurado con tus rutas exactas -->
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
@@ -281,13 +250,13 @@
                         <configuration>
                             <dontWrapJar>false</dontWrapJar>
                             <headerType>gui</headerType>
-                            <jar>c:/kaos/kaos.jar</jar>
+                            <jar>${project.build.directory}/kaos.jar</jar>
                             <outfile>${project.build.directory}/kaos.exe</outfile>
-                            <errTitle></errTitle>
+                            <errTitle>Kaos - Error</errTitle>
                             <cmdLine></cmdLine>
                             <chdir>.</chdir>
                             <priority>normal</priority>
-                            <downloadUrl></downloadUrl>
+                            <downloadUrl>https://www.oracle.com/java/technologies/javase-jdk21-downloads.html</downloadUrl>
                             <supportUrl></supportUrl>
                             <stayAlive>false</stayAlive>
                             <restartOnCrash>false</restartOnCrash>
@@ -297,33 +266,54 @@
                                 <mainClass>org.example.kaos.Launcher</mainClass>
                             </classPath>
                             <jre>
-                                <path>%JAVA_HOME%;%PATH%</path>
+                                <path>C:\Program Files\Java\jdk-21</path>
                                 <jdkPreference>jdkOnly</jdkPreference>
                                 <requires64Bit>false</requires64Bit>
                                 <minVersion>21.0</minVersion>
                                 <maxVersion></maxVersion>
                                 <opts>
-                                    <opt>--module-path "C:\kaos\javafx-sdk-21.0.9\lib"</opt>
-                                    <opt>--add-modules javafx.controls,javafx.fxml</opt>
+                                    <opt>--module-path</opt>
+                                    <opt>C:\kaos\javafx-sdk-21.0.9\lib</opt>
+                                    <opt>--add-modules</opt>
+                                    <opt>javafx.controls,javafx.fxml,javafx.web,javafx.swing</opt>
                                     <opt>-Dprism.order=sw</opt>
                                     <opt>-Dfile.encoding=UTF-8</opt>
+                                    <opt>-Djava.net.preferIPv4Stack=true</opt>
                                 </opts>
                             </jre>
                             <versionInfo>
                                 <fileVersion>1.0.0.0</fileVersion>
                                 <txtFileVersion>1.0.0.0</txtFileVersion>
                                 <fileDescription>Kaos Application</fileDescription>
-                                <copyright>2023</copyright>
+                                <copyright>2024</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>1.0.0.0</txtProductVersion>
                                 <productName>Kaos</productName>
-                                <companyName>Your Company</companyName>
+                                <companyName>Kaos Company</companyName>
                                 <internalName>kaos</internalName>
                                 <originalFilename>kaos.exe</originalFilename>
                             </versionInfo>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- JavaFX Maven Plugin para desarrollo -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>org.example.kaos.Launcher</mainClass>
+                    <options>
+                        <option>--module-path</option>
+                        <option>C:/kaos/javafx-sdk-21.0.9/lib</option>
+                        <option>--add-modules</option>
+                        <option>javafx.controls,javafx.fxml,javafx.web,javafx.swing</option>
+                        <option>-Dprism.order=sw</option>
+                        <option>-Dfile.encoding=UTF-8</option>
+                    </options>
+                </configuration>
             </plugin>
 
         </plugins>

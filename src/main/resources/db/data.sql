@@ -17,7 +17,7 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Insert users
 INSERT INTO users (username, password, role, store_id) VALUES
-('admin', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPjYfYf5Hf5K6', 'ADMIN', NULL),
-('Despeñaderos', '$2a$12$abcdefghijklmnopqrstuvwxYz1234567890', 'LOCAL', 1),
-('SanAgustin', '$2a$12$zyxwvutsrqponmlkjihgfedcba0987654321', 'LOCAL', 2)
+('admin', 'admin123456', 'ADMIN', 1),
+('Despeñaderos', 'despe123', 'LOCAL', 1),
+('SanAgustin', 'sanagustin123', 'LOCAL', 2)
 ON CONFLICT (username) DO NOTHING;

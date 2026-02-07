@@ -6,8 +6,10 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -59,7 +61,6 @@ public class OrderDetailsController {
     private final TicketPrintServiceImpl ticketPrintService = new TicketPrintServiceImpl();
 
     private List<OrderDetail> orderDetails;
-    private List<Delivery> deliveriesList = new ArrayList<>();
     private Order order;
     private Stage stage;
     private boolean isEditMode = false;
@@ -71,6 +72,8 @@ public class OrderDetailsController {
     private double delivery = 0;
     private double subtotal = 0;
     private double total = 0;
+    private boolean orderConfirmed = false;
+    private boolean orderCancelled = false;
 
     public void initialize() {
         setupDefaultData();
@@ -119,6 +122,10 @@ public class OrderDetailsController {
         transferCheckBox.setVisible(true);
         deletedCheckBox.setVisible(false);
 
+        if (isAdmin) {
+            btnConfirm.setDisable(true);
+        }
+
         setupDefaultData();
         updateOrderDisplay();
     }
@@ -138,6 +145,7 @@ public class OrderDetailsController {
         cashCheckBox.setDisable(true);
         transferCheckBox.setDisable(true);
         deliveryComboBox.setDisable(true);
+        deletedCheckBox.setDisable(true);
 
         showPaymentValues();
 
@@ -214,7 +222,14 @@ public class OrderDetailsController {
     private void setupDefaultData() {
         orderNumberLabel.setText("#ORD-");
         customerNameField.setText("");
-        deliveryPriceField.setText("2000");
+
+        Store store = Session.getInstance().getCurrentUser().getStore();
+        if (store != null && store.getDeliveryPrice() != null) {
+            deliveryPriceField.setText(String.valueOf(store.getDeliveryPrice()));
+        } else {
+            deliveryPriceField.setText("0.00");
+        }
+
         cashAmountField.setText("0");
         transferAmountField.setText("0");
         notesTextArea.setText("");
@@ -251,22 +266,54 @@ public class OrderDetailsController {
 
     private void setupKeyboardShortcuts() {
         Platform.runLater(() -> {
-            if (stage != null) {
-                stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-                    if (event.getCode() == KeyCode.ESCAPE) {
-                        goBack();
-                        event.consume();
-                    } else if (event.getCode() == KeyCode.SPACE) {
-                        // Only confirm order if focus is not on notesTextArea
-                        if (!notesTextArea.isFocused()) {
-                            confirmOrder(null);
-                            event.consume();
-                        }
-                        // If focused on notesTextArea, do nothing (allow space to be typed)
+            if (stage == null || stage.getScene() == null) return;
+
+            stage.getScene().addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
+                Node target = (Node) event.getTarget();
+
+                if (!isInsideTextInput(target)) {
+                    stage.getScene().getRoot().requestFocus();
+                }
+            });
+
+            stage.getScene().addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+
+                if (event.getCode() == KeyCode.ESCAPE) {
+                    goBack();
+                    return;
+                }
+
+                if (event.getCode() == KeyCode.SPACE) {
+
+                    if (isTextInputFocused()) {
+                        return;
                     }
-                });
-            }
+
+                    confirmOrder(null);
+                    event.consume();
+                }
+            });
         });
+    }
+
+    private boolean isTextInputFocused() {
+        return customerNameField.isFocused()
+                || customerAddressField.isFocused()
+                || customerPhoneField.isFocused()
+                || deliveryPriceField.isFocused()
+                || cashAmountField.isFocused()
+                || transferAmountField.isFocused()
+                || notesTextArea.isFocused();
+    }
+
+    private boolean isInsideTextInput(Node node) {
+        while (node != null) {
+            if (node instanceof TextInputControl) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
     }
 
     private void loadOrderData() {
@@ -434,6 +481,13 @@ public class OrderDetailsController {
             }
         }
 
+        if (detail.getObservations() != null && !detail.getObservations().isEmpty()) {
+            String labelObs = detail.getObservations().trim();
+            Label obsLabel = new Label("Obs: " + labelObs);
+            obsLabel.setStyle("-fx-font-style: italic; -fx-text-fill: black; -fx-font-size: 12px;");
+            infoBox.getChildren().add(obsLabel);
+        }
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -585,6 +639,7 @@ public class OrderDetailsController {
 
                 DialogUtil.showInfo("Éxito","Pedido confirmado correctamente");
 
+                orderConfirmed = true;
                 orderDetails.clear();
 
                 ticketPrintService.print(savedOrder.getId());
@@ -697,6 +752,7 @@ public class OrderDetailsController {
         } else {
             if (DialogUtil.showConfirmation("Cancelar", "¿Estás seguro de cancelar?")) {
                 orderDetails.clear();
+                orderCancelled = true;
                 goBack();
             }
         }
@@ -749,5 +805,17 @@ public class OrderDetailsController {
 
     public void orderPrint(ActionEvent actionEvent) {
         ticketPrintService.generatePDF(order.getId());
+    }
+    
+    public boolean isOrderConfirmed() {
+        return orderConfirmed;
+    }
+    
+    public boolean isOrderCancelled() {
+        return orderCancelled;
+    }
+    
+    public Stage getStage() {
+        return stage;
     }
 }

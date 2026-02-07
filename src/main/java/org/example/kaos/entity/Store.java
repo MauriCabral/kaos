@@ -17,4 +17,7 @@ public class Store {
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;
+
+    @Column(name = "delivery_price", nullable = false)
+    private Double deliveryPrice;
 }

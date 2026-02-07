@@ -31,6 +31,7 @@ import org.example.kaos.util.WindowManager;
 import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -42,7 +43,6 @@ public class OrderController implements Initializable {
     @FXML private Label selectedProductName;
     @FXML private Label quantityLabel;
     @FXML private VBox orderItemsContainer;
-    @FXML private Label totalAmount;
     @FXML private Label totalLabel;
     @FXML private VBox totalsContainer;
     @FXML private Button editProductsBtn;
@@ -64,6 +64,7 @@ public class OrderController implements Initializable {
     private String currentSelectedVariantName;
     private ExtraItem currentSelectedExtra;
     private ExtraItem currentSelectedCombo;
+    private String currentSelectedSalsaType;
     private boolean isAdmin = false;
 
     @Override
@@ -254,6 +255,44 @@ public class OrderController implements Initializable {
         return menuButton;
     }
 
+    private Button createSalsaMenuButton(ExtraItem salsa) {
+        Button menuButton = new Button("⋮");
+        menuButton.getStyleClass().add("menu-button");
+        menuButton.setOnAction(e -> {
+            if (currentContextMenu != null) {
+                currentContextMenu.hide();
+            }
+            ContextMenu salsaMenu = createSalsaMenu(salsa);
+            salsaMenu.show(menuButton, Side.BOTTOM, 0, 0);
+            currentContextMenu = salsaMenu;
+        });
+        return menuButton;
+    }
+
+    private ContextMenu createSalsaMenu(ExtraItem salsa) {
+        ContextMenu salsaMenu = new ContextMenu();
+
+        List<String> salsaTypes = Arrays.asList(
+                "Kaos",
+                "Terra Nova",
+                "Ketchup",
+                "Mayo",
+                "Mostaza",
+                "Dolce Inferno",
+                "BBQ"
+        );
+
+        for (String salsaType : salsaTypes) {
+            MenuItem menuItem = new MenuItem(salsaType);
+            menuItem.setOnAction(e -> {
+                selectSalsa(salsa, salsaType);
+            });
+            salsaMenu.getItems().add(menuItem);
+        }
+
+        return salsaMenu;
+    }
+
     private ContextMenu createVariantMenu(Burger burger) {
         ContextMenu variantMenu = new ContextMenu();
 
@@ -351,6 +390,11 @@ public class OrderController implements Initializable {
             StackPane.setAlignment(deleteButton, Pos.TOP_RIGHT);
             StackPane.setMargin(deleteButton, new Insets(5, 5, 0, 0));
             imageContainer.getChildren().addAll(imageView, deleteButton);
+        } else if (!isEditMode && extraItem.isSalsa()) {
+            Button menuButton = createSalsaMenuButton(extraItem);
+            StackPane.setAlignment(menuButton, Pos.TOP_RIGHT);
+            StackPane.setMargin(menuButton, new Insets(5, 5, 0, 0));
+            imageContainer.getChildren().addAll(imageView, menuButton);
         } else {
             imageContainer.getChildren().add(imageView);
         }
@@ -377,6 +421,31 @@ public class OrderController implements Initializable {
         });
 
         return card;
+    }
+
+    private void selectSalsa(ExtraItem salsa, String salsaType) {
+        selectedProductPanel.setVisible(true);
+
+        try {
+            if (salsa.getImageData() != null && salsa.getImageData().length > 0) {
+                Image image = new Image(new ByteArrayInputStream(salsa.getImageData()));
+                selectedProductImage.setImage(image);
+            } else {
+                loadDefaultImage(selectedProductImage);
+            }
+        } catch (Exception e) {
+            loadDefaultImage(selectedProductImage);
+        }
+
+        selectedProductName.setText(salsa.getName() + " " + salsaType + " - $" + String.valueOf(salsa.getPrice().intValue()).trim());
+
+        currentSelectedExtra = salsa;
+        currentSelectedBurger = null;
+        currentSelectedCombo = null;
+        currentSelectedSalsaType = salsaType;
+
+        quantity = 1;
+        quantityLabel.setText(String.valueOf(quantity));
     }
 
     private void selectExtra(ExtraItem extra) {
@@ -501,6 +570,9 @@ public class OrderController implements Initializable {
             orderDetail = new OrderDetail();
             orderDetail.setExtraItem(currentSelectedExtra);
             orderDetail.setProductName(currentSelectedExtra.getName());
+            if (currentSelectedSalsaType != null && !currentSelectedSalsaType.isEmpty()) {
+                orderDetail.setVariantName(currentSelectedSalsaType);
+            }
             orderDetail.setUnitPrice(currentSelectedExtra.getPrice());
             orderDetail.setQuantity(quantity);
             orderDetail.calculateSubtotal();
@@ -533,6 +605,7 @@ public class OrderController implements Initializable {
         currentSelectedVariantName = null;
         currentSelectedExtra = null;
         currentSelectedCombo = null;
+        currentSelectedSalsaType = null;
         selectedProductPanel.setVisible(false);
     }
 
@@ -543,36 +616,17 @@ public class OrderController implements Initializable {
             return;
         }
 
-        WindowManager.openOrderDetailsWindow(currentOrderDetails, null, false);
-        updateOrderSummary();
-    }
-
-    @FXML
-    private void clearOrder() {
+        OrderDetailsController controller = WindowManager.openOrderDetailsWindow(currentOrderDetails, null, false);
+        if (controller != null && (controller.isOrderConfirmed() || controller.isOrderCancelled())) {
+            // Clear the order summary if order was confirmed or cancelled
+            currentOrderDetails.clear();
+            updateOrderSummary();
+        }
     }
 
     @FXML
     public void openEditProducts(ActionEvent actionEvent) {
         isEditMode = !isEditMode;
-
-//        for (javafx.scene.Node node : productsFlowPane.getChildren()) {
-//            if (node instanceof VBox) {
-//                VBox productCard = (VBox) node;
-//
-//                if (productCard.getStyleClass().contains("add-button")) {
-//                    productCard.setVisible(!isEditMode);
-//                    continue;
-//                }
-//
-//                if (isEditMode) {
-//                    productCard.getStyleClass().add("edit-mode");
-//                    productCard.setStyle("-fx-opacity: 0.8;");
-//                } else {
-//                    productCard.getStyleClass().remove("edit-mode");
-//                    productCard.setStyle("-fx-opacity: 1.0;");
-//                }
-//            }
-//        }
 
         if (isEditMode) {
             editProductsBtn.getStyleClass().add("edit-mode-active");

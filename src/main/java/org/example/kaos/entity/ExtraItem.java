@@ -17,7 +17,7 @@ public class ExtraItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "extra_id", nullable = false, unique = true)
+    @Column(name = "extra_id", nullable = false)
     private int extraItemId;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -39,8 +39,12 @@ public class ExtraItem {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "is_salsa", nullable = false)
+    private boolean isSalsa;
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
+        isSalsa = false;
     }
 }

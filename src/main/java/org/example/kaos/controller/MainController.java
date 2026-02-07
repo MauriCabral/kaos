@@ -131,6 +131,7 @@ public class MainController {
             switchToTab(tabId);
 
         } catch (IOException e) {
+            e.printStackTrace();
             DialogUtil.showError("Error", "No se pudo cargar: " + title + ". " + e.getMessage());
         }
     }

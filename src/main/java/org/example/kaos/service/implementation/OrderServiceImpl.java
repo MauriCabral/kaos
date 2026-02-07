@@ -43,8 +43,8 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public List<Order> getAllOrders(Boolean isAdmin) {
-        return orderRepository.findAll(isAdmin);
+    public List<Order> getAllOrders(Boolean isAdmin, int storeId) {
+        return orderRepository.findAll(isAdmin,storeId);
     }
 
     @Override

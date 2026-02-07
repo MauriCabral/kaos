@@ -10,6 +10,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.example.kaos.entity.*;
@@ -73,8 +74,19 @@ public class BurgerSelectionController implements Initializable {
                         handleCancel();
                         event.consume();
                     } else if (event.getCode() == KeyCode.SPACE) {
-                        handleAddToOrder();
-                        event.consume();
+                        // Only handle space if focus is not on observationsField
+                        if (scene.getFocusOwner() != observationsField) {
+                            handleAddToOrder();
+                            event.consume();
+                        }
+                        // If focused on observationsField, allow space to be typed
+                    }
+                });
+
+                // Add mouse event filter to remove focus from observationsField when clicking outside
+                scene.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                    if (scene.getFocusOwner() == observationsField && event.getTarget() != observationsField) {
+                        scene.getRoot().requestFocus();
                     }
                 });
             }
@@ -316,7 +328,8 @@ public class BurgerSelectionController implements Initializable {
         orderDetail.setVariantName(variantName);
 
         orderDetail.setQuantity(quantity);
-        orderDetail.setObservations(observationsField.getText().trim().isEmpty() ? observationsField.getText().trim() : null);
+        String obs = observationsField.getText().trim();
+        orderDetail.setObservations(obs.isEmpty() ? null : obs);
 
         double basePrice = selectedVariant.getPrice();
         double toppingsTotal = 0;
@@ -386,9 +399,4 @@ public class BurgerSelectionController implements Initializable {
             updatePrice();
         });
     }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
 }

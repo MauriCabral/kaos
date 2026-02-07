@@ -21,9 +21,15 @@
         <properties>
 
             <!-- CONEXIÓN -->
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/kaos"/>
-            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
-            <property name="jakarta.persistence.jdbc.password" value="password"/>
+<!--            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/kaos"/>-->
+<!--            <property name="jakarta.persistence.jdbc.user" value="postgres"/>-->
+<!--            <property name="jakarta.persistence.jdbc.password" value="password"/>-->
+<!--            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>-->
+
+            <!-- Azure PostgreSQL -->
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://kaos.postgres.database.azure.com:5432/kaos?ssl=true&amp;sslmode=require"/>
+            <property name="jakarta.persistence.jdbc.user" value="kaos_admin"/>
+            <property name="jakarta.persistence.jdbc.password" value="Nakefranmati666-"/>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
 
             <!-- HIBERNATE -->
