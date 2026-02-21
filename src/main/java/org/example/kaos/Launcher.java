@@ -15,7 +15,6 @@ public class Launcher {
     public static void main(String[] args) {
         logger.info("Iniciando Launcher de Kaos...");
         try {
-            // Check for update file and replace if exists
             String exePath = ProcessHandle.current().info().command().orElse(null);
             if (exePath != null) {
                 logger.debug("Ruta del ejecutable: {}", exePath);

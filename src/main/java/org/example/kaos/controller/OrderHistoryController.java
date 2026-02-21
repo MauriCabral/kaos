@@ -119,6 +119,9 @@ public class OrderHistoryController implements Initializable {
             loadOrders();
             setupActionsColumn();
             setupAutoFilterListeners();
+            
+            todayCheck.setSelected(true);
+            applyFilters();
         } catch (Exception e) {
             e.printStackTrace();
             DialogUtil.showError("Error de Inicialización", "No se pudo inicializar la pantalla: " + e.getMessage());
@@ -147,7 +150,6 @@ public class OrderHistoryController implements Initializable {
         checkboxColumn.setMaxWidth(30);
         checkboxColumn.setMinWidth(30);
 
-        // Checkbox column
         checkboxColumn.setCellFactory(param -> new TableCell<Order, Void>() {
             private final CheckBox checkBox = new CheckBox();
 
@@ -305,11 +307,9 @@ public class OrderHistoryController implements Initializable {
                         Order order = getItem();
                         editOrder(order);
                     } else if (event.getClickCount() == 1 && !isEmpty()) {
-                        // Check if the click target is not a button (action buttons) and order is delivery
                         if (!(event.getTarget() instanceof javafx.scene.control.Button)) {
                             Order order = getItem();
                             if (Boolean.TRUE.equals(order.getIsDelivery()) && order.getDelivery() == null) {
-                                // Toggle checkbox
                                 boolean current = checkedOrders.getOrDefault(order, false);
                                 checkedOrders.put(order, !current);
                                 ordersTable.refresh();
@@ -380,11 +380,14 @@ public class OrderHistoryController implements Initializable {
 
     private void loadOrders() {
         try {
-            List<Order> allOrders = orderService.getAllOrders(isAdmin, Session.getInstance().getCurrentUser().getStore().getId().intValue());
+            int storeId = 0;
+            if (Session.getInstance().getCurrentUser().getStore() != null) {
+                storeId = Session.getInstance().getCurrentUser().getStore().getId() != null ? Session.getInstance().getCurrentUser().getStore().getId().intValue() : 0;
+            }
+            List<Order> allOrders = orderService.getAllOrders(isAdmin, storeId);
             orders.setAll(allOrders);
             ordersTable.setItems(orders);
 
-            // Clear checked orders when reloading
             checkedOrders.clear();
             updateAssignButtonState();
 
@@ -429,11 +432,8 @@ public class OrderHistoryController implements Initializable {
             Order fullOrder = orderService.getOrderById(order.getId());
             if (fullOrder != null && fullOrder.getOrderDetails() != null) {
                 OrderDetailsController controller = WindowManager.openOrderDetailsWindow(null, fullOrder, true);
-                if (controller != null && controller.getStage() != null) {
-                    controller.getStage().setOnHidden(e -> {
-                        loadOrders();
-                    });
-                }
+                // Since showAndWait() blocks, we can just call loadOrders() directly after the window closes
+                loadOrders();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -523,18 +523,19 @@ public class OrderHistoryController implements Initializable {
                         matches = false;
                     } else {
                         LocalDateTime orderDateTime = order.getCreatedAt();
-                        LocalDate orderDate = orderDateTime.toLocalDate();
-                        LocalTime orderTime = orderDateTime.toLocalTime();
+                        LocalTime currentTime = LocalTime.now();
+                        LocalDateTime startTime;
+                        LocalDateTime endTime;
 
-                        boolean isInRange = false;
-
-                        if (orderDate.equals(today) && !orderTime.isBefore(LocalTime.of(3, 0))) {
-                            isInRange = true;
+                        if (currentTime.isBefore(LocalTime.of(3, 0))) {
+                            startTime = today.minusDays(1).atTime(15, 0);
+                            endTime = today.atTime(3, 0);
+                        } else {
+                            startTime = today.atTime(15, 0);
+                            endTime = today.plusDays(1).atTime(3, 0);
                         }
 
-                        if (orderDate.equals(today.plusDays(1)) && !orderTime.isAfter(LocalTime.of(3, 0))) {
-                            isInRange = true;
-                        }
+                        boolean isInRange = !orderDateTime.isBefore(startTime) && !orderDateTime.isAfter(endTime);
 
                         if (!isInRange) {
                             matches = false;
@@ -663,6 +664,11 @@ public class OrderHistoryController implements Initializable {
         try {
             String userHome = System.getProperty("user.home");
             File desktopDir = new File(userHome, "Desktop");
+            
+            File initialDirectory = desktopDir;
+            if (!initialDirectory.exists() || !initialDirectory.isDirectory()) {
+                initialDirectory = new File(userHome);
+            }
 
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Cerrar Caja - Exportar Deliveries");
@@ -670,7 +676,7 @@ public class OrderHistoryController implements Initializable {
                     new FileChooser.ExtensionFilter("Archivos Excel", "*.xlsx")
             );
 
-            fileChooser.setInitialDirectory(desktopDir);
+            fileChooser.setInitialDirectory(initialDirectory);
 
             fileChooser.setInitialFileName("cierre_caja_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx");
 
@@ -690,10 +696,10 @@ public class OrderHistoryController implements Initializable {
             LocalTime currentTime = LocalTime.now();
             
             if (currentTime.isBefore(LocalTime.of(3, 0))) {
-                startTime = yesterday.atTime(18, 0);
+                startTime = yesterday.atTime(15, 0);
                 endTime = today.atTime(3, 0);
             } else {
-                startTime = today.atTime(18, 0);
+                startTime = today.atTime(15, 0);
                 endTime = today.plusDays(1).atTime(3, 0);
             }
 
@@ -712,7 +718,6 @@ public class OrderHistoryController implements Initializable {
                 return;
             }
 
-            // Group data by delivery
             java.util.Map<Long, DeliveryData> data = new java.util.HashMap<>();
 
             for (Order order : deliveryOrders) {
@@ -726,23 +731,19 @@ public class OrderHistoryController implements Initializable {
                     .addOrder(cash);
             }
 
-            // Create simple Excel
             Workbook workbook = new XSSFWorkbook();
             Sheet sheet = workbook.createSheet("Cierre de Caja");
 
-            // Header style
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
 
-            // Data style
             CellStyle dataStyle = workbook.createCellStyle();
 
             CellStyle currencyStyle = workbook.createCellStyle();
             currencyStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("[$$-es-AR]#,##0"));
 
-            // Headers
             Row headerRow = sheet.createRow(0);
             String[] headers = {"Delivery", "Efectivo", "Cantidad de Pedidos"};
             for (int i = 0; i < headers.length; i++) {
@@ -751,7 +752,6 @@ public class OrderHistoryController implements Initializable {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Data rows
             int rowNum = 1;
             for (DeliveryData dd : data.values()) {
                 Row row = sheet.createRow(rowNum++);
@@ -770,7 +770,6 @@ public class OrderHistoryController implements Initializable {
                 cell2.setCellStyle(dataStyle);
             }
 
-            // Auto size columns
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
@@ -781,10 +780,7 @@ public class OrderHistoryController implements Initializable {
 
             workbook.close();
 
-            String successMessage = String.format(
-                    "Archivo guardado en:\n%s",
-                    file.getAbsolutePath()
-            );
+            String successMessage = String.format("Archivo guardado en:\n%s", file.getAbsolutePath());
 
             DialogUtil.showInfo("Cierre de Caja Exitoso", successMessage);
 
@@ -815,6 +811,11 @@ public class OrderHistoryController implements Initializable {
         try {
             String userHome = System.getProperty("user.home");
             File desktopDir = new File(userHome, "Desktop");
+            
+            File initialDirectory = desktopDir;
+            if (!initialDirectory.exists() || !initialDirectory.isDirectory()) {
+                initialDirectory = new File(userHome);
+            }
 
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Exportar órdenes a Excel");
@@ -822,7 +823,7 @@ public class OrderHistoryController implements Initializable {
                     new FileChooser.ExtensionFilter("Archivos Excel", "*.xlsx")
             );
 
-            fileChooser.setInitialDirectory(desktopDir);
+            fileChooser.setInitialDirectory(initialDirectory);
 
             fileChooser.setInitialFileName("orders_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx");
 
@@ -1008,7 +1009,6 @@ public class OrderHistoryController implements Initializable {
             return;
         }
 
-        // Filter delivery orders without assigned delivery
         List<Order> deliveryOrders = checkedOrdersList.stream()
                 .filter(order -> Boolean.TRUE.equals(order.getIsDelivery()) && order.getDelivery() == null)
                 .toList();
@@ -1018,14 +1018,12 @@ public class OrderHistoryController implements Initializable {
             return;
         }
 
-        // Get store ID from the first order (assuming all are from same store)
         Long storeId = deliveryOrders.get(0).getStore() != null ? deliveryOrders.get(0).getStore().getId() : null;
         if (storeId == null) {
             DialogUtil.showError("Error", "No se pudo determinar el local de los pedidos.");
             return;
         }
 
-        // Get available deliveries for the store
         List<org.example.kaos.entity.Delivery> availableDeliveries = deliveryService.findByStoreId(storeId);
 
         if (availableDeliveries.isEmpty()) {
@@ -1033,11 +1031,9 @@ public class OrderHistoryController implements Initializable {
             return;
         }
 
-        // Show modal to select delivery
         Delivery selectedDelivery = showDeliverySelectionDialog(availableDeliveries);
 
         if (selectedDelivery != null) {
-            // Assign delivery to all selected orders
             for (Order order : deliveryOrders) {
                 order.setDelivery(selectedDelivery);
                 try {
@@ -1059,7 +1055,6 @@ public class OrderHistoryController implements Initializable {
         dialog.setTitle("Seleccionar Delivery");
         dialog.setHeaderText("Selecciona un delivery para asignar a los pedidos:");
 
-        // Create table for deliveries
         TableView<Delivery> deliveryTable = new TableView<>();
         TableColumn<Delivery, String> nameCol = new TableColumn<>("Nombre");
         nameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getName()));

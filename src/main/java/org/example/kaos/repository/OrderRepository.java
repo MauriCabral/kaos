@@ -7,6 +7,8 @@ import jakarta.persistence.TypedQuery;
 import org.example.kaos.entity.Burger;
 import org.example.kaos.entity.Order;
 import org.example.kaos.util.JpaUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +20,9 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 
 public class OrderRepository {
+    private static final Logger logger = LoggerFactory.getLogger(OrderRepository.class);
     public Order save(Order order) {
+        logger.debug("Guardando pedido: {}", order);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -26,28 +30,36 @@ public class OrderRepository {
             if (order.getId() == null) {
                 em.persist(order);
                 em.flush();
+                logger.info("Pedido persistido con ID: {}", order.getId());
 
                 String orderNumber = String.format("ORD-%04d", order.getId());
                 order.setOrderNumber(orderNumber);
+                logger.debug("Número de pedido generado: {}", orderNumber);
 
                 order = em.merge(order);
             } else {
                 order = em.merge(order);
+                logger.info("Pedido actualizado con ID: {}", order.getId());
             }
 
             em.getTransaction().commit();
+            logger.debug("Transacción completada");
             return order;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
+                logger.error("Rollback de transacción al guardar pedido: {}", e.getMessage(), e);
             }
+            logger.error("Error al guardar pedido: {}", e.getMessage(), e);
             throw e;
         } finally {
             em.close();
+            logger.debug("EntityManager cerrado");
         }
     }
 
     public Order findById(Long id) {
+        logger.debug("Buscando pedido por ID: {}", id);
         EntityManager em = JpaUtil.getEntityManager();
         Order order = null;
         try {
@@ -55,6 +67,8 @@ public class OrderRepository {
                     "SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.id = :orderId", Order.class);
             query.setParameter("orderId", id);
             order = query.getSingleResult();
+            logger.debug("Pedido encontrado por ID: {}", id);
+            
             // Force initialization of collections before session closes
             if (order != null) {
                 order.getOrderDetails().size();
@@ -63,6 +77,9 @@ public class OrderRepository {
                 }
             }
         } catch (NoResultException e) {
+            logger.warn("No se encontró pedido con ID: {}", id);
+        } catch (Exception e) {
+            logger.error("Error al buscar pedido por ID: {}", id, e);
         } finally {
             em.close();
         }
@@ -70,42 +87,62 @@ public class OrderRepository {
     }
 
     public boolean existsByOrderNumber(String orderNumber) {
+        logger.debug("Verificando existencia de pedido por número: {}", orderNumber);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             TypedQuery<Long> query = em.createQuery(
                     "SELECT COUNT(o) FROM Order o WHERE o.orderNumber = :orderNumber", Long.class);
             query.setParameter("orderNumber", orderNumber);
-            return query.getSingleResult() > 0;
+            boolean exists = query.getSingleResult() > 0;
+            logger.debug("Pedido con número {} {}", orderNumber, exists ? "existe" : "no existe");
+            return exists;
+        } catch (Exception e) {
+            logger.error("Error al verificar existencia de pedido por número: {}", orderNumber, e);
+            return false;
         } finally {
             em.close();
         }
     }
 
     public String getLastOrderNumber() {
+        logger.debug("Obteniendo último número de pedido");
         EntityManager em = JpaUtil.getEntityManager();
         try {
             Query query = em.createQuery(
                     "SELECT MAX(o.orderNumber) FROM Order o WHERE o.orderNumber LIKE 'ORD-%'");
             String lastNumber = (String) query.getSingleResult();
-            return lastNumber != null ? lastNumber : "ORD-0000";
+            lastNumber = lastNumber != null ? lastNumber : "ORD-0000";
+            logger.debug("Último número de pedido: {}", lastNumber);
+            return lastNumber;
+        } catch (Exception e) {
+            logger.error("Error al obtener último número de pedido: {}", e.getMessage(), e);
+            return "ORD-0000";
         } finally {
             em.close();
         }
     }
 
     public String generateUniqueOrderNumber() {
+        logger.debug("Generando número de pedido único");
         String baseNumber = "ORD-" + (System.currentTimeMillis() % 10000);
         String orderNumber = baseNumber;
         int attempt = 0;
 
         while (existsByOrderNumber(orderNumber) && attempt < 100) {
             orderNumber = baseNumber + "-" + (++attempt);
+            logger.debug("Intentando número de pedido: {}", orderNumber);
         }
 
+        if (attempt >= 100) {
+            logger.error("No se pudo generar un número de pedido único después de 100 intentos");
+        }
+
+        logger.debug("Número de pedido único generado: {}", orderNumber);
         return orderNumber;
     }
 
     public List<Order> findAll(Boolean isAdmin, int storeId) {
+        logger.debug("Buscando todos los pedidos - isAdmin: {}, storeId: {}", isAdmin, storeId);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             StringBuilder jpql = new StringBuilder("SELECT o FROM Order o LEFT JOIN FETCH o.store");
@@ -124,23 +161,32 @@ public class OrderRepository {
             if (storeId > 0) {
                 query.setParameter("storeId", storeId);
             }
-            return query.getResultList();
+            List<Order> orders = query.getResultList();
+            logger.debug("Se encontraron {} pedidos", orders.size());
+            return orders;
+        } catch (Exception e) {
+            logger.error("Error al buscar todos los pedidos - isAdmin: {}, storeId: {}", isAdmin, storeId, e);
+            return new ArrayList<>();
         } finally {
             em.close();
         }
     }
 
     public Order update(Order order) {
+        logger.debug("Actualizando pedido: {}", order);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             order = em.merge(order);
             em.getTransaction().commit();
+            logger.info("Pedido actualizado con ID: {}", order.getId());
             return order;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
+                logger.error("Rollback de transacción al actualizar pedido: {}", e.getMessage(), e);
             }
+            logger.error("Error al actualizar pedido: {}", e.getMessage(), e);
             throw new RuntimeException("Error updating order", e);
         } finally {
             em.close();
@@ -152,6 +198,7 @@ public class OrderRepository {
     }
 
     public Map<String, Integer> getBurgerSalesForDate(LocalDate date, Long storeId) {
+        logger.debug("Obteniendo ventas de hamburguesas para fecha: {}, storeId: {}", date, storeId);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             LocalDateTime startOfDay = date.atTime(3, 0);
@@ -181,7 +228,11 @@ public class OrderRepository {
                 Long totalQty = (Long) row[2];
                 sales.put(type != null ? name + " (" + type + ")" : name, totalQty.intValue());
             }
+            logger.debug("Se encontraron {} registros de ventas para la fecha: {}", sales.size(), date);
             return sales;
+        } catch (Exception e) {
+            logger.error("Error al obtener ventas de hamburguesas para fecha: {}, storeId: {}", date, storeId, e);
+            return new HashMap<>();
         } finally {
             em.close();
         }
@@ -192,6 +243,7 @@ public class OrderRepository {
     }
 
     public Map<String, Integer> getBurgerSalesForDateRange(LocalDate startDate, LocalDate endDate, Long storeId) {
+        logger.debug("Obteniendo ventas de hamburguesas para rango de fechas: {} - {}, storeId: {}", startDate, endDate, storeId);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             String jpql = "SELECT od.productName, od.variantName, SUM(od.quantity) " +
@@ -217,7 +269,11 @@ public class OrderRepository {
                 Long totalQty = (Long) row[2];
                 sales.put(type != null ? name + " (" + type + ")" : name, totalQty.intValue());
             }
+            logger.debug("Se encontraron {} registros de ventas para el rango de fechas: {} - {}", sales.size(), startDate, endDate);
             return sales;
+        } catch (Exception e) {
+            logger.error("Error al obtener ventas de hamburguesas para rango de fechas: {} - {}, storeId: {}", startDate, endDate, storeId, e);
+            return new HashMap<>();
         } finally {
             em.close();
         }
@@ -228,6 +284,7 @@ public class OrderRepository {
     }
 
     public List<Map<String, Object>> getSalesPerDay(LocalDate startDate, LocalDate endDate, Long storeId) {
+        logger.debug("Obteniendo ventas por día para rango de fechas: {} - {}, storeId: {}", startDate, endDate, storeId);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             String jpql = "SELECT DATE(o.createdAt) as date, SUM(o.total) as total FROM Order o " +
@@ -252,7 +309,11 @@ public class OrderRepository {
                 map.put("total", row[1]);
                 sales.add(map);
             }
+            logger.debug("Se encontraron {} registros de ventas por día para el rango de fechas: {} - {}", sales.size(), startDate, endDate);
             return sales;
+        } catch (Exception e) {
+            logger.error("Error al obtener ventas por día para rango de fechas: {} - {}, storeId: {}", startDate, endDate, storeId, e);
+            return new java.util.ArrayList<>();
         } finally {
             em.close();
         }

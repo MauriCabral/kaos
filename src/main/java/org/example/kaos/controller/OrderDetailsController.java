@@ -764,7 +764,14 @@ public class OrderDetailsController {
     }
 
     private void setupDeliveryComboBox() {
-        List<Delivery> deliveries = deliveryService.findByStoreId(Session.getInstance().getCurrentUser().getStore().getId());
+        Long storeId;
+        if (order != null && order.getStore() != null && order.getStore().getId() != null) {
+            storeId = order.getStore().getId();
+        } else {
+            storeId = Session.getInstance().getCurrentUser().getStore().getId();
+        }
+        
+        List<Delivery> deliveries = deliveryService.findByStoreId(storeId);
         deliveryComboBox.getItems().setAll(deliveries);
 
         deliveryComboBox.setVisible(true);

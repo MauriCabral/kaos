@@ -52,8 +52,6 @@ public class OrderDetail {
     @Column(name = "observations", length = 500)
     private String observations;
 
-
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -22,12 +22,10 @@ public class App extends Application {
         logger.info("Iniciando aplicación Kaos...");
         
         try {
-            // Initialize JPA
             logger.debug("Inicializando JPA...");
             JpaUtil.getEntityManagerFactory();
             logger.debug("JPA inicializado correctamente");
 
-            // Check for updates
             logger.debug("Verificando actualizaciones...");
             if (UpdateManager.checkForUpdate()) {
                 logger.info("Nueva versión disponible: {}", UpdateManager.getLatestVersion());
@@ -42,7 +40,7 @@ public class App extends Application {
                         logger.info("Iniciando descarga de actualización...");
                         UpdateManager.downloadUpdate();
                         logger.info("Actualización descargada correctamente. Reiniciando aplicación...");
-                        return; // Exit since restart will happen
+                        return;
                     } catch (IOException | InterruptedException e) {
                         logger.error("Error al descargar la actualización", e);
                         Alert errorAlert = new Alert(Alert.AlertType.ERROR);

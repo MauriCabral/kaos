@@ -8,36 +8,49 @@ import org.example.kaos.entity.BurgerVariant;
 import org.example.kaos.entity.User;
 import org.example.kaos.entity.VariantType;
 import org.example.kaos.util.JpaUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BurgerRepository {
+    private static final Logger logger = LoggerFactory.getLogger(BurgerRepository.class);
 
     public List<Burger> findAll() {
+        logger.debug("Buscando todas las hamburguesas");
         EntityManager em = JpaUtil.getEntityManager();
         try {
             TypedQuery<Burger> query = em.createQuery(
                     "SELECT b FROM Burger b ORDER BY b.name", Burger.class);
-            return query.getResultList();
+            List<Burger> burgers = query.getResultList();
+            logger.debug("Se encontraron {} hamburguesas", burgers.size());
+            return burgers;
+        } catch (Exception e) {
+            logger.error("Error al buscar todas las hamburguesas", e);
+            return new ArrayList<>();
         } finally {
             em.close();
         }
     }
 
     public Burger save(Burger burger) {
+        logger.debug("Guardando hamburguesa: {}", burger.getName());
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             if (burger.getId() == 0) {
                 em.persist(burger);
+                logger.info("Hamburguesa creada: {}", burger.getName());
             } else {
                 burger = em.merge(burger);
+                logger.info("Hamburguesa actualizada: {}", burger.getName());
             }
             em.getTransaction().commit();
             return burger;
         } catch (Exception e) {
             em.getTransaction().rollback();
+            logger.error("Error al guardar hamburguesa: {}", burger.getName(), e);
             throw e;
         } finally {
             em.close();
@@ -45,6 +58,7 @@ public class BurgerRepository {
     }
 
     public boolean existsByCode(long id, String code) {
+        logger.debug("Verificando existencia de hamburguesa por código: {}, id: {}", code, id);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             String queryString;
@@ -59,13 +73,19 @@ public class BurgerRepository {
             if (id != 0) {
                 query.setParameter("id", id);
             }
-            return query.getSingleResult() > 0;
+            boolean exists = query.getSingleResult() > 0;
+            logger.debug("Hamburguesa con código {} {}", code, exists ? "existe" : "no existe");
+            return exists;
+        } catch (Exception e) {
+            logger.error("Error al verificar existencia de hamburguesa por código: {}, id: {}", code, id, e);
+            return false;
         } finally {
             em.close();
         }
     }
 
     public boolean existsByName(long id, String name) {
+        logger.debug("Verificando existencia de hamburguesa por nombre: {}, id: {}", name, id);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             String queryString;
@@ -80,13 +100,19 @@ public class BurgerRepository {
             if (id != 0) {
                 query.setParameter("id", id);
             }
-            return query.getSingleResult() > 0;
+            boolean exists = query.getSingleResult() > 0;
+            logger.debug("Hamburguesa con nombre {} {}", name, exists ? "existe" : "no existe");
+            return exists;
+        } catch (Exception e) {
+            logger.error("Error al verificar existencia de hamburguesa por nombre: {}, id: {}", name, id, e);
+            return false;
         } finally {
             em.close();
         }
     }
 
     public Burger saveBurger(Burger burger) {
+        logger.debug("Guardando hamburguesa: {}", burger.getName());
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -95,13 +121,16 @@ public class BurgerRepository {
                 em.persist(burger);
                 em.flush(); // Ensure id is assigned
                 savedBurger = burger;
+                logger.info("Hamburguesa creada: {}", burger.getName());
             } else {
                 savedBurger = em.merge(burger);
+                logger.info("Hamburguesa actualizada: {}", burger.getName());
             }
             em.getTransaction().commit();
             return savedBurger;
         } catch (Exception e) {
             em.getTransaction().rollback();
+            logger.error("Error al guardar hamburguesa: {}", burger.getName(), e);
             throw e;
         } finally {
             em.close();
@@ -110,14 +139,17 @@ public class BurgerRepository {
 
 
     public Burger updateBurger(Burger burger) {
+        logger.debug("Actualizando hamburguesa: {}", burger.getName());
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             Burger updatedBurger = em.merge(burger);
             em.getTransaction().commit();
+            logger.info("Hamburguesa actualizada: {}", burger.getName());
             return updatedBurger;
         } catch (Exception e) {
             em.getTransaction().rollback();
+            logger.error("Error al actualizar hamburguesa: {}", burger.getName(), e);
             throw e;
         } finally {
             em.close();
@@ -126,6 +158,7 @@ public class BurgerRepository {
 
 
     public Burger findBurgerById(int burgerId) {
+        logger.debug("Buscando hamburguesa por ID: {}", burgerId);
         EntityManager em = JpaUtil.getEntityManager();
         Burger burger = null;
         try {
@@ -133,8 +166,11 @@ public class BurgerRepository {
                     "SELECT b FROM Burger b WHERE b.id = :burgerId", Burger.class);
             query.setParameter("burgerId", burgerId);
             burger = query.getSingleResult();
+            logger.debug("Hamburguesa encontrada: {}", burger.getName());
         } catch (NoResultException e) {
-            // burger no encontrado
+            logger.warn("Hamburguesa no encontrada por ID: {}", burgerId);
+        } catch (Exception e) {
+            logger.error("Error al buscar hamburguesa por ID: {}", burgerId, e);
         } finally {
             em.close();
         }
@@ -142,6 +178,7 @@ public class BurgerRepository {
     }
 
     public boolean deleteBurgerById(long burgerId) {
+        logger.debug("Eliminando hamburguesa por ID: {}", burgerId);
         EntityManager em = JpaUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -155,16 +192,20 @@ public class BurgerRepository {
 
                 em.remove(burger);
                 em.getTransaction().commit();
+                logger.info("Hamburguesa eliminada: {}", burger.getName());
                 return true;
             }
 
             em.getTransaction().commit();
+            logger.warn("No se encontró hamburguesa por ID para eliminar: {}", burgerId);
             return false;
 
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
+                logger.error("Rollback de transacción al eliminar hamburguesa: {}", e.getMessage(), e);
             }
+            logger.error("Error al eliminar hamburguesa por ID: {}", burgerId, e);
             throw e;
         } finally {
             em.close();

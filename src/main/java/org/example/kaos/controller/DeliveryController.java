@@ -73,7 +73,6 @@ public class DeliveryController implements Initializable {
             } else {
                 deliveryPriceField.setText("0.00");
             }
-            // Agregar efecto de foco verde al campo de precio
             deliveryPriceField.getStyleClass().add("price-field-focused");
         }
     }
@@ -90,7 +89,6 @@ public class DeliveryController implements Initializable {
                 storeService.update(selectedStore);
                 
                 DialogUtil.showWarning("Éxito", "Precio de delivery actualizado");
-                // Quitar el efecto de foco verde
                 deliveryPriceField.getStyleClass().removeAll("price-field-focused");
             } catch (NumberFormatException e) {
                 DialogUtil.showWarning("Error", "El precio debe ser un número válido");

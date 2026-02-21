@@ -65,7 +65,6 @@ public class BurgerSelectionController implements Initializable {
         setupVariantComboBox();
         setupCounterBurger();
 
-        // Add global key event filter for ESC and SPACE
         Platform.runLater(() -> {
             Scene scene = toppingsContainer.getScene();
             if (scene != null) {
@@ -74,16 +73,13 @@ public class BurgerSelectionController implements Initializable {
                         handleCancel();
                         event.consume();
                     } else if (event.getCode() == KeyCode.SPACE) {
-                        // Only handle space if focus is not on observationsField
                         if (scene.getFocusOwner() != observationsField) {
                             handleAddToOrder();
                             event.consume();
                         }
-                        // If focused on observationsField, allow space to be typed
                     }
                 });
 
-                // Add mouse event filter to remove focus from observationsField when clicking outside
                 scene.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
                     if (scene.getFocusOwner() == observationsField && event.getTarget() != observationsField) {
                         scene.getRoot().requestFocus();
@@ -200,27 +196,25 @@ public class BurgerSelectionController implements Initializable {
             Label priceLabel = new Label("$" + String.valueOf(topping.getPrice().intValue()).trim());
             priceLabel.getStyleClass().add("topping-price");
 
-            // Counter controls
             Button decreaseBtn = new Button("-");
             decreaseBtn.getStyleClass().add("counter-btn");
-            decreaseBtn.setMinWidth(30);
-            decreaseBtn.setMaxWidth(30);
+            decreaseBtn.setMinWidth(26);
+            decreaseBtn.setMaxWidth(26);
 
             TextField quantityField = new TextField("0");
             quantityField.getStyleClass().add("counter-field");
-            quantityField.setMinWidth(50);
-            quantityField.setMaxWidth(50);
+            quantityField.setMinWidth(40);
+            quantityField.setMaxWidth(40);
             quantityField.setAlignment(Pos.CENTER);
 
             Button increaseBtn = new Button("+");
             increaseBtn.getStyleClass().add("counter-btn");
-            increaseBtn.setMinWidth(30);
-            increaseBtn.setMaxWidth(30);
+            increaseBtn.setMinWidth(26);
+            increaseBtn.setMaxWidth(26);
 
             HBox counterBox = new HBox(4, decreaseBtn, quantityField, increaseBtn);
             counterBox.setAlignment(Pos.CENTER_RIGHT);
 
-            // Get current quantity if exists
             int currentQuantity = selectedToppings.stream()
                     .filter(odt -> odt.getTopping().equals(topping))
                     .mapToInt(OrderDetailTopping::getQuantity)

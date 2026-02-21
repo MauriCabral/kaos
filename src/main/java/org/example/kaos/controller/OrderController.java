@@ -74,7 +74,6 @@ public class OrderController implements Initializable {
         configureButtonsByUser();
         loadAllProductsFromDatabase();
 
-        // Add keyboard support for space key to trigger addToOrder and enter key to trigger viewOrder
         Platform.runLater(() -> {
             Scene scene = productsFlowPane.getScene();
             if (scene != null) {
@@ -112,13 +111,12 @@ public class OrderController implements Initializable {
             itemBox.getChildren().addAll(nameLabel, spacer, qtyLabel, priceLabel);
             orderItemsContainer.getChildren().add(itemBox);
 
-            // Add toppings if any
             if (detail.getOrderDetailToppings() != null && !detail.getOrderDetailToppings().isEmpty()) {
                 for (OrderDetailTopping topping : detail.getOrderDetailToppings()) {
                     if (topping.getQuantity() > 0) {
                         HBox toppingBox = new HBox(10);
                         toppingBox.setAlignment(Pos.CENTER_LEFT);
-                        toppingBox.setPadding(new Insets(0, 0, 0, 20)); // Indent by 20 pixels
+                        toppingBox.setPadding(new Insets(0, 0, 0, 20));
 
                         String toppingDisplay = "+ " + topping.getTopping().getName() + " x" + topping.getQuantity();
                         Label toppingNameLabel = new Label(toppingDisplay);
@@ -618,7 +616,6 @@ public class OrderController implements Initializable {
 
         OrderDetailsController controller = WindowManager.openOrderDetailsWindow(currentOrderDetails, null, false);
         if (controller != null && (controller.isOrderConfirmed() || controller.isOrderCancelled())) {
-            // Clear the order summary if order was confirmed or cancelled
             currentOrderDetails.clear();
             updateOrderSummary();
         }

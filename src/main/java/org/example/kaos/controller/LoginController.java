@@ -30,18 +30,20 @@ public class LoginController {
     @FXML private Label versionLabel;
 
     private final IUserService userService = new UserServiceImpl();
-    private final String version = "v1.0.21";
+    private final String version = "v1.0.26";
 
     @FXML
     public void initialize() {
         logger.info("Inicializando LoginController. Versión: {}", version);
-        usernameField.setText("admin");
-        passwordField.setText("admin123456");
+        usernameField.setText("Despeñaderos");
+        passwordField.setText("despe123");
+
+//        usernameField.setText("SanAgustin");
+//        passwordField.setText("sanagustin123");
 
         setupPasswordFields();
         versionLabel.setText(version);
 
-        // Add global key event filter for ENTER
         Platform.runLater(() -> {
             Scene scene = usernameField.getScene();
             if (scene != null) {

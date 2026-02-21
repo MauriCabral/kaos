@@ -58,7 +58,6 @@ public class MainController {
             btnStatistics.setVisible(false);
         }
 
-        // Add keyboard shortcuts
         Platform.runLater(() -> {
             Scene scene = tabContainer.getScene();
             if (scene != null) {
@@ -151,7 +150,6 @@ public class MainController {
         tabItem.getChildren().addAll(titleLabel, closeBtn);
         tabItem.setOnMouseClicked(e -> switchToTab(tabId));
 
-        // Add context menu
         ContextMenu contextMenu = new ContextMenu();
         MenuItem closeItem = new MenuItem("Cerrar");
         closeItem.setOnAction(e -> closeTab(tabId));
